@@ -33,9 +33,9 @@
 extern "C"
 {
 #if PY_MAJOR_VERSION >= 3
-	PyMODINIT_FUNC PyInit_PyGcodeArcConverter(void);
+	PyMODINIT_FUNC PyInit_PyArcWelder(void);
 #else
-	extern "C" void initPyGcodeArcConverter(void);
+	extern "C" void initPyArcWelder(void);
 #endif
 	static PyObject* ConvertFile(PyObject* self, PyObject* args);
 }

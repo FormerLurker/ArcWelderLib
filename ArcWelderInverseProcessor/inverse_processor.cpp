@@ -68,15 +68,18 @@ inverse_processor::inverse_processor(std::string source_path, std::string target
     // 20200417 - FormerLurker - Declare two globals and pre-calculate some values that will reduce the
     // amount of trig funcitons we need to call while printing.  For the price of having two globals we
     // save one trig calc per G2/G3 for both MIN_ARC_SEGMENTS and MIN_MM_PER_ARC_SEGMENT.  This is a good trade IMHO.
+
+    
 #ifdef MIN_ARC_SEGMENTS
 // Determines the radius at which the transition from using MM_PER_ARC_SEGMENT to MIN_ARC_SEGMENTS
-    /*const float*/arc_max_radius_threshold = MM_PER_ARC_SEGMENT / (2.0F * sin(M_PI / MIN_ARC_SEGMENTS));
+    arc_max_radius_threshold = MM_PER_ARC_SEGMENT / (2.0F * sin(M_PI / MIN_ARC_SEGMENTS));
 #endif
+/*
 #if defined(MIN_ARC_SEGMENTS) && defined(MIN_MM_PER_ARC_SEGMENT)
     // Determines the radius at which the transition from using MIN_ARC_SEGMENTS to MIN_MM_PER_ARC_SEGMENT.
-    /*const float*/arc_min_radius_threshold = MIN_MM_PER_ARC_SEGMENT / (2.0F * sin(M_PI / MIN_ARC_SEGMENTS));
+    arc_min_radius_threshold = MIN_MM_PER_ARC_SEGMENT / (2.0F * sin(M_PI / MIN_ARC_SEGMENTS));
 #endif
-
+*/
 }
 
 gcode_position_args inverse_processor::get_args_(bool g90_g91_influences_extruder, int buffer_size)
@@ -202,7 +205,7 @@ void inverse_processor::process()
                     }
                     float radius = hypot(offset[X_AXIS], offset[Y_AXIS]); // Compute arc radius for mc_arc
                     uint8_t isclockwise = cmd.command == "G2" ? 1 : 0;
-                    output_file << mc_arc(position, target, offset, X_AXIS, Y_AXIS, Z_AXIS, static_cast<float>(p_pre_pos->f), radius, isclockwise, 0, p_cur_pos->is_extruder_relative) << "\n";
+                    output_file << mc_arc(position, target, offset, X_AXIS, Y_AXIS, Z_AXIS, static_cast<float>(p_cur_pos->f), radius, isclockwise, 0, p_cur_pos->is_extruder_relative) << "\n";
                 }
                 else
                 {
@@ -256,7 +259,7 @@ std::string inverse_processor::mc_arc(float* position, float* target, float* off
     float rt_axis0 = target[axis_0] - center_axis0;
     float rt_axis1 = target[axis_1] - center_axis1;
     // 20200419 - Add a variable that will be used to hold the arc segment length
-    float mm_per_arc_segment;
+    float mm_per_arc_segment = MM_PER_ARC_SEGMENT;
 
     // CCW angle between position and target from circle center. Only one atan2() trig computation required.
     float angular_travel_total = atan2(r_axis0 * rt_axis1 - r_axis1 * rt_axis0, r_axis0 * rt_axis0 + r_axis1 * rt_axis1);
@@ -265,18 +268,29 @@ std::string inverse_processor::mc_arc(float* position, float* target, float* off
 #ifdef MIN_ARC_SEGMENTS
     // 20200417 - FormerLurker - Implement MIN_ARC_SEGMENTS if it is defined - from Marlin 2.0 implementation
     // Do this before converting the angular travel for clockwise rotation
+    if (radius < arc_max_radius_threshold) mm_per_arc_segment = radius * ((2.0f * M_PI) / MIN_ARC_SEGMENTS);
+#endif
+
+#ifdef ARC_SEGMENTS_PER_SEC
+    // 20200417 - FormerLurker - Implement MIN_ARC_SEGMENTS if it is defined - from Marlin 2.0 implementation
+    float mm_per_arc_segment_sec = (feed_rate / 60.0f) * (1.0f / ARC_SEGMENTS_PER_SEC);
+    if (mm_per_arc_segment_sec < mm_per_arc_segment) 
+        mm_per_arc_segment = mm_per_arc_segment_sec;
+#endif
+
 #ifdef MIN_MM_PER_ARC_SEGMENT
-// 20200417 - FormerLurker - Implement MIN_MM_PER_ARC_SEGMENT if it is defined
-// This prevents a very high number of segments from being generated for curves of a short radius
-    if (radius < arc_min_radius_threshold)  mm_per_arc_segment = MIN_MM_PER_ARC_SEGMENT;
-    else
+    // 20200417 - FormerLurker - Implement MIN_MM_PER_ARC_SEGMENT if it is defined
+    // This prevents a very high number of segments from being generated for curves of a short radius
+    if (mm_per_arc_segment < MIN_MM_PER_ARC_SEGMENT)  mm_per_arc_segment = MIN_MM_PER_ARC_SEGMENT;
 #endif
-        if (radius < arc_max_radius_threshold) mm_per_arc_segment = radius * ((2.0f * M_PI) / MIN_ARC_SEGMENTS);
-        else mm_per_arc_segment = MM_PER_ARC_SEGMENT;
-#else
-    // 20200418 - FormerLurker - Use the standard segment length
-    mm_per_arc_segment = MM_PER_ARC_SEGMENT;
+
+#if defined(MIN_MM_PER_ARC_SEGMENT) || defined(ARC_SEGMENTS_PER_SEC) || defined(MIN_ARC_SEGMENTS)
+    if (mm_per_arc_segment > MM_PER_ARC_SEGMENT)
+        mm_per_arc_segment = MM_PER_ARC_SEGMENT;
 #endif
+
+
+    // Adjust the angular travel if the direction is clockwise
     if (isclockwise) { angular_travel_total -= 2 * M_PI; }
 
     //20141002:full circle for G03 did not work, e.g. G03 X80 Y80 I20 J0 F2000 is giving an Angle of zero so head is not moving
@@ -293,9 +307,9 @@ std::string inverse_processor::mc_arc(float* position, float* target, float* off
     if (millimeters_of_travel_arc < 0.001) { return ""; }
     // Calculate the total travel per segment
     // Calculate the number of arc segments
-    uint16_t segments = static_cast<uint16_t>(floor(millimeters_of_travel_arc / mm_per_arc_segment));
+    uint16_t segments = static_cast<uint16_t>(ceil(millimeters_of_travel_arc / mm_per_arc_segment));
     // Ensure at least one segment
-    if (segments < 1) segments = 1;
+    //if (segments < 1) segments = 1;
 
     // Calculate theta per segments and linear (z) travel per segment
     float theta_per_segment = angular_travel_total / segments;

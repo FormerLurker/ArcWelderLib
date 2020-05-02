@@ -338,3 +338,5 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
+/DeployCodeToPlugin.bat
+/DeployCodeToPlugin_Exclude.txt

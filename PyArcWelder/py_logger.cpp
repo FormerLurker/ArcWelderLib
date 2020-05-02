@@ -60,7 +60,6 @@ void py_logger::initialize_loggers()
 
 	// Create a logging configurator
 	PyGILState_STATE gstate = PyGILState_Ensure();
-	std::cout << "Creating arguments for LoggingConfigurator creation.\r\n";
 	PyObject* funcArgs = Py_BuildValue("(s,s,s)", "arc_welder", "arc_welder.", "octoprint_arc_welder.");
 	if (funcArgs == NULL)
 	{
@@ -68,7 +67,7 @@ void py_logger::initialize_loggers()
 		PyErr_SetString(PyExc_ImportError, "Could not create LoggingConfigurator arguments.");
 		return;
 	}
-	std::cout << "Creating LoggingConfigurator...";
+	
 	py_logging_configurator = PyObject_CallObject(py_logging_configurator_name, funcArgs);
 	std::cout << "Complete.\r\n";
 	Py_DECREF(funcArgs);
@@ -98,8 +97,6 @@ void py_logger::initialize_loggers()
 	py_critical_function_name = gcode_arc_converter::PyString_SafeFromString("critical");
 	py_get_effective_level_function_name = gcode_arc_converter::PyString_SafeFromString("getEffectiveLevel");
 	loggers_created_ = true;
-	std::cout << "Logger created successfully.\r\n";
-
 }
 
 void py_logger::set_internal_log_levels(bool check_real_time)
@@ -199,6 +196,11 @@ void py_logger::log(const int logger_type, const int log_level, const std::strin
 		case CRITICAL:
 			pyFunctionName = py_critical_function_name;
 			break;
+		default:
+			std::cout << "An unknown log level of '" << log_level << " 'was supplied for the message: " << message.c_str() << "\r\n";
+			PyErr_Format(PyExc_ValueError,
+				"An unknown log level was supplied for the message %s.", message.c_str());
+			return;
 		}
 	}
 	PyObject* pyMessage = gcode_arc_converter::PyUnicode_SafeFromString(message);
@@ -220,15 +222,19 @@ void py_logger::log(const int logger_type, const int log_level, const std::strin
 		{
 			std::cout << "Logging.arc_welder_log - null was returned from the specified logger.\r\n";
 			PyErr_SetString(PyExc_ValueError, "Logging.arc_welder_log - null was returned from the specified logger.");
+			return;
 		}
 		else
 		{
 			std::cout << "Logging.arc_welder_log - null was returned from the specified logger and an error was detected.\r\n";
+			std::cout << "\tLog Level: " << log_level <<", Logger Type: " << logger_type << ", Message: " << message.c_str() << "\r\n";
+			
 			// I'm not sure what else to do here since I can't log the error.  I will print it 
 			// so that it shows up in the console, but I can't log it, and there is no way to 
 			// return an error.
 			PyErr_Print();
 			PyErr_Clear();
+			return;
 		}
 	}
 	else

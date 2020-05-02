@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
 {
 	std::string info = "Arc Welder: Inverse Processor v0.1.rc1.dev0\nConverts G2/G3 commands to G1/G2 commands.\nCopyright(C) 2020 - Brad Hochgesang\n";
 	std::cout << info;
-	TestInverseProcessor(ARC_GYROID_BENCHY_DIFFICULT, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode");
+	TestInverseProcessor(SIX_SPEED_TEST, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode");
 }
 
 static void TestInverseProcessor(std::string source_path, std::string target_path)

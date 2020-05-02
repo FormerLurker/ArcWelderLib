@@ -34,13 +34,15 @@ typedef signed char int8_t;
 #define M_PI       3.14159265358979323846f   // pi
 enum AxisEnum { X_AXIS = 0, Y_AXIS= 1, Z_AXIS = 2, E_AXIS = 3, X_HEAD = 4, Y_HEAD = 5 };
 // Arc interpretation settings:
-#define MM_PER_ARC_SEGMENT 1.0f // The maximum length of an arc segment if a full circle of the same radius has more than MIN_ARC_SEGMENTS (if defined)
-#define N_ARC_CORRECTION 25 // The number of interpolated segments that will be generated without a floating point correction
-// 20200417 - FormerLurker - Add Additional Arc Config Values
-#define MIN_ARC_SEGMENTS 32 // The minimum segments in a full circle.  If not defined, MM_PER_ARC_SEMGMENT is enforced always
-#define MIN_MM_PER_ARC_SEGMENT 0.25f // the minimum length of an interpolated segment.  Must be smaller than MM_PER_ARC_SEGMENT if defined.
+#define MM_PER_ARC_SEGMENT 2.0f // REQUIRED - The enforced maximum length of an arc segment
+#define MIN_MM_PER_ARC_SEGMENT 0.2f /* OPTIONAL - the enforced minimum length of an interpolated segment.  Must be smaller than
+	MM_PER_ARC_SEGMENT if defined.  Only has an effect if MIN_ARC_SEGMENTS or ARC_SEGMENTS_PER_SEC is defined */
+	// If both MIN_ARC_SEGMENTS and ARC_SEGMENTS_PER_SEC is defined, the minimum calculated segment length is used.
+#define MIN_ARC_SEGMENTS 20 // OPTIONAL - The enforced minimum segments in a full circle of the same radius.
+#define ARC_SEGMENTS_PER_SEC 40 // OPTIONAL - Use feedrate to choose segment length.
+#define N_ARC_CORRECTION 25 // OPTIONAL - The number of interpolated segments that will be generated without a floating point correction
 //#define ARC_EXTRUSION_CORRECTION // If defined, we should apply correction to the extrusion length based on the
-                                   // difference in true arc length.  The correctly is extremely small, and may not be worth the cpu cycles 
+								   // difference in true arc length.  The correctly is extremely small, and may not be worth the cpu cycles
 
 class inverse_processor {
 public:
@@ -54,8 +56,9 @@ private:
 	std::string source_path_;
 	std::string target_path_;
 	gcode_position* p_source_position_;
+	
 	float arc_max_radius_threshold;
-	float arc_min_radius_threshold;
+	//float arc_min_radius_threshold;
 	float total_e_adjustment;
 	int trig_calc_count = 0;
 };

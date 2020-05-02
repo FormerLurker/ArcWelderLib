@@ -23,4 +23,5 @@
 // FormerLurker@pm.me
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma once
-static bool on_progress(double percent_complete, double seconds_elapsed, double seconds_remaining, int gcodes_processed, int current_line, int points_compressed, int arcs_created);
+#include "arc_welder.h"
+static bool on_progress(arc_welder_progress progress);

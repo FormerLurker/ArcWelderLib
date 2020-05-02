@@ -239,7 +239,8 @@ static void TestAntiStutter(std::string filePath)
 	logger* p_logger = new logger(logger_names, logger_levels);
 	p_logger->set_log_level(INFO);
 	//arc_welder arc_welder_obj(BENCHY_0_5_MM_NO_WIPE, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50, static_cast<progress_callback>(on_progress));
-	arc_welder arc_welder_obj(ISSUE_PRICKLYPEAR, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50);
+	arc_welder arc_welder_obj(SIX_SPEED_TEST, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50, on_progress);
+	arc_welder arc_welder_obj(SIX_SPEED_TEST, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\SixSpeedTest_AS.gcode", p_logger, max_resolution, false, 50, on_progress);
 	//BENCHY_LAYER_1GCODE
 	//SMALL_TEST
 	//FACE_SHIELD
@@ -261,8 +262,8 @@ static void TestAntiStutter(std::string filePath)
 	delete p_logger;
 }
 
-static bool on_progress(double percentComplete, double secondsElapsed, double estimatedSecondsRemaining, int gcodes_processed, int currentLine, int points_compressed, int arcs_created)
+static bool on_progress(arc_welder_progress progress)
 {
-	std::cout << percentComplete << "% complete in " << secondsElapsed << " seconds with " << estimatedSecondsRemaining << " seconds remaining.  Current Line: " << currentLine << ", Points Compressed:" << points_compressed << ", ArcsCreated:" << arcs_created << "\r\n";
+	std::cout << progress.str() << "\r\n";
 	return true;
 }

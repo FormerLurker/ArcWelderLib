@@ -26,7 +26,6 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
-#include "arc_welder.h"
 #include "gcode_position.h"
 int main(int argc, char* argv[])
 {
@@ -224,13 +223,8 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
-static bool on_progress(double percent_complete, double seconds_elapsed, double seconds_remaining, int gcodes_processed, int current_line, int points_compressed, int arcs_created)
+static bool on_progress(arc_welder_progress progress)
 {
-	std::cout << std::fixed << std::setprecision(1);
-	if (percent_complete < 100)
-		std::cout << percent_complete << "% complete in " << seconds_elapsed << " seconds with " << seconds_remaining << " seconds remaining.  Current Line: " << current_line << ", Points Compressed:" << points_compressed << ", ArcsCreated:" << arcs_created << "\r\n";
-	else if (percent_complete >= 100)
-		std::cout << "Processing Completed in " << seconds_elapsed << " seconds.\n\tPoints Compressed:" << points_compressed << "\n\tArcsCreated:" << arcs_created << "\n";
-	std::cout.unsetf(std::ios::floatfield);
+	std::cout << progress.str();
 	return true;
 }
