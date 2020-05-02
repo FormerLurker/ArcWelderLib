@@ -239,7 +239,7 @@ static void TestAntiStutter(std::string filePath)
 	logger* p_logger = new logger(logger_names, logger_levels);
 	p_logger->set_log_level(INFO);
 	//arc_welder arc_welder_obj(BENCHY_0_5_MM_NO_WIPE, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50, static_cast<progress_callback>(on_progress));
-	arc_welder arc_welder_obj(SIX_SPEED_TEST, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50, on_progress);
+	//arc_welder arc_welder_obj(SIX_SPEED_TEST, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50, on_progress);
 	arc_welder arc_welder_obj(SIX_SPEED_TEST, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\SixSpeedTest_AS.gcode", p_logger, max_resolution, false, 50, on_progress);
 	//BENCHY_LAYER_1GCODE
 	//SMALL_TEST
