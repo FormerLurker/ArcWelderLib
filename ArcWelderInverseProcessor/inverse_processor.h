@@ -26,7 +26,12 @@
 
 #include <string>
 #include "gcode_position.h"
-
+#include "math.h"
+#include <iostream>
+#include <string>
+#include <sstream>
+#include <iomanip>
+#include <fstream>
 
 typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
@@ -34,34 +39,52 @@ typedef signed char int8_t;
 #define M_PI       3.14159265358979323846f   // pi
 enum AxisEnum { X_AXIS = 0, Y_AXIS= 1, Z_AXIS = 2, E_AXIS = 3, X_HEAD = 4, Y_HEAD = 5 };
 // Arc interpretation settings:
-#define MM_PER_ARC_SEGMENT 2.0f // REQUIRED - The enforced maximum length of an arc segment
-#define MIN_MM_PER_ARC_SEGMENT 0.2f /* OPTIONAL - the enforced minimum length of an interpolated segment.  Must be smaller than
-	MM_PER_ARC_SEGMENT if defined.  Only has an effect if MIN_ARC_SEGMENTS or ARC_SEGMENTS_PER_SEC is defined */
+#define DEFAULT_MM_PER_ARC_SEGMENT 100.0f // REQUIRED - The enforced maximum length of an arc segment
+#define DEFAULT_MIN_MM_PER_ARC_SEGMENT 0.2f /* OPTIONAL - the enforced minimum length of an interpolated segment.  Must be smaller than
+	MM_PER_ARC_SEGMENT.  Only has an effect if MIN_ARC_SEGMENTS > 0 or ARC_SEGMENTS_PER_SEC > 0 */
 	// If both MIN_ARC_SEGMENTS and ARC_SEGMENTS_PER_SEC is defined, the minimum calculated segment length is used.
-#define MIN_ARC_SEGMENTS 20 // OPTIONAL - The enforced minimum segments in a full circle of the same radius.
-#define ARC_SEGMENTS_PER_SEC 40 // OPTIONAL - Use feedrate to choose segment length.
-#define N_ARC_CORRECTION 25 // OPTIONAL - The number of interpolated segments that will be generated without a floating point correction
-//#define ARC_EXTRUSION_CORRECTION // If defined, we should apply correction to the extrusion length based on the
-								   // difference in true arc length.  The correctly is extremely small, and may not be worth the cpu cycles
+#define DEFAULT_MIN_ARC_SEGMENTS 10 // OPTIONAL - The enforced minimum segments in a full circle of the same radius.
+#define DEFAULT_ARC_SEGMENTS_PER_SEC 30 // OPTIONAL - Use feedrate to choose segment length.
+// approximation will not be used for the first segment.  Subsequent segments will be corrected following DEFAULT_N_ARC_CORRECTION.
 
+struct ConfigurationStore {
+	ConfigurationStore() {
+		mm_per_arc_segment = DEFAULT_MM_PER_ARC_SEGMENT;
+		min_mm_per_arc_segment = DEFAULT_MIN_MM_PER_ARC_SEGMENT;
+		min_arc_segments = DEFAULT_MIN_ARC_SEGMENTS;
+		arc_segments_per_sec = DEFAULT_ARC_SEGMENTS_PER_SEC;
+	}
+	float mm_per_arc_segment;
+	float min_mm_per_arc_segment;
+	int min_arc_segments; // If less than or equal to zero, this is disabled
+	int arc_segments_per_sec; // If less than or equal to zero, this is disabled
+};
 class inverse_processor {
 public:
 	inverse_processor(std::string source_path, std::string target_path, bool g90_g91_influences_extruder, int buffer_size);
 	virtual ~inverse_processor();
 	void process();
-	std::string mc_arc(float* position, float* target, float* offset, uint8_t axis_0, uint8_t axis_1,
-		uint8_t axis_linear, float feed_rate, float radius, uint8_t isclockwise, uint8_t extruder, bool output_relative);
+	void mc_arc(float* position, float* target, float* offset, float feed_rate, float radius, uint8_t isclockwise, uint8_t extruder);
+	ConfigurationStore cs;
 private:
 	gcode_position_args get_args_(bool g90_g91_influences_extruder, int buffer_size);
 	std::string source_path_;
 	std::string target_path_;
 	gcode_position* p_source_position_;
-	
+	std::ofstream output_file_;
+	bool output_relative_;
 	float arc_max_radius_threshold;
 	//float arc_min_radius_threshold;
 	float total_e_adjustment;
 	int trig_calc_count = 0;
+	int lines_processed_ = 0;
+	void clamp_to_software_endstops(float* target);
+
+	void plan_buffer_line(float x, float y, float z, const float& e, float feed_rate, uint8_t extruder, const float* gcode_target=NULL);
+	
 };
+
+
 
 
 
