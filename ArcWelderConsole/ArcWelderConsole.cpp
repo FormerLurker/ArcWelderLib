@@ -197,6 +197,8 @@ int main(int argc, char* argv[])
 	log_levels.push_back(log_levels::DEBUG);
 	logger* p_logger = new logger(log_names, log_levels);
 	p_logger->set_log_level_by_value(log_level_value);
+	std::string log_level_name = "No Logging";
+	if (log_level_value >= 0)	log_level_names[logger::get_log_level_for_value(log_level_value)];
 
 	std::stringstream log_messages;
 	log_messages << "Processing Gcode\n";
@@ -204,7 +206,7 @@ int main(int argc, char* argv[])
 	log_messages << "\tTarget File File            : " << target_file_apth << "\n";
 	log_messages << "\tResolution in MM            : " << resolution_mm << "\n";
 	log_messages << "\tG90/G91 Influences Extruder : " << (g90_g91_influences_extruder ? "True" : "False") << "\n";
-	log_messages << "\tLog Level                   : " << log_level_names[logger::get_log_level_for_value(log_level_value)] << "\n";
+	log_messages << "\tLog Level                   : " << log_level_name << "\n";
 	log_messages << "\tShow Progress Updates       : " << (show_progress ? "True" : "False") << "\n";
 	std::cout << log_messages.str();
 	arc_welder* p_arc_welder = NULL;
@@ -225,6 +227,6 @@ int main(int argc, char* argv[])
 
 static bool on_progress(arc_welder_progress progress)
 {
-	std::cout << progress.str();
+	std::cout << progress.str() << "\n";
 	return true;
 }

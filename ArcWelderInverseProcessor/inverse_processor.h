@@ -26,7 +26,6 @@
 
 #include <string>
 #include "gcode_position.h"
-#include "math.h"
 #include <iostream>
 #include <string>
 #include <sstream>

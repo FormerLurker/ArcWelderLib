@@ -48,7 +48,7 @@
 */
 
 #include "inverse_processor.h"
-
+#include <cmath>
 
 //#include "Marlin.h"
 //#include "stepper.h"
@@ -308,7 +308,7 @@ void inverse_processor::mc_arc(float* position, float* target, float* offset, fl
 
     // 20200417 - FormerLurker - rename millimeters_of_travel to millimeters_of_travel_arc to better describe what we are
     // calculating here
-    float millimeters_of_travel_arc = hypot(angular_travel_total * radius, fabs(travel_z));
+    float millimeters_of_travel_arc = hypot(angular_travel_total * radius, std::abs(travel_z));
     if (millimeters_of_travel_arc < 0.001) { return; }
     // Calculate the total travel per segment
     // Calculate the number of arc segments
