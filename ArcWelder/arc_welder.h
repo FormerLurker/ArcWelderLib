@@ -70,7 +70,7 @@ struct arc_welder_progress {
 		stream << ", Current Line: " << lines_processed;
 		stream << ", Points Compressed: " << points_compressed;
 		stream << ", ArcsCreated: " << arcs_created;
-		stream << ", Compression: " << compression_ratio << "% ";
+		stream << ", Compression: " << compression_ratio << "% \n";
 		return stream.str();
 	}
 };
