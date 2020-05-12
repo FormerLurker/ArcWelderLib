@@ -40,11 +40,9 @@ endif()
 target_link_libraries(${PROJECT_NAME} ArcWelder GcodeProcessorLib)
 
 # On Windows, it is required to link to the Python libraries
-if(WIN32 or APPLE)
+if(WIN32 OR APPLE)
     target_link_libraries(${PROJECT_NAME} ArcWelder GcodeProcessorLib ${PYTHON_LIBRARIES})
 endif()
-
-if(MACOS)
 
 # Expose the GcodeProcessorLib, and ArcWelder's Definitions.
 set(${PROJECT_NAME}_DEFINITIONS ${GcodeProcessorLib_DEFINITIONS}
