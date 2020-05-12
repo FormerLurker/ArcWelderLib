@@ -226,7 +226,7 @@ jobs:
 
     - name: Pack zip
       working-directory: instdir
-      run: ${{ steps.cmake_and_ninja.outputs.cmake_dir }}/cmake -E tar "cf" "../${{ matrix.config.artifact_zip }}" --format=zip .
+      run: ${{ steps.cmake_and_ninja.outputs.cmake_dir }}/cmake -E tar "cvf" "../${{ matrix.config.artifact_zip }}" --format=zip .
 
 
     - name: Upload tar
