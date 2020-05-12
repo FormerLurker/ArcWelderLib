@@ -52,7 +52,7 @@ bool py_arc_welder::on_progress_(arc_welder_progress progress)
 {
 	PyObject* py_dict = py_arc_welder::build_py_progress(progress);
 	if (py_dict == NULL)
-		return NULL;
+		return false;
 	PyObject* func_args = Py_BuildValue("(O)", py_dict);
 	if (func_args == NULL)
 	{

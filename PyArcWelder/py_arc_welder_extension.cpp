@@ -211,7 +211,7 @@ extern "C"
 			u8"cancelled",
 			results.cancelled,
 			u8"message",
-			results.message,
+			results.message.c_str(),
 			u8"progress",
 			p_progress
 		);
