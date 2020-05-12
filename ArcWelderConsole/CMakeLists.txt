@@ -15,5 +15,7 @@ include(sourcelist.cmake)
 # Add an executable our ArcWelderConsoleSources variable from our sourcelist file
 add_executable(${PROJECT_NAME} ${ArcWelderConsoleSources})
 
+install(TARGETS ${PROJECT_NAME})
+
 # specify linking to the GcodeProcessorLib and ArcWelder libraries
 target_link_libraries(${PROJECT_NAME} GcodeProcessorLib ArcWelder)

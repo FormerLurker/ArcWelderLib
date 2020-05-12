@@ -18,6 +18,8 @@ include(sourcelist.cmake)
 # Create our library
 add_library(${PROJECT_NAME} SHARED ${PyArcWelderSources})
 
+install(TARGETS ${PROJECT_NAME})
+
 set_target_properties(
     ${PROJECT_NAME}
     PROPERTIES

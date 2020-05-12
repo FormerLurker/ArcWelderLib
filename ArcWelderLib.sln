@@ -23,6 +23,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		sourcelist.cmake = sourcelist.cmake
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{704AE839-EEF5-4277-900D-91FA4DBB17EB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{87F36EEF-E3D6-4B1D-815C-DEEB369BAB98}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\ccpp.yml = .github\workflows\ccpp.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -82,6 +89,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{87F36EEF-E3D6-4B1D-815C-DEEB369BAB98} = {704AE839-EEF5-4277-900D-91FA4DBB17EB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {46059DE8-A2F4-453F-9F33-F12ABC8010EF}

@@ -15,6 +15,8 @@ include(sourcelist.cmake)
 # Add a library using our ArcWelderSources variable from our sourcelist file
 add_library(${PROJECT_NAME} STATIC ${ArcWelderSources})
 
+install(TARGETS ${PROJECT_NAME})
+
 # Link the GcodeProcessorLib
 target_link_libraries(${PROJECT_NAME} GcodeProcessorLib)
 
