@@ -7,7 +7,7 @@ project(GcodeProcessorLib C CXX)
 include(sourcelist.cmake)
 
 # Add a library using our GcodeProcessorLibSources variable from our sourcelist file
-add_library(${PROJECT_NAME} STATIC ${GcodeProcessorLibSources})
+add_library(${PROJECT_NAME} SHARED ${GcodeProcessorLibSources})
 
 install(TARGETS ${PROJECT_NAME})
 
