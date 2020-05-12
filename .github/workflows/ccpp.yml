@@ -242,7 +242,7 @@ jobs:
         name: ${{ matrix.config.artifact_zip }}
 
   release:
-    if: contains(github.ref, 'tags/v')
+    if: contains(github.ref, 'tags/')
     runs-on: ubuntu-latest
     needs: build
 
