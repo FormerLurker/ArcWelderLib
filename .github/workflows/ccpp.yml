@@ -17,7 +17,7 @@ jobs:
       matrix:
         config:
         - {
-            name: "Windows Latest MSVC", artifact: "C:\Program Files\PowerShell\7\pwsh.EXE -command",
+            name: "Windows Latest MSVC", artifact: "Windows-MSVC.tar.xz",
             os: windows-latest,
             cc: "cl", cxx: "cl",
             environment_script: "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build/vcvars64.bat"
