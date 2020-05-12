@@ -35,7 +35,7 @@ jobs:
         - {
             name: "macOS Latest g++", artifact: "macOS.tar.xz",
             os: macos-latest,
-            cc: "g++", cxx: "g++"
+            cc: "gcc", cxx: "g++"
           }
 
     steps:
