@@ -13,7 +13,7 @@ include_directories(${GcodeProcessorLib_INCLUDE_DIRS})
 include(sourcelist.cmake)
 
 # Add a library using our ArcWelderSources variable from our sourcelist file
-add_library(${PROJECT_NAME} SHARED ${ArcWelderSources})
+add_library(${PROJECT_NAME} STATIC ${ArcWelderSources})
 
 install(TARGETS ${PROJECT_NAME})
 
