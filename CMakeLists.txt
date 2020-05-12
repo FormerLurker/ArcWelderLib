@@ -2,8 +2,9 @@ cmake_minimum_required (VERSION "3.16")
 # You can tweak some common (for all subprojects) stuff here. For example:
 project(Build C CXX)
 
-# Use C++ 11
+# Use and require C++ 11
 set (CMAKE_CXX_STANDARD 11)
+set(CXX_STANDARD_REQUIRED)
 
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 set(CMAKE_DISABLE_SOURCE_CHANGES  ON)
