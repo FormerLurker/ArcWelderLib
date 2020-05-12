@@ -17,23 +17,31 @@ jobs:
       matrix:
         config:
         - {
-            name: "Windows Latest MSVC", artifact: "Windows-MSVC.tar.xz",
+            name: "Windows Latest MSVC", 
+            artifact_tar: "Windows-MSVC.tar.xz",
+            artifact_zip: "Windows-MSVC.zip",
             os: windows-latest,
             cc: "cl", cxx: "cl",
             environment_script: "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build/vcvars64.bat"
           }
         - {
-            name: "Windows Latest MinGW", artifact: "Windows-MinGW.tar.xz",
+            name: "Windows Latest MinGW", 
+            artifact_tar: "Windows-MinGW.tar.xz",
+            artifact_zip: "Windows-MinGW.zip",
             os: windows-latest,
             cc: "gcc", cxx: "g++"
           }
         - {
-            name: "Ubuntu Latest GCC", artifact: "Linux.tar.xz",
+            name: "Ubuntu Latest GCC", 
+            artifact_tar: "Linux.tar.xz",
+            artifact_zip: "Linux.zip",
             os: ubuntu-latest,
             cc: "gcc", cxx: "g++"
           }
         - {
-            name: "macOS Latest g++", artifact: "macOS.tar.xz",
+            name: "macOS Latest g++", 
+            artifact_tar: "macOS.tar.xz",
+            artifact_zip: "macOS.zip",
             os: macos-latest,
             cc: "gcc", cxx: "g++"
           }
@@ -212,16 +220,26 @@ jobs:
       run: ${{ steps.cmake_and_ninja.outputs.cmake_dir }}/cmake --install build --prefix instdir --strip
 
 
-    - name: Pack
+    - name: Pack tar
       working-directory: instdir
-      run: ${{ steps.cmake_and_ninja.outputs.cmake_dir }}/cmake -E tar cJfv ../${{ matrix.config.artifact }} .
+      run: ${{ steps.cmake_and_ninja.outputs.cmake_dir }}/cmake -E tar cJfv ../${{ matrix.config.artifact_tar }} .
+
+    - name: Pack zip
+      working-directory: instdir
+      run: ${{ steps.cmake_and_ninja.outputs.cmake_dir }}/cmake -E zip cJfv ../${{ matrix.config.artifact_zip }} .
 
 
-    - name: Upload
-      uses: actions/upload-artifact@v1
+    - name: Upload tar
+      uses: actions/upload-artifact_tar@v1
       with:
-        path: ./${{ matrix.config.artifact }}
-        name: ${{ matrix.config.artifact }}
+        path: ./${{ matrix.config.artifact_tar }}
+        name: ${{ matrix.config.artifact_tar }}
+
+    - name: Upload zip
+      uses: actions/upload-artifact_zip@v1
+      with:
+        path: ./${{ matrix.config.artifact_zip }}
+        name: ${{ matrix.config.artifact_zip }}
 
   release:
     if: contains(github.ref, 'tags/v')
@@ -244,7 +262,12 @@ jobs:
       run: |
         echo "${{ steps.create_release.outputs.upload_url }}" > ./upload_url
 
-    - uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact_tar@v1
+      with:
+        path: ./upload_url
+        name: upload_url
+
+    - uses: actions/upload-artifact_zip@v1
       with:
         path: ./upload_url
         name: upload_url
@@ -258,47 +281,82 @@ jobs:
       matrix:
         config:
         - {
-            name: "Windows Latest MSVC", artifact: "Windows-MSVC.tar.xz",
+            name: "Windows Latest MSVC", 
+            artifact_tar: "Windows-MSVC.tar.xz",
+            artifact_zip: "Windows-MSVC.zip",
             os: ubuntu-latest
           }
         - {
-            name: "Windows Latest MinGW", artifact: "Windows-MinGW.tar.xz",
+            name: "Windows Latest MinGW", 
+            artifact_tar: "Windows-MinGW.tar.xz",
+            artifact_zip: "Windows-MinGW.zip",
             os: ubuntu-latest
           }
         - {
-            name: "Ubuntu Latest GCC", artifact: "Linux.tar.xz",
+            name: "Ubuntu Latest GCC", 
+            artifact_tar: "Linux.tar.xz",
+            artifact_zip: "Linux.zip",
             os: ubuntu-latest
           }
         - {
-            name: "macOS Latest Clang", artifact: "macOS.tar.xz",
+            name: "macOS Latest Clang", 
+            artifact_tar: "macOS.tar.xz",
+            artifact_zip: "macOS.zip",
             os: ubuntu-latest
           }
     needs: release
 
     steps:
-    - name: Download artifact
-      uses: actions/download-artifact@v1
+    - name: Download artifact_tar
+      uses: actions/download-artifact_tar@v1
       with:
-        name: ${{ matrix.config.artifact }}
+        name: ${{ matrix.config.artifact_tar }}
         path: ./
 
-    - name: Download URL
-      uses: actions/download-artifact@v1
+    - name: Download artifact_zip
+      uses: actions/download-artifact_zip@v1
       with:
-        name: upload_url
+        name: ${{ matrix.config.artifact_zip }}
         path: ./
-    - id: set_upload_url
+
+    - name: Download URL tar
+      uses: actions/download-artifact_tar@v1
+      with:
+        name: upload_url_tar
+        path: ./
+    - id: set_upload_url_tar
       run: |
-        upload_url=`cat ./upload_url`
-        echo ::set-output name=upload_url::$upload_url
+        upload_url_tar=`cat ./upload_url_tar`
+        echo ::set-output name=upload_url_tar::$upload_url_tar
 
-    - name: Upload to Release
-      id: upload_to_release
+    - name: Download URL zip
+      uses: actions/download-artifact_zip@v1
+      with:
+        name: upload_url_zip
+        path: ./
+    - id: set_upload_url_zip
+      run: |
+        upload_url_zip=`cat ./upload_url_zip`
+        echo ::set-output name=upload_url_zip::$upload_url_zip
+
+    - name: Upload tar to Release
+      id: upload_tar_to_release
       uses: actions/upload-release-asset@v1.0.1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ steps.set_upload_url.outputs.upload_url }}
-        asset_path: ./${{ matrix.config.artifact }}
-        asset_name: ${{ matrix.config.artifact }}
+        upload_url: ${{ steps.set_upload_url.outputs.upload_url_tar }}
+        asset_path: ./${{ matrix.config.artifact_tar }}
+        asset_name: ${{ matrix.config.artifact_tar }}
         asset_content_type: application/x-gtar
+
+    - name: Upload zip to Release
+      id: upload_zip_to_release
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.set_upload_url.outputs.upload_url_zip }}
+        asset_path: ./${{ matrix.config.artifact_zip }}
+        asset_name: ${{ matrix.config.artifact_zip }}
+        asset_content_type: application/zip
