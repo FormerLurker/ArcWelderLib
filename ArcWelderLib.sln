@@ -15,6 +15,14 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ArcWelderInverseProcessor",
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ArcWelderTest", "ArcWelderTest\ArcWelderTest.vcxproj", "{18D7E538-6ACE-44E4-B83E-31C3E44D4227}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{4B744529-B248-475D-AE0D-0B5E1617837F}"
+	ProjectSection(SolutionItems) = preProject
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		CMakeLists.txt = CMakeLists.txt
+		sourcelist.cmake = sourcelist.cmake
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64

@@ -111,6 +111,10 @@ ipch/
 # Visual Studio Trace Files
 *.e2e
 
+# CMake Builds
+/Builds
+/out
+
 # TFS 2012 Local Workspace
 $tf/
 
