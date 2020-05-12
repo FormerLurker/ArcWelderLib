@@ -2,6 +2,9 @@ cmake_minimum_required (VERSION "3.16")
 # You can tweak some common (for all subprojects) stuff here. For example:
 project(Build C CXX)
 
+# Use C++ 11
+set (CMAKE_CXX_STANDARD 11)
+
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 set(CMAKE_DISABLE_SOURCE_CHANGES  ON)
 
@@ -15,6 +18,11 @@ set(CMAKE_COLOR_MAKEFILE   ON)
 # Remove 'lib' prefix for shared libraries on Windows
 if (WIN32)
   set(CMAKE_SHARED_LIBRARY_PREFIX "")
+endif ()
+
+# Fix behavior of CMAKE_CXX_STANDARD when targeting macOS.
+if (POLICY CMP0025)
+  cmake_policy(SET CMP0025 NEW)
 endif ()
 
 # add subdirectories to compile in order of inheritance
