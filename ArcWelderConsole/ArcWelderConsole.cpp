@@ -35,13 +35,16 @@ int main(int argc, char* argv[])
   std::string source_file_path;
   std::string target_file_path;
   double resolution_mm;
+  double resolution_mm_default = 0.05;
   bool g90_g91_influences_extruder;
-  bool hide_progress;
+    bool hide_progress;
   std::string log_level_string;
+  std::string log_level_string_default = "INFO";
   int log_level_value;
   std::string version = "0.1.0";
   std::string info = "Arc Welder: Anti-Stutter - Reduces the number of gcodes per second sent to a 3D printer that supports arc commands (G2 G3)\nCopyright(C) 2020 - Brad Hochgesang";
-  
+  std::stringstream arg_description_stream;
+  arg_description_stream << std::fixed << std::setprecision(2);
   // Extract arguments
   try {
     // Define the command line object
@@ -56,7 +59,8 @@ int main(int argc, char* argv[])
     TCLAP::UnlabeledValueArg<std::string> target_arg("target", "The target gcode file containing the converted code.", true, "", "path to target gcode file");
 
     // -r --resolution-mm
-    TCLAP::ValueArg<float> resolution_arg("r", "resolution-mm", "The resolution in mm of the of the output.  Determines the maximum tool path deviation allowed during conversion.", false, 0.05f, "float");
+    arg_description_stream << "The resolution in mm of the of the output.  Determines the maximum tool path deviation allowed during conversion. Default Value: " << resolution_mm_default;
+    TCLAP::ValueArg<double> resolution_arg("r", "resolution-mm", arg_description_stream.str(), false, resolution_mm_default, "float");
     
     // -g --g90-influences-extruder
     TCLAP::SwitchArg g90_arg("g", "g90-influences-extruder", "If supplied, G90/G91 influences the extruder axis.", false);
@@ -75,7 +79,10 @@ int main(int argc, char* argv[])
     log_levels_vector.push_back("CRITICAL");
     log_levels_vector.push_back("");
     TCLAP::ValuesConstraint<std::string> log_levels_constraint(log_levels_vector);
-    TCLAP::ValueArg<std::string> log_level_arg("l", "log-level", "Sets console log level.", false, "INFO", &log_levels_constraint);
+    arg_description_stream.clear();
+    arg_description_stream.str("");
+    arg_description_stream << "Sets console log level. Default Value: " << log_level_string_default; 
+    TCLAP::ValueArg<std::string> log_level_arg("l", "log-level", arg_description_stream.str(), false, log_level_string_default, &log_levels_constraint);
 
     // Add all arguments
     cmd.add(source_arg);
