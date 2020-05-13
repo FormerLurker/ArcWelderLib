@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
     log_levels_vector.push_back("CRITICAL");
     log_levels_vector.push_back("");
     TCLAP::ValuesConstraint<std::string> log_levels_constraint(log_levels_vector);
-    TCLAP::ValueArg<std::string> log_level_arg("l", "log-level", "Sets console log level.", false, "ERROR", &log_levels_constraint);
+    TCLAP::ValueArg<std::string> log_level_arg("l", "log-level", "Sets console log level.", false, "INFO", &log_levels_constraint);
 
     // Add all arguments
     cmd.add(source_arg);
@@ -136,8 +136,8 @@ int main(int argc, char* argv[])
   log_messages << "\tG90/G91 Influences Extruder : " << (g90_g91_influences_extruder ? "True" : "False") << "\n";
   log_messages << "\tLog Level                   : " << log_level_string << "\n";
   log_messages << "\tHide Progress Updates       : " << (hide_progress ? "True" : "False") << "\n";
-  std::cout << log_messages.str();
-  arc_welder* p_arc_welder = NULL;
+  p_logger->log(0, INFO, log_messages.str());
+    arc_welder* p_arc_welder = NULL;
   if (!hide_progress)
     p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, g90_g91_influences_extruder, 50, on_progress);
   else
