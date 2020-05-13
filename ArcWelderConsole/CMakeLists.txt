@@ -6,7 +6,7 @@ project(ArcWelderConsole C CXX)
 add_definitions(${GcodeProcessorLib_DEFINITIONS} ${ArcWelder_DEFINITIONS})
 
 # Include the GcodeProcessorLib and ArcWelder's directories
-include_directories(${GcodeProcessorLib_INCLUDE_DIRS} ${ArcWelder_INCLUDE_DIRS})
+include_directories(${GcodeProcessorLib_INCLUDE_DIRS} ${ArcWelder_INCLUDE_DIRS} ${TCLAP_INCLUDE_DIRS})
 
 # include sourcelist.cmake, which contains our source list and exposes it as the
 # ArcWelderConsoleSources variable
