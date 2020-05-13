@@ -63,14 +63,20 @@ struct arc_welder_progress {
 		std::stringstream stream;
 		stream << std::fixed << std::setprecision(2);
 		double compression_ratio = 0;
-		if (target_file_size > 0)
-			compression_ratio = (static_cast<float>(source_file_size) / static_cast<float>(target_file_size) * 100.0f);
+		double target_compression_percent = 0;
+
+		if (target_file_size > 0) {
+			compression_ratio = (static_cast<float>(source_file_size) / static_cast<float>(target_file_size));
+			target_compression_percent = (1.0 - (static_cast<float>(target_file_size) / static_cast<float>(source_file_size))) * 100.0f;
+		}
+			
 		stream << percent_complete << "% complete in " << seconds_elapsed << " seconds with " << seconds_remaining << " seconds remaining.";
 		stream << " Gcodes Processed: " << gcodes_processed;
 		stream << ", Current Line: " << lines_processed;
 		stream << ", Points Compressed: " << points_compressed;
 		stream << ", ArcsCreated: " << arcs_created;
-		stream << ", Compression: " << compression_ratio << "% ";
+		stream << ", Compression Ratio: " << compression_ratio;
+		stream << ", Size Reduction: " << target_compression_percent << "% ";
 		return stream.str();
 	}
 };

@@ -20,8 +20,8 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
-    <ProjectGuid>{F4910B67-FE16-40EA-9BD5-91017C569B0D}</ProjectGuid>
-    <RootNamespace>ArcWelderConsole</RootNamespace>
+    <ProjectGuid>{38302600-81A7-45BB-A199-3360D6594365}</ProjectGuid>
+    <RootNamespace>TCLAP</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -69,23 +69,19 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)\GcodeProcessorLib\;$(SolutionDir)\ArcWelder\;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)\TCLAP\</IncludePath>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)\GcodeProcessorLib\;$(SolutionDir)\ArcWelder\;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)\TCLAP\</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)\GcodeProcessorLib\;$(SolutionDir)\ArcWelder\;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)\TCLAP\</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)\GcodeProcessorLib\;$(SolutionDir)\ArcWelder\;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)\TCLAP\</IncludePath>
   </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
@@ -97,7 +93,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
@@ -142,27 +138,37 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ArcWelderConsole.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="ArcWelderConsole.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ArcWelder\ArcWelder.vcxproj">
-      <Project>{1a4dbab1-bb42-4db1-b168-f113784efcef}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\GcodeProcessorLib\GcodeProcessorLib.vcxproj">
-      <Project>{31478bae-104b-4cc3-9876-42fa90cbd5fe}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\TCLAP\TCLAP.vcxproj">
-      <Project>{38302600-81a7-45bb-a199-3360d6594365}</Project>
-    </ProjectReference>
+    <None Include="COPYING" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="sourcelist.cmake" />
+    <ClInclude Include="tclap\Arg.h" />
+    <ClInclude Include="tclap\ArgException.h" />
+    <ClInclude Include="tclap\ArgTraits.h" />
+    <ClInclude Include="tclap\CmdLine.h" />
+    <ClInclude Include="tclap\CmdLineInterface.h" />
+    <ClInclude Include="tclap\CmdLineOutput.h" />
+    <ClInclude Include="tclap\Constraint.h" />
+    <ClInclude Include="tclap\DocBookOutput.h" />
+    <ClInclude Include="tclap\HelpVisitor.h" />
+    <ClInclude Include="tclap\IgnoreRestVisitor.h" />
+    <ClInclude Include="tclap\MultiArg.h" />
+    <ClInclude Include="tclap\MultiSwitchArg.h" />
+    <ClInclude Include="tclap\OptionalUnlabeledTracker.h" />
+    <ClInclude Include="tclap\sstream.h" />
+    <ClInclude Include="tclap\StandardTraits.h" />
+    <ClInclude Include="tclap\StdOutput.h" />
+    <ClInclude Include="tclap\SwitchArg.h" />
+    <ClInclude Include="tclap\UnlabeledMultiArg.h" />
+    <ClInclude Include="tclap\UnlabeledValueArg.h" />
+    <ClInclude Include="tclap\ValueArg.h" />
+    <ClInclude Include="tclap\ValuesConstraint.h" />
+    <ClInclude Include="tclap\VersionVisitor.h" />
+    <ClInclude Include="tclap\Visitor.h" />
+    <ClInclude Include="tclap\XorHandler.h" />
+    <ClInclude Include="tclap\ZshCompletionOutput.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

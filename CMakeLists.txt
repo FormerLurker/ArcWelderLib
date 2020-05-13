@@ -28,6 +28,7 @@ if (POLICY CMP0025)
 endif ()
 
 # add subdirectories to compile in order of inheritance
+add_subdirectory(${CMAKE_SOURCE_DIR}/TCLAP)
 add_subdirectory(${CMAKE_SOURCE_DIR}/GcodeProcessorLib)
 add_subdirectory(${CMAKE_SOURCE_DIR}/ArcWelder)
 add_subdirectory(${CMAKE_SOURCE_DIR}/ArcWelderConsole)

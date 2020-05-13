@@ -18,4 +18,7 @@ add_executable(${PROJECT_NAME} ${ArcWelderConsoleSources})
 install(TARGETS ${PROJECT_NAME})
 
 # specify linking to the GcodeProcessorLib and ArcWelder libraries
-target_link_libraries(${PROJECT_NAME} GcodeProcessorLib ArcWelder)
+target_link_libraries(${PROJECT_NAME} GcodeProcessorLib ArcWelder TCLAP)
+
+
+
