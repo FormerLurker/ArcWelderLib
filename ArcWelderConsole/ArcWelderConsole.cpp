@@ -144,7 +144,8 @@ int main(int argc, char* argv[])
   log_messages << "\tLog Level                   : " << log_level_string << "\n";
   log_messages << "\tHide Progress Updates       : " << (hide_progress ? "True" : "False") << "\n";
   p_logger->log(0, INFO, log_messages.str());
-    arc_welder* p_arc_welder = NULL;
+  arc_welder* p_arc_welder = NULL;
+
   if (!hide_progress)
     p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, g90_g91_influences_extruder, 50, on_progress);
   else
