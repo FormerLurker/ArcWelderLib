@@ -142,8 +142,9 @@ void logger::log(const int logger_type, const int log_level, const std::string& 
 
 	// write the log
 	if (is_exception)
-		std::cerr << output << "\n";
+		std::cerr << output << std::endl;
 	else
-		std::cout << output << "\n";
+		std::cout << output << std::endl;
+	std::cout.flush();
 	
 }

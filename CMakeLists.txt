@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION "3.16")
+cmake_minimum_required (VERSION "3.13")
 # You can tweak some common (for all subprojects) stuff here. For example:
 project(Build C CXX)
 
@@ -9,6 +9,7 @@ set(CXX_STANDARD_REQUIRED)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 set(CMAKE_DISABLE_SOURCE_CHANGES  ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+option(USE_CXX_EXCEPTIONS "Enable C++ exception support" ON)
 
 if ("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
   message(SEND_ERROR "In-source builds are not allowed.")

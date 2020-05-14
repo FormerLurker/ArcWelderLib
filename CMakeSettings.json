@@ -1,0 +1,55 @@
+﻿{
+	"configurations": [
+		{
+			"name": "x64-Release",
+			"generator": "Ninja",
+			"configurationType": "RelWithDebInfo",
+			"buildRoot": "${projectDir}\\out\\build\\${name}",
+			"installRoot": "${projectDir}\\out\\install\\${name}",
+			"cmakeCommandArgs": "",
+			"buildCommandArgs": "-v",
+			"ctestCommandArgs": "",
+			"inheritEnvironments": [ "msvc_x64_x64" ],
+			"variables": []
+		},
+		{
+			"name": "x86-Release",
+			"generator": "Ninja",
+			"configurationType": "RelWithDebInfo",
+			"buildRoot": "${projectDir}\\out\\build\\${name}",
+			"installRoot": "${projectDir}\\out\\install\\${name}",
+			"cmakeCommandArgs": "",
+			"buildCommandArgs": "-v",
+			"ctestCommandArgs": "",
+			"inheritEnvironments": [ "msvc_x86" ],
+			"variables": []
+		},
+		{
+			"name": "Linux-GCC-Release",
+			"generator": "Unix Makefiles",
+			"configurationType": "Release",
+			"cmakeExecutable": "/usr/bin/cmake",
+			"remoteCopySourcesExclusionList": [ ".vs", ".git", "out" ],
+			"cmakeCommandArgs": "",
+			"buildCommandArgs": "",
+			"ctestCommandArgs": "",
+			"inheritEnvironments": [ "linux_arm" ],
+			"remoteMachineName": "${defaultRemoteMachineName}",
+			"remoteCMakeListsRoot": "$HOME/.vs/${projectDirName}/${workspaceHash}/src",
+			"remoteBuildRoot": "$HOME/.vs/${projectDirName}/${workspaceHash}/out/build/${name}",
+			"remoteInstallRoot": "$HOME/.vs/${projectDirName}/${workspaceHash}/out/install/${name}",
+			"remoteCopySources": true,
+			"rsyncCommandArgs": "-t --delete --delete-excluded",
+			"remoteCopyBuildOutput": false,
+			"remoteCopySourcesMethod": "rsync",
+			"addressSanitizerRuntimeFlags": "detect_leaks=0",
+			"variables": [
+				{
+					"name": "CMAKE_BUILD_TYPE",
+					"value": "RELEASE",
+					"type": "STRING"
+				}
+			]
+		}
+	]
+}

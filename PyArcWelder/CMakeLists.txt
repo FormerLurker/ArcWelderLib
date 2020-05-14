@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION "3.16")
+cmake_minimum_required (VERSION "3.13")
 
 project(PyArcWelder C CXX)
 
@@ -18,7 +18,13 @@ include(sourcelist.cmake)
 # Create our library
 add_library(${PROJECT_NAME} SHARED ${PyArcWelderSources})
 
-install(TARGETS ${PROJECT_NAME})
+
+install(
+    TARGETS ${PROJECT_NAME}
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib  # <-- Add this line
+    COMPONENT library
+)
 
 set_target_properties(
     ${PROJECT_NAME}

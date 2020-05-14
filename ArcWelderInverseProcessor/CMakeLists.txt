@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION "3.16")
+cmake_minimum_required (VERSION "3.13")
 
 project(ArcWelderInverseProcessor C CXX)
 
@@ -15,7 +15,11 @@ include(sourcelist.cmake)
 # Add an executable our ArcWelderConsoleSources variable from our sourcelist file
 add_executable(${PROJECT_NAME} ${ArcWelderInverseProcessorSources})
 
-install(TARGETS ${PROJECT_NAME})
+install(
+    TARGETS ${PROJECT_NAME}
+    DESTINATION bin
+)
+
 
 # specify linking to the GcodeProcessorLib and ArcWelder libraries
 target_link_libraries(${PROJECT_NAME} GcodeProcessorLib ArcWelder)

@@ -1,6 +1,8 @@
-cmake_minimum_required (VERSION "3.16")
+cmake_minimum_required (VERSION "3.13")
 
 project(ArcWelder C CXX)
+
+option(USE_CXX_EXCEPTIONS "Enable C++ exception support" ON)
 
 # add definitions from the GcodeProcessorLib project
 add_definitions(${GcodeProcessorLib_DEFINITIONS})
@@ -15,7 +17,12 @@ include(sourcelist.cmake)
 # Add a library using our ArcWelderSources variable from our sourcelist file
 add_library(${PROJECT_NAME} STATIC ${ArcWelderSources})
 
-install(TARGETS ${PROJECT_NAME})
+install(
+    TARGETS ${PROJECT_NAME}
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib  # <-- Add this line
+    COMPONENT library
+)
 
 # Link the GcodeProcessorLib
 target_link_libraries(${PROJECT_NAME} GcodeProcessorLib)

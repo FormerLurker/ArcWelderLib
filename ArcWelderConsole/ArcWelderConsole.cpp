@@ -163,7 +163,8 @@ int main(int argc, char* argv[])
 
 static bool on_progress(arc_welder_progress progress)
 {
-  std::cout << progress.str() << "\n";
+  std::cout << progress.str() << std::endl;
+  std::cout.flush();
   return true;
 }
 
