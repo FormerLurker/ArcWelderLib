@@ -241,7 +241,7 @@ static void TestAntiStutter(std::string filePath)
 	p_logger->set_log_level(INFO);
 	//arc_welder arc_welder_obj(BENCHY_0_5_MM_NO_WIPE, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50, static_cast<progress_callback>(on_progress));
 	//arc_welder arc_welder_obj(SIX_SPEED_TEST, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50, on_progress);
-	arc_welder arc_welder_obj(BENCHY_GYROID_RELATIVE_E_NOWIPE, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, max_radius_mm, false, 50, on_progress);
+	arc_welder arc_welder_obj(SUPER_HUGE_TEST, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, max_radius_mm, false, 50, on_progress);
 	//BENCHY_LAYER_1GCODE
 	//SMALL_TEST
 	//FACE_SHIELD
