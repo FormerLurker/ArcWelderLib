@@ -69,6 +69,12 @@ point segmented_arc::pop_back(double e_relative)
 
 bool segmented_arc::is_shape()
 {
+	if (is_shape_)
+	{
+		arc a;
+		bool is_arc = try_get_arc(a);
+		return is_arc;
+	}
 	return is_shape_;
 }
 
@@ -235,7 +241,8 @@ bool segmented_arc::does_circle_fit_points_(const circle& c)
 	}
 	
 	// get the current arc and compare the total length to the original length
-	return true;
+	arc a;
+	return try_get_arc_(c, a);
 	
 }
 
