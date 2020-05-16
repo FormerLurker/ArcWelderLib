@@ -230,7 +230,8 @@ static gcode_position_args get_5_extruder_position_args()
 
 static void TestAntiStutter(std::string filePath)
 {
-	double max_resolution = 0.05;
+	double max_resolution = DEFAULT_RESOLUTION_MM;
+	double max_radius_mm = DEFAULT_MAX_RADIUS_MM;
 	std::vector<std::string> logger_names;
 	logger_names.push_back("arc_welder.gcode_conversion");
 	std::vector<int> logger_levels;
@@ -240,7 +241,7 @@ static void TestAntiStutter(std::string filePath)
 	p_logger->set_log_level(INFO);
 	//arc_welder arc_welder_obj(BENCHY_0_5_MM_NO_WIPE, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50, static_cast<progress_callback>(on_progress));
 	//arc_welder arc_welder_obj(SIX_SPEED_TEST, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50, on_progress);
-	arc_welder arc_welder_obj(BENCHY_GYROID_ABSOLUTE_E_NOWIPE, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50, on_progress);
+	arc_welder arc_welder_obj(BENCHY_GYROID_RELATIVE_E_NOWIPE, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, max_radius_mm, false, 50, on_progress);
 	//BENCHY_LAYER_1GCODE
 	//SMALL_TEST
 	//FACE_SHIELD
@@ -257,6 +258,7 @@ static void TestAntiStutter(std::string filePath)
 	//ORCHID_POD
 	//DIFFICULT_CURVES
 	//ISSUE_PRICKLYPEAR_LAYER_0_114
+	//BARBARIAN
 	arc_welder_obj.process();
 	p_logger->log(0, INFO, "Processing Complete.");
 	delete p_logger;

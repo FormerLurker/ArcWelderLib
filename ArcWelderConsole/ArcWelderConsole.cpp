@@ -35,9 +35,9 @@ int main(int argc, char* argv[])
   std::string source_file_path;
   std::string target_file_path;
   double resolution_mm;
-  double resolution_mm_default = 0.05;
+  double max_radius_mm;
   bool g90_g91_influences_extruder;
-    bool hide_progress;
+  bool hide_progress;
   std::string log_level_string;
   std::string log_level_string_default = "INFO";
   int log_level_value;
@@ -59,8 +59,14 @@ int main(int argc, char* argv[])
     TCLAP::UnlabeledValueArg<std::string> target_arg("target", "The target gcode file containing the converted code.", true, "", "path to target gcode file");
 
     // -r --resolution-mm
-    arg_description_stream << "The resolution in mm of the of the output.  Determines the maximum tool path deviation allowed during conversion. Default Value: " << resolution_mm_default;
-    TCLAP::ValueArg<double> resolution_arg("r", "resolution-mm", arg_description_stream.str(), false, resolution_mm_default, "float");
+    arg_description_stream << "The resolution in mm of the of the output.  Determines the maximum tool path deviation allowed during conversion. Default Value: " << DEFAULT_RESOLUTION_MM;
+    TCLAP::ValueArg<double> resolution_arg("r", "resolution-mm", arg_description_stream.str(), false, DEFAULT_RESOLUTION_MM, "float");
+
+    // -m --max-radius-mm
+    arg_description_stream.clear();
+    arg_description_stream.str("");
+    arg_description_stream << "The maximum radius of any arc in mm. Default Value: " << DEFAULT_MAX_RADIUS_MM;
+    TCLAP::ValueArg<double> max_radius_arg("m", "max-radius-mm", arg_description_stream.str(), false, DEFAULT_MAX_RADIUS_MM, "float");
     
     // -g --g90-influences-extruder
     TCLAP::SwitchArg g90_arg("g", "g90-influences-extruder", "If supplied, G90/G91 influences the extruder axis.", false);
@@ -88,6 +94,7 @@ int main(int argc, char* argv[])
     cmd.add(source_arg);
     cmd.add(target_arg);
     cmd.add(resolution_arg);
+    cmd.add(max_radius_arg);
     cmd.add(g90_arg);
     cmd.add(hide_progress_arg);
     cmd.add(log_level_arg);
@@ -99,6 +106,7 @@ int main(int argc, char* argv[])
     source_file_path = source_arg.getValue();
     target_file_path = target_arg.getValue();
     resolution_mm = resolution_arg.getValue();
+    max_radius_mm = max_radius_arg.getValue();
     g90_g91_influences_extruder = g90_arg.getValue();
     hide_progress = hide_progress_arg.getValue();
     log_level_string = log_level_arg.getValue();
@@ -140,6 +148,7 @@ int main(int argc, char* argv[])
   log_messages << "\tSource File Path            : " << source_file_path << "\n";
   log_messages << "\tTarget File File            : " << target_file_path << "\n";
   log_messages << "\tResolution in MM            : " << resolution_mm << "\n";
+  log_messages << "\tMaximum Arc Radius in MM    : " << max_radius_mm << "\n";
   log_messages << "\tG90/G91 Influences Extruder : " << (g90_g91_influences_extruder ? "True" : "False") << "\n";
   log_messages << "\tLog Level                   : " << log_level_string << "\n";
   log_messages << "\tHide Progress Updates       : " << (hide_progress ? "True" : "False") << "\n";
@@ -147,9 +156,9 @@ int main(int argc, char* argv[])
   arc_welder* p_arc_welder = NULL;
 
   if (!hide_progress)
-    p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, g90_g91_influences_extruder, 50, on_progress);
+    p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, max_radius_mm, g90_g91_influences_extruder, 50, on_progress);
   else
-    p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, g90_g91_influences_extruder, 50);
+    p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, max_radius_mm, g90_g91_influences_extruder, 50);
 
   p_arc_welder->process();
 

@@ -35,11 +35,11 @@
 typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
 typedef signed char int8_t;
-#define M_PI       3.14159265358979323846f   // pi
+#define M_PI       3.14159265358979323846   // pi
 enum AxisEnum { X_AXIS = 0, Y_AXIS= 1, Z_AXIS = 2, E_AXIS = 3, X_HEAD = 4, Y_HEAD = 5 };
 // Arc interpretation settings:
-#define DEFAULT_MM_PER_ARC_SEGMENT 100.0f // REQUIRED - The enforced maximum length of an arc segment
-#define DEFAULT_MIN_MM_PER_ARC_SEGMENT 0.2f /* OPTIONAL - the enforced minimum length of an interpolated segment.  Must be smaller than
+#define DEFAULT_MM_PER_ARC_SEGMENT 100.0 // REQUIRED - The enforced maximum length of an arc segment
+#define DEFAULT_MIN_MM_PER_ARC_SEGMENT 0.2 /* OPTIONAL - the enforced minimum length of an interpolated segment.  Must be smaller than
 	MM_PER_ARC_SEGMENT.  Only has an effect if MIN_ARC_SEGMENTS > 0 or ARC_SEGMENTS_PER_SEC > 0 */
 	// If both MIN_ARC_SEGMENTS and ARC_SEGMENTS_PER_SEC is defined, the minimum calculated segment length is used.
 #define DEFAULT_MIN_ARC_SEGMENTS 10 // OPTIONAL - The enforced minimum segments in a full circle of the same radius.
