@@ -45,6 +45,7 @@ static gcode_position_args get_5_shared_extruder_position_args();
 static gcode_position_args get_5_extruder_position_args();
 static void TestAntiStutter(std::string filePath);
 static bool on_progress(arc_welder_progress progress);
+static void TestDoubleToString();
 
 
 static std::string ANTI_STUTTER_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\5x5_cylinder_2000Fn_0.2mm_PLA_MK2.5MMU2_4m.gcode";
@@ -65,7 +66,10 @@ static std::string SMALL_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStut
 static std::string SUPER_HUGE_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\super_huge_file.gcode";
 static std::string TORTURE_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\stereographic_projection_0.2mm_PLA_MK2.5MMU2_2h49m.gcode";
 static std::string ORCHID_POD = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\Pla_OrchidPot.gcode";
-static std::string ARC_GYROID_BENCHY_DIFFICULT = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\AS_BenchyArc_Difficult.gcode";
+static std::string BENCHY_DIFFICULT = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\BenchyArc_Difficult.gcode";
+static std::string BENCHY_L1_DIFFICULT = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\BenchyArc_L1_Difficult.gcode";
+
+
 static std::string SIX_SPEED_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\6_speed_test.gcode";
 // Issues
 static std::string ISSUE_MIMUPREFERIDA = "C:\\Users\\Brad\\Documents\\AntiStutter\\Issues\\MIMUPREFERIDA\\TESTSTUTTER.gcode";

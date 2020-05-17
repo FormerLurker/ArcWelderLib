@@ -24,6 +24,7 @@
 #include "ArcWelderTest.h"
 #include "logger.h"
 #include <iostream>
+#include "utilities.h"
 
 int main(int argc, char* argv[])
 {
@@ -51,6 +52,7 @@ int run_tests(int argc, char* argv[])
 	{
 		std::cout << "Processing test run " << index + 1 << " of " << num_runs << ".\r\n";
 		TestAntiStutter(ANTI_STUTTER_TEST);
+		//TestDoubleToString();
 		//TestInverseProcessor();
 		//TestCircularBuffer();
 		//TestSegmentedLine();
@@ -241,7 +243,7 @@ static void TestAntiStutter(std::string filePath)
 	p_logger->set_log_level(INFO);
 	//arc_welder arc_welder_obj(BENCHY_0_5_MM_NO_WIPE, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50, static_cast<progress_callback>(on_progress));
 	//arc_welder arc_welder_obj(SIX_SPEED_TEST, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50, on_progress);
-	arc_welder arc_welder_obj(BARBARIAN, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, max_radius_mm, false, 50, on_progress);
+	arc_welder arc_welder_obj(BENCHY_DIFFICULT, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, max_radius_mm, false, 50, on_progress);
 	//BENCHY_LAYER_1GCODE
 	//SMALL_TEST
 	//FACE_SHIELD
@@ -259,6 +261,7 @@ static void TestAntiStutter(std::string filePath)
 	//DIFFICULT_CURVES
 	//ISSUE_PRICKLYPEAR_LAYER_0_114
 	//BARBARIAN
+	// Benchy_L1_Difficult
 	arc_welder_obj.process();
 	p_logger->log(0, INFO, "Processing Complete.");
 	delete p_logger;
@@ -268,4 +271,20 @@ static bool on_progress(arc_welder_progress progress)
 {
 	std::cout << progress.str() << "\r\n";
 	return true;
+}
+
+void TestDoubleToString()
+{
+	char buffer[100];
+
+	
+	for (int index = 0; index < 1000; index++)
+	{
+		double r = (double)rand() / RAND_MAX;
+		r = -1000000.0 + r * (1000000.0 - -1000000.0);
+		std::cout << std::fixed << std::setprecision(10) << "Number: " << r << std::endl;
+		utilities::to_string(r, 5, buffer);
+		std::cout << buffer << std::endl;
+	}
+	
 }
