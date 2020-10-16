@@ -112,7 +112,7 @@ int main(int argc, char* argv[])
     log_level_string = log_level_arg.getValue();
 
     log_level_value = -1;
-    for (unsigned int log_name_index = 0; log_name_index < log_level_names.size(); log_name_index++)
+    for (unsigned int log_name_index = 0; log_name_index < log_level_names_size; log_name_index++)
     {
       if (log_level_string == log_level_names[log_name_index])
       {

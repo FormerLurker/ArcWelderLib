@@ -104,14 +104,25 @@ gcode_parser::~gcode_parser()
 
 parsed_command gcode_parser::parse_gcode(const char * gcode)
 {
-
 	parsed_command p_cmd;
-	try_parse_gcode(gcode, p_cmd);
+	try_parse_gcode(gcode, p_cmd, true);
 	return p_cmd;
 }
 
+parsed_command gcode_parser::parse_gcode(const char* gcode, bool preserve_format)
+{
+	parsed_command p_cmd;
+	try_parse_gcode(gcode, p_cmd, preserve_format);
+	return p_cmd;
+}
+
+
+bool gcode_parser::try_parse_gcode(const char* gcode, parsed_command& command)
+{
+	  return try_parse_gcode(gcode, command, true)	 ;
+}
 // Superfast gcode parser - v2
-bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command & command)
+bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command & command, bool preserve_format)
 {
 	// Create a command
 	char * p_gcode = const_cast<char *>(gcode);
@@ -130,6 +141,9 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command & command)
 				command.is_empty = false;
 				break;
 			}
+			else if (preserve_format) {
+				command.gcode.push_back(c);
+			}
 			p_gcode++;
 		}
 		command.command = "";
@@ -138,6 +152,9 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command & command)
 		command.is_empty = false;
 
 	bool has_seen_character = false;
+
+	bool is_text_only_parameter = text_only_functions_.find(command.command) != text_only_functions_.end();
+
 	while (true)
 	{
 		char cur_char = *p_gcode;
@@ -145,23 +162,25 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command & command)
 			break;
 		else if (cur_char > 32 || (cur_char == ' ' && has_seen_character))
 		{
-			if (cur_char >= 'a' && cur_char <= 'z')
+			if (!preserve_format && !is_text_only_parameter && (cur_char >= 'a' && cur_char <= 'z'))
 				command.gcode.push_back(cur_char - 32);
 			else
 				command.gcode.push_back(cur_char);
 			has_seen_character = true;
 		}
+		else if (preserve_format)
+		{
+			command.gcode.push_back(cur_char);
+		}
 		p_gcode++;
 	}
-	command.gcode = utilities::rtrim(command.gcode);
+	if (!preserve_format){
+		command.gcode = utilities::rtrim(command.gcode);
+	}
 
-	if (command.is_known_command)
+	if (command.is_known_command && parsable_commands_.find(command.command) != parsable_commands_.end())
 	{
 
-		if (parsable_commands_.find(command.command) == parsable_commands_.end())
-		{
-			return true;
-		}
 		if (command.command.length() > 0 && command.command == "@OCTOLAPSE")
 		{
 			
@@ -188,7 +207,7 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command & command)
 
 		}
 		else if (
-			text_only_functions_.find(command.command) != text_only_functions_.end() ||
+			is_text_only_parameter ||
 			(
 				command.command.length() > 0 && command.command[0] == '@'
 			)
@@ -232,6 +251,7 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command & command)
 			}
 		}
 	}
+		
 	try_extract_comment(&p_gcode, &(command.comment));
 		
 

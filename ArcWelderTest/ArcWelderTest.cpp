@@ -52,6 +52,7 @@ int run_tests(int argc, char* argv[])
 	{
 		std::cout << "Processing test run " << index + 1 << " of " << num_runs << ".\r\n";
 		TestAntiStutter(ANTI_STUTTER_TEST);
+		//TestParsingCase();
 		//TestDoubleToString();
 		//TestInverseProcessor();
 		//TestCircularBuffer();
@@ -240,10 +241,10 @@ static void TestAntiStutter(std::string filePath)
 	//logger_levels.push_back(log_levels::DEBUG);
 	logger_levels.push_back(log_levels::INFO);
 	logger* p_logger = new logger(logger_names, logger_levels);
-	p_logger->set_log_level(INFO);
+	p_logger->set_log_level(VERBOSE);
 	//arc_welder arc_welder_obj(BENCHY_0_5_MM_NO_WIPE, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50, static_cast<progress_callback>(on_progress));
 	//arc_welder arc_welder_obj(SIX_SPEED_TEST, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50, on_progress);
-	arc_welder arc_welder_obj(BENCHY_DIFFICULT, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, max_radius_mm, false, 50, on_progress);
+	arc_welder arc_welder_obj(BENCHY_L1_DIFFICULT, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, max_radius_mm, false, 50, on_progress);
 	//BENCHY_LAYER_1GCODE
 	//SMALL_TEST
 	//FACE_SHIELD
@@ -261,8 +262,9 @@ static void TestAntiStutter(std::string filePath)
 	//DIFFICULT_CURVES
 	//ISSUE_PRICKLYPEAR_LAYER_0_114
 	//BARBARIAN
-	// Benchy_L1_Difficult
-	arc_welder_obj.process();
+	// BENCHY_L1_DIFFICULT
+	arc_welder_results results = arc_welder_obj.process();
+	p_logger->log(0, INFO, results.progress.detail_str());
 	p_logger->log(0, INFO, "Processing Complete.");
 	delete p_logger;
 }
@@ -287,4 +289,15 @@ void TestDoubleToString()
 		std::cout << buffer << std::endl;
 	}
 	
+}
+
+static void TestParsingCase()
+{
+	gcode_parser parser;
+	//parsed_command command = parser.parse_gcode("  G0 X1 y2 ; test", true);
+	parsed_command command2 = parser.parse_gcode(" M73 P0 R93", true);
+	//parsed_command command2 = parser.parse_gcode("M204 P2000 R1500 T2000 ; sets acceleration (P, T) and retract acceleration (R), mm/sec^2", true);
+	parsed_command command3 = parser.parse_gcode("G0 X1 y2; test", true);
+	
+
 }

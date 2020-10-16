@@ -46,6 +46,7 @@ static gcode_position_args get_5_extruder_position_args();
 static void TestAntiStutter(std::string filePath);
 static bool on_progress(arc_welder_progress progress);
 static void TestDoubleToString();
+static void TestParsingCase();
 
 
 static std::string ANTI_STUTTER_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\5x5_cylinder_2000Fn_0.2mm_PLA_MK2.5MMU2_4m.gcode";

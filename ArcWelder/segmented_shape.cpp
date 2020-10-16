@@ -227,18 +227,18 @@ point circle::get_closest_point(const point& p) const
 #pragma region Arc Functions
 bool arc::try_create_arc(const circle& c, const point& start_point, const point& mid_point, const point& end_point, double approximate_length, double resolution, arc& target_arc)
 {
-	point p1 = c.get_closest_point(start_point);
-	point p2 = c.get_closest_point(mid_point);
-	point p3 = c.get_closest_point(end_point);
+	//point p1 = c.get_closest_point(start_point);
+	//point p2 = c.get_closest_point(mid_point);
+	//point p3 = c.get_closest_point(end_point);
 	/*// Get the radians between p1 and p2 (short angle)
 	double p1_p2_rad = c.get_radians(p1, p2);
 	double p2_p3_rad = c.get_radians(p2, p3);
 	double p3_p1_rad = c.get_radians(p3, p1);
 	*/
 
-	double polar_start_theta = c.get_polar_radians(p1);
-	double polar_mid_theta = c.get_polar_radians(p2);
-	double polar_end_theta = c.get_polar_radians(p3);
+	double polar_start_theta = c.get_polar_radians(start_point);
+	double polar_mid_theta = c.get_polar_radians(mid_point);
+	double polar_end_theta = c.get_polar_radians(end_point);
 	
 	// variable to hold radians
 	double angle_radians = 0;
@@ -306,11 +306,7 @@ bool arc::try_create_arc(const circle& c, const array_list<point>& points, doubl
 }
 #pragma endregion
 
-segmented_shape::segmented_shape() : segmented_shape(DEFAULT_MIN_SEGMENTS, DEFAULT_MAX_SEGMENTS, DEFAULT_RESOLUTION_MM )
-{
-}
-
-segmented_shape::segmented_shape(int min_segments, int max_segments, double resolution_mm) : points_(max_segments)
+segmented_shape::segmented_shape(int min_segments = DEFAULT_MIN_SEGMENTS, int max_segments = DEFAULT_MAX_SEGMENTS, double resolution_mm = DEFAULT_RESOLUTION_MM) : points_(max_segments)
 {
 	
 	max_segments_ = max_segments;

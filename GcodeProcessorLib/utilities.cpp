@@ -23,6 +23,7 @@
 #include <cmath>
 #include <sstream>
 #include <iostream>
+#include <iomanip>
 
 // Had to increase the zero tolerance because prusa slicer doesn't always retract enough while wiping.
 const double ZERO_TOLERANCE = 0.000005;
@@ -117,6 +118,13 @@ double utilities::get_cartesian_distance(double x1, double y1, double z1, double
 }
 
 std::string utilities::to_string(double value)
+{
+	std::ostringstream os;
+	os << value;
+	return os.str();
+}
+
+std::string utilities::to_string(int value)
 {
 	std::ostringstream os;
 	os << value;
@@ -218,4 +226,61 @@ std::istream& utilities::safe_get_line(std::istream& is, std::string& t)
 			t += static_cast<char>(c);
 		}
 	}
+}
+
+std::string utilities::center(std::string input, int width) 
+{
+	int input_width = input.length();
+	int difference = width - input_width;
+	if (difference < 1)
+	{
+		return input;
+	}
+	int left_padding = difference /2;
+	int right_padding = width - left_padding - input_width;
+	return std::string(left_padding, ' ') + input + std::string(right_padding, ' ');
+}
+
+std::string utilities::get_percent_change_string(int v1, int v2, int precision)
+{
+	std::stringstream format_stream;
+	format_stream.str(std::string());
+	std::string percent_change_string;
+	if (v1 == 0)
+	{
+		if (v2 > 0)
+		{
+			format_stream << "INF";
+		}
+		else
+		{
+			format_stream << std::fixed << std::setprecision(1) << 0.0 << "%";
+		}
+	}
+	else
+	{
+		double percent_change = (((double)v2 - (double)v1) / (double)v1) * 100.0;
+		format_stream << std::fixed << std::setprecision(precision) << percent_change << "%";
+	}
+	return format_stream.str();
+}
+
+int utilities::get_num_digits(int x)
+{
+	x = abs(x);
+	return (x < 10 ? 1 :
+		(x < 100 ? 2 :
+			(x < 1000 ? 3 :
+				(x < 10000 ? 4 :
+					(x < 100000 ? 5 :
+						(x < 1000000 ? 6 :
+							(x < 10000000 ? 7 :
+								(x < 100000000 ? 8 :
+									(x < 1000000000 ? 9 :
+										10)))))))));
+}
+
+int utilities::get_num_digits(double x)
+{
+	return get_num_digits((int) x);
 }
