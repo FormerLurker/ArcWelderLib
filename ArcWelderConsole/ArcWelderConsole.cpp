@@ -22,6 +22,9 @@
 // You can contact the author at the following email address: 
 // FormerLurker@pm.me
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#if _MSC_VER > 1200
+#define _CRT_SECURE_NO_DEPRECATE
+#endif
 #include "ArcWelderConsole.h"
 #include <cstring>
 #include <iostream>
@@ -38,6 +41,7 @@ int main(int argc, char* argv[])
   double max_radius_mm;
   bool g90_g91_influences_extruder;
   bool hide_progress;
+  bool overwrite_source_file = false;
   std::string log_level_string;
   std::string log_level_string_default = "INFO";
   int log_level_value;
@@ -112,6 +116,7 @@ int main(int argc, char* argv[])
     log_level_string = log_level_arg.getValue();
 
     log_level_value = -1;
+
     for (unsigned int log_name_index = 0; log_name_index < log_level_names_size; log_name_index++)
     {
       if (log_level_string == log_level_names[log_name_index])
@@ -144,6 +149,15 @@ int main(int argc, char* argv[])
   p_logger->set_log_level_by_value(log_level_value);
 
   std::stringstream log_messages;
+  if (source_file_path == target_file_path)
+  {
+    overwrite_source_file = true;
+    target_file_path = std::tmpnam(NULL);
+    log_messages << "Source and target path are the same.  The source file will be overwritten.  Temporary file path: " << target_file_path << std::endl;
+    p_logger->log(0, INFO, log_messages.str());
+    log_messages.clear();
+    log_messages.str("");
+  }
   log_messages << "Processing Gcode\n";
   log_messages << "\tSource File Path            : " << source_file_path << "\n";
   log_messages << "\tTarget File File            : " << target_file_path << "\n";
@@ -160,14 +174,34 @@ int main(int argc, char* argv[])
   else
     p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, max_radius_mm, g90_g91_influences_extruder, 50);
 
-  p_arc_welder->process();
+  arc_welder_results results = p_arc_welder->process();
+  if (results.success)
+  {
+    log_messages.clear();
+    log_messages.str("");
+    log_messages << "Target file at '" << target_file_path << "' created.";
+
+    if (overwrite_source_file)
+    {
+      log_messages.clear();
+      log_messages.str("");
+      log_messages << "Overwriting source file at '" << source_file_path << "'.";
+      p_logger->log(0, INFO, log_messages.str());
+      log_messages.clear();
+      log_messages.str("");
+      std::ifstream  src(target_file_path, std::ios::binary);
+      std::ofstream  dst(source_file_path, std::ios::binary);
+      dst << src.rdbuf();
+      src.close();
+      dst.close();
+      log_messages << "Deleting temporary file at '" << target_file_path << "'.";
+      p_logger->log(0, INFO, log_messages.str());
+      std::remove(target_file_path.c_str());
+
+    }
+  }                       
 
   delete p_arc_welder;
-  log_messages.clear();
-  log_messages.str("");
-  log_messages << "Target file at '" << target_file_path << "' created.  Exiting.";
-  p_logger->log(0, INFO, log_messages.str());
-
   return 0;
 }
 
