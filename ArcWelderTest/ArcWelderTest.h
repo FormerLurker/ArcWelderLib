@@ -44,7 +44,7 @@ static gcode_position_args get_single_extruder_position_args();
 static gcode_position_args get_5_shared_extruder_position_args();
 static gcode_position_args get_5_extruder_position_args();
 static void TestAntiStutter(std::string filePath);
-static bool on_progress(arc_welder_progress progress);
+static bool on_progress(arc_welder_progress progress, logger* p_logger, int logger_type);
 static void TestDoubleToString();
 static void TestParsingCase();
 

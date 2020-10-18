@@ -269,9 +269,9 @@ static void TestAntiStutter(std::string filePath)
 	delete p_logger;
 }
 
-static bool on_progress(arc_welder_progress progress)
+static bool on_progress(arc_welder_progress progress, logger * p_logger, int logger_type)
 {
-	std::cout << progress.str() << "\r\n";
+	p_logger->log(logger_type, INFO, progress.str());
 	return true;
 }
 

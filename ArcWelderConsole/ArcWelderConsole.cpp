@@ -152,8 +152,17 @@ int main(int argc, char* argv[])
   if (source_file_path == target_file_path)
   {
     overwrite_source_file = true;
-    target_file_path = std::tmpnam(NULL);
-    log_messages << "Source and target path are the same.  The source file will be overwritten.  Temporary file path: " << target_file_path << std::endl;
+    if (!utilities::get_temp_file_path_for_file(source_file_path, target_file_path));
+    {
+      log_messages << "The source and target path are the same, but a temporary file path could not be created.  Is the path empty?";
+      p_logger->log(0, INFO, log_messages.str());
+      log_messages.clear();
+      log_messages.str("");
+    }
+
+    // create a uuid with a tmp extension for the temporary file
+
+    log_messages << "Source and target path are the same.  The source file will be overwritten.  Temporary file path: " << target_file_path;
     p_logger->log(0, INFO, log_messages.str());
     log_messages.clear();
     log_messages.str("");
@@ -165,12 +174,12 @@ int main(int argc, char* argv[])
   log_messages << "\tMaximum Arc Radius in MM    : " << max_radius_mm << "\n";
   log_messages << "\tG90/G91 Influences Extruder : " << (g90_g91_influences_extruder ? "True" : "False") << "\n";
   log_messages << "\tLog Level                   : " << log_level_string << "\n";
-  log_messages << "\tHide Progress Updates       : " << (hide_progress ? "True" : "False") << "\n";
+  log_messages << "\tHide Progress Updates       : " << (hide_progress ? "True" : "False");
   p_logger->log(0, INFO, log_messages.str());
   arc_welder* p_arc_welder = NULL;
 
   if (!hide_progress)
-    p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, max_radius_mm, g90_g91_influences_extruder, 50, on_progress);
+    p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, max_radius_mm, g90_g91_influences_extruder, 50);
   else
     p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, max_radius_mm, g90_g91_influences_extruder, 50);
 
@@ -185,21 +194,32 @@ int main(int argc, char* argv[])
     {
       log_messages.clear();
       log_messages.str("");
-      log_messages << "Overwriting source file at '" << source_file_path << "'.";
+      log_messages << "Deleting the source file at '" << source_file_path << "'.";
       p_logger->log(0, INFO, log_messages.str());
       log_messages.clear();
       log_messages.str("");
-      std::ifstream  src(target_file_path, std::ios::binary);
-      std::ofstream  dst(source_file_path, std::ios::binary);
-      dst << src.rdbuf();
-      src.close();
-      dst.close();
-      log_messages << "Deleting temporary file at '" << target_file_path << "'.";
+      std::remove(source_file_path.c_str());
+      log_messages << "Renaming temporary file at '" << target_file_path << "' to '" << source_file_path <<"'.";
       p_logger->log(0, INFO, log_messages.str());
-      std::remove(target_file_path.c_str());
-
+      std::rename(target_file_path.c_str(), source_file_path.c_str());
     }
-  }                       
+    log_messages.clear();
+    log_messages.str("");
+    log_messages << std::endl << results.progress.segment_statistics.str();
+    p_logger->log(0, INFO, log_messages.str() );
+    
+    log_messages.clear();
+    log_messages.str("");
+    log_messages << "Arc Welder process completed successfully.";
+    p_logger->log(0, INFO, log_messages.str());
+  }
+  else
+  {
+    log_messages.clear();
+    log_messages.str("");
+    log_messages << "File processing failed.";
+    p_logger->log(0, INFO, log_messages.str());
+  }
 
   delete p_arc_welder;
   return 0;
