@@ -152,7 +152,7 @@ int main(int argc, char* argv[])
   if (source_file_path == target_file_path)
   {
     overwrite_source_file = true;
-    if (!utilities::get_temp_file_path_for_file(source_file_path, target_file_path));
+    if (!utilities::get_temp_file_path_for_file(source_file_path, target_file_path))
     {
       log_messages << "The source and target path are the same, but a temporary file path could not be created.  Is the path empty?";
       p_logger->log(0, INFO, log_messages.str());
