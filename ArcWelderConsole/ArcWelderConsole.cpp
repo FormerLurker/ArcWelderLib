@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
     TCLAP::UnlabeledValueArg<std::string> source_arg("source", "The source gcode file to convert.", true, "", "path to source gcode file");
 
     // <TARGET>
-    TCLAP::UnlabeledValueArg<std::string> target_arg("target", "The target gcode file containing the converted code.", true, "", "path to target gcode file");
+    TCLAP::UnlabeledValueArg<std::string> target_arg("target", "The target gcode file containing the converted code.  If this is not supplied, the source path will be used and the source file will be overwritten.", false, "", "path to target gcode file");
 
     // -r --resolution-mm
     arg_description_stream << "The resolution in mm of the of the output.  Determines the maximum tool path deviation allowed during conversion. Default Value: " << DEFAULT_RESOLUTION_MM;
@@ -109,6 +109,12 @@ int main(int argc, char* argv[])
     // Get the value parsed by each arg. 
     source_file_path = source_arg.getValue();
     target_file_path = target_arg.getValue();
+
+    if (target_file_path.size() == 0)
+    {
+      target_file_path = source_file_path;
+    }
+
     resolution_mm = resolution_arg.getValue();
     max_radius_mm = max_radius_arg.getValue();
     g90_g91_influences_extruder = g90_arg.getValue();
