@@ -1,5 +1,5 @@
 all:
-	g++ -c -I../GCodeProcessorLib *.cpp
+	g++ -c -I../GcodeProcessorLib *.cpp
 
 
 clean:
