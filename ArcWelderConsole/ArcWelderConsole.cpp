@@ -290,7 +290,7 @@ int main(int argc, char* argv[])
   return 0;
 }
 
-static bool on_progress(arc_welder_progress progress, logger* p_logger, int logger_type)
+bool on_progress(arc_welder_progress progress, logger* p_logger, int logger_type)
 {
   std::cout << "Progress: "<< progress.str() << std::endl;
   std::cout.flush();
