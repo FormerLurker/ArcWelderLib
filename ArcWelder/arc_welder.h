@@ -344,13 +344,13 @@ struct arc_welder_progress {
 		std::stringstream stream;
 		stream << std::fixed << std::setprecision(2);
 
-		stream << percent_complete << "% complete in " << seconds_elapsed << " seconds with " << seconds_remaining << " seconds remaining.";
-		stream << " Gcodes Processed: " << gcodes_processed;
-		stream << ", Current Line: " << lines_processed;
-		stream << ", Points Compressed: " << points_compressed;
-		stream << ", ArcsCreated: " << arcs_created;
-		stream << ", Compression Ratio: " << compression_ratio;
-		stream << ", Size Reduction: " << compression_percent << "% ";
+		stream << " percent_complete:" << percent_complete << ", seconds_elapsed:" << seconds_elapsed << ", seconds_remaining:" << seconds_remaining;
+		stream << ", gcodes_processed: " << gcodes_processed;
+		stream << ", current_file_line: " << lines_processed;
+		stream << ", points_compressed: " << points_compressed;
+		stream << ", arcs_created: " << arcs_created;
+		stream << ", compression_ratio: " << compression_ratio;
+		stream << ", size_reduction: " << compression_percent << "% ";
 		return stream.str();
 	}
 	std::string detail_str() const {
@@ -375,11 +375,21 @@ struct arc_welder_results {
 	std::string message;
 	arc_welder_progress progress;
 };
+#define DEFAULT_GCODE_BUFFER_SIZE 100
 
 class arc_welder
 {
 public:
-	arc_welder(std::string source_path, std::string target_path, logger* log, double resolution_mm, double max_radius, bool g90_g91_influences_extruder, int buffer_size, progress_callback callback = NULL);
+	arc_welder(
+		std::string source_path,
+		std::string target_path,
+		logger* log,
+		double resolution_mm,
+		double path_tolerance_percent,
+		double max_radius,
+		bool g90_g91_influences_extruder,
+		int buffer_size = DEFAULT_GCODE_BUFFER_SIZE,
+		progress_callback callback = NULL);
 	void set_logger_type(int logger_type);
 	virtual ~arc_welder();
 	arc_welder_results process();
@@ -402,7 +412,6 @@ private:
 	std::string source_path_;
 	std::string target_path_;
 	double resolution_mm_;
-	double max_segments_;
 	gcode_position_args gcode_position_args_;
 	long file_size_;
 	int lines_processed_;

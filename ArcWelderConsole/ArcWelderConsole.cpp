@@ -32,6 +32,7 @@
 #include <iomanip>
 #include "gcode_position.h"
 #include <tclap/CmdLine.h>
+#define DEFAULT_ARG_DOUBLE_PRECISION 4
 
 int main(int argc, char* argv[])
 {
@@ -39,6 +40,7 @@ int main(int argc, char* argv[])
   std::string target_file_path;
   double resolution_mm;
   double max_radius_mm;
+  double path_tolerance_percent;
   bool g90_g91_influences_extruder;
   bool hide_progress;
   bool overwrite_source_file = false;
@@ -48,7 +50,7 @@ int main(int argc, char* argv[])
   std::string version = "0.1.0";
   std::string info = "Arc Welder: Anti-Stutter - Reduces the number of gcodes per second sent to a 3D printer that supports arc commands (G2 G3)\nCopyright(C) 2020 - Brad Hochgesang";
   std::stringstream arg_description_stream;
-  arg_description_stream << std::fixed << std::setprecision(2);
+  arg_description_stream << std::fixed << std::setprecision(5);
   // Extract arguments
   try {
     // Define the command line object
@@ -65,6 +67,10 @@ int main(int argc, char* argv[])
     // -r --resolution-mm
     arg_description_stream << "The resolution in mm of the of the output.  Determines the maximum tool path deviation allowed during conversion. Default Value: " << DEFAULT_RESOLUTION_MM;
     TCLAP::ValueArg<double> resolution_arg("r", "resolution-mm", arg_description_stream.str(), false, DEFAULT_RESOLUTION_MM, "float");
+
+    // -t --path-tolerance-percent
+    arg_description_stream << "This is the maximum allowable difference between the arc path and the original toolpath.  Expressed as a decimal percent, where 0.01 = 1%. Default Value: " << ARC_LENGTH_PERCENT_TOLERANCE_DEFAULT;
+    TCLAP::ValueArg<double> path_tolerance_percent_arg("t", "path-tolerance-percent", arg_description_stream.str(), false, DEFAULT_RESOLUTION_MM, "float");
 
     // -m --max-radius-mm
     arg_description_stream.clear();
@@ -98,6 +104,7 @@ int main(int argc, char* argv[])
     cmd.add(source_arg);
     cmd.add(target_arg);
     cmd.add(resolution_arg);
+    cmd.add(path_tolerance_percent_arg);
     cmd.add(max_radius_arg);
     cmd.add(g90_arg);
     cmd.add(hide_progress_arg);
@@ -117,11 +124,47 @@ int main(int argc, char* argv[])
 
     resolution_mm = resolution_arg.getValue();
     max_radius_mm = max_radius_arg.getValue();
+    path_tolerance_percent = path_tolerance_percent_arg.getValue();
     g90_g91_influences_extruder = g90_arg.getValue();
     hide_progress = hide_progress_arg.getValue();
     log_level_string = log_level_arg.getValue();
-
     log_level_value = -1;
+
+    // Check the entered values
+    bool has_error = false;
+    if (resolution_mm <= 0)
+    {
+      std::cerr << "error: The provided resolution of " << resolution_mm << " is negative, which is not allowed." <<std::endl;
+      has_error = true;
+    }
+    
+    if (path_tolerance_percent <= 0)
+    {
+      std::cerr << "error: The provided path tolerance percentage of " << path_tolerance_percent << " is negative, which is not allowed." << std::endl;
+      has_error = true;
+    }
+
+    if (max_radius_mm > 1000000)
+    {
+      // warning
+      std::cout << "warning: The provided path max radius of " << max_radius_mm << "mm is greater than 1000000 (1km), which is not recommended." << std::endl;
+    }
+
+    if (path_tolerance_percent > 0.05)
+    {
+      // warning
+      std::cout << "warning: The provided path tolerance percent of " << path_tolerance_percent << " is greater than 0.05 (5%), which is not recommended." << std::endl;
+    }
+    else if (path_tolerance_percent < 0.0001 && path_tolerance_percent > 0)
+    {
+      // warning
+      std::cout << "warning: The provided path tolerance percent of " << path_tolerance_percent << " is less than greater than 0.001 (0.1%), which is not recommended." << std::endl;
+    }
+
+    if (has_error)
+    {
+      return 1;
+    }
 
     for (unsigned int log_name_index = 0; log_name_index < log_level_names_size; log_name_index++)
     {
@@ -155,10 +198,12 @@ int main(int argc, char* argv[])
   p_logger->set_log_level_by_value(log_level_value);
 
   std::stringstream log_messages;
+  std::string temp_file_path = "";
+  log_messages << std::fixed << std::setprecision(DEFAULT_ARG_DOUBLE_PRECISION);
   if (source_file_path == target_file_path)
   {
     overwrite_source_file = true;
-    if (!utilities::get_temp_file_path_for_file(source_file_path, target_file_path))
+    if (!utilities::get_temp_file_path_for_file(source_file_path, temp_file_path))
     {
       log_messages << "The source and target path are the same, but a temporary file path could not be created.  Is the path empty?";
       p_logger->log(0, INFO, log_messages.str());
@@ -174,20 +219,34 @@ int main(int argc, char* argv[])
     log_messages.str("");
   }
   log_messages << "Processing Gcode\n";
-  log_messages << "\tSource File Path            : " << source_file_path << "\n";
-  log_messages << "\tTarget File File            : " << target_file_path << "\n";
-  log_messages << "\tResolution in MM            : " << resolution_mm << "\n";
-  log_messages << "\tMaximum Arc Radius in MM    : " << max_radius_mm << "\n";
-  log_messages << "\tG90/G91 Influences Extruder : " << (g90_g91_influences_extruder ? "True" : "False") << "\n";
-  log_messages << "\tLog Level                   : " << log_level_string << "\n";
-  log_messages << "\tHide Progress Updates       : " << (hide_progress ? "True" : "False");
+  log_messages << "\tSource File Path             : " << source_file_path << "\n";
+  if (overwrite_source_file)
+  {
+    log_messages << "\tTarget File Path (overwrite) : " << target_file_path << "\n";
+    log_messages << "\tTemporary File Path          : " << temp_file_path << "\n";
+  }
+  else 
+  {
+    log_messages << "\tTarget File File             : " << target_file_path << "\n";
+  }
+  
+  log_messages << "\tResolution                   : " << resolution_mm << "mm (+-" << std::setprecision(5) << resolution_mm/2.0 << "mm)\n";
+  log_messages << "\tPath Tolerance               : " << std::setprecision(3) << path_tolerance_percent*100.0 << "%\n";
+  log_messages << "\tMaximum Arc Radius in MM     : " << std::setprecision(0) << max_radius_mm << "\n";
+  log_messages << "\tG90/G91 Influences Extruder  : " << (g90_g91_influences_extruder ? "True" : "False") << "\n";
+  log_messages << "\tLog Level                    : " << log_level_string << "\n";
+  log_messages << "\tHide Progress Updates        : " << (hide_progress ? "True" : "False");
   p_logger->log(0, INFO, log_messages.str());
   arc_welder* p_arc_welder = NULL;
 
+  if (overwrite_source_file)
+  {
+    target_file_path = temp_file_path;
+  }
   if (!hide_progress)
-    p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, max_radius_mm, g90_g91_influences_extruder, 50);
+    p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, path_tolerance_percent, max_radius_mm, g90_g91_influences_extruder, 50, on_progress);
   else
-    p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, max_radius_mm, g90_g91_influences_extruder, 50);
+    p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, path_tolerance_percent, max_radius_mm, g90_g91_influences_extruder, 50);
 
   arc_welder_results results = p_arc_welder->process();
   if (results.success)
@@ -200,7 +259,7 @@ int main(int argc, char* argv[])
     {
       log_messages.clear();
       log_messages.str("");
-      log_messages << "Deleting the source file at '" << source_file_path << "'.";
+      log_messages << "Deleting the original source file at '" << source_file_path << "'.";
       p_logger->log(0, INFO, log_messages.str());
       log_messages.clear();
       log_messages.str("");
@@ -231,9 +290,9 @@ int main(int argc, char* argv[])
   return 0;
 }
 
-static bool on_progress(arc_welder_progress progress)
+static bool on_progress(arc_welder_progress progress, logger* p_logger, int logger_type)
 {
-  std::cout << progress.str() << std::endl;
+  std::cout << "Progress: "<< progress.str() << std::endl;
   std::cout.flush();
   return true;
 }

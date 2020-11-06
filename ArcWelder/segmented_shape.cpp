@@ -96,7 +96,8 @@ bool segment::get_closest_perpendicular_point(point p1, point p2, point c, point
 	double t = num / denom;
 
 	// We're considering this a failure if t == 0 or t==1 within our tolerance.  In that case we hit the endpoint, which is OK.
-	if (utilities::less_than_or_equal(t, 0, CIRCLE_GENERATION_A_ZERO_TOLERANCE) || utilities::greater_than_or_equal(t, 1, CIRCLE_GENERATION_A_ZERO_TOLERANCE))
+	// Why are we using the CIRCLE_GENERATION_A_ZERO_TOLERANCE tolerance here??
+	if (utilities::less_than_or_equal(t, 0) || utilities::greater_than_or_equal(t, 1))
 		return false;
 
 	d.x = p1.x + t * (p2.x - p1.x);
@@ -155,12 +156,6 @@ double distance_from_segment(segment s, point p)
 
 
 #pragma region Circle Functions
-bool circle::is_point_on_circle(point p, double resolution_mm)
-{
-	// get the difference between the point and the circle's center.
-	double difference = std::abs(utilities::get_cartesian_distance(p.x, p.y, center.x, center.y) - radius);
-	return utilities::less_than(difference, resolution_mm, CIRCLE_GENERATION_A_ZERO_TOLERANCE);
-}
 
 bool circle::try_create_circle(point p1, point p2, point p3, double max_radius, circle& new_circle)
 {
@@ -172,11 +167,12 @@ bool circle::try_create_circle(point p1, point p2, point p3, double max_radius, 
 	double y3 = p3.y;
 
 	double a = x1 * (y2 - y3) - y1 * (x2 - x3) + x2 * y3 - x3 * y2;
-
-	if (utilities::is_zero(a, CIRCLE_GENERATION_A_ZERO_TOLERANCE))
+	//  Take out to figure out how we handle very small values for a
+	if (utilities::is_zero(a,0.000000001))
 	{
 		return false;
 	}
+	
 
 	double b = (x1 * x1 + y1 * y1) * (y3 - y2)
 		+ (x2 * x2 + y2 * y2) * (y1 - y3)
@@ -196,6 +192,12 @@ bool circle::try_create_circle(point p1, point p2, point p3, double max_radius, 
 	new_circle.center.y = y;
 	new_circle.center.z = p1.z;
 	new_circle.radius = radius;
+
+	/*if (utilities::is_zero(a, CIRCLE_GENERATION_A_ZERO_TOLERANCE))
+	{
+		return false;
+	}	*/
+
 	return true;
 }
 double circle::get_radians(const point& p1, const point& p2) const
@@ -225,17 +227,16 @@ point circle::get_closest_point(const point& p) const
 #pragma endregion Circle Functions
 
 #pragma region Arc Functions
-bool arc::try_create_arc(const circle& c, const point& start_point, const point& mid_point, const point& end_point, double approximate_length, double resolution, arc& target_arc)
+bool arc::try_create_arc(
+	const circle& c, 
+	const point& start_point, 
+	const point& mid_point, 
+	const point& end_point, 
+	double approximate_length, 
+	arc& target_arc, 
+	double resolution, 
+	double path_tolerance_percent)
 {
-	//point p1 = c.get_closest_point(start_point);
-	//point p2 = c.get_closest_point(mid_point);
-	//point p3 = c.get_closest_point(end_point);
-	/*// Get the radians between p1 and p2 (short angle)
-	double p1_p2_rad = c.get_radians(p1, p2);
-	double p2_p3_rad = c.get_radians(p2, p3);
-	double p3_p1_rad = c.get_radians(p3, p1);
-	*/
-
 	double polar_start_theta = c.get_polar_radians(start_point);
 	double polar_mid_theta = c.get_polar_radians(mid_point);
 	double polar_end_theta = c.get_polar_radians(end_point);
@@ -276,12 +277,37 @@ bool arc::try_create_arc(const circle& c, const point& start_point, const point&
 		}
 	}
 	
-	if (direction == 0) return false;
-	
-	double arc_length = c.radius * angle_radians;
-	if (!utilities::is_equal(arc_length, approximate_length, resolution))
-		return false;
+	// this doesn't always work..  in rare situations, the angle may be backward
+	if (direction == 0 || utilities::is_zero(angle_radians)) return false;
 
+	// Let's check the length against the original length
+	// This can trigger simply due to the differing path lengths
+	// but also could indicate that our vector calculation above
+	// got the direction wrong
+	double arc_length = c.radius * angle_radians;
+	// Calculate the percent difference of the original path
+	double difference = (arc_length - approximate_length) / approximate_length;
+	if (!utilities::is_zero(difference, path_tolerance_percent))
+	{
+		// So it's possible our vector calculation above got the direction wrong.
+		// This can happen if there is a crazy arrangement of points
+		// extremely close to eachother.  They have to be close enough to 
+		// break our other checks.  However, we may be able to salvage this.
+		// see if an arc moving in the opposite direction had the correct length.
+
+		// Find the rest of the angle across the circle
+		double test_radians = std::abs(angle_radians - 2 * PI_DOUBLE);
+		// Calculate the length of that arc
+		double test_arc_length = c.radius * test_radians;
+		difference = (test_arc_length - approximate_length) / approximate_length;
+		if (!utilities::is_zero(difference, path_tolerance_percent))
+		{
+			return false;
+		}
+		// So, let's set the new length and flip the direction (but not the angle)!
+		arc_length = test_arc_length;
+		direction = direction == 1 ? 2 : 1;
+	}
 	if(direction == 2)
 		angle_radians *= -1.0;
 
@@ -295,21 +321,31 @@ bool arc::try_create_arc(const circle& c, const point& start_point, const point&
 	target_arc.angle_radians = angle_radians;
 	target_arc.polar_start_theta = polar_start_theta;
 	target_arc.polar_end_theta = polar_end_theta;
+
 	return true;
 	
 }
 
-bool arc::try_create_arc(const circle& c, const array_list<point>& points, double approximate_length, double resolution, arc& target_arc)
+bool arc::try_create_arc(
+	const circle& c, 
+	const array_list<point>& points, 
+	double approximate_length, 
+	arc& target_arc, 
+	double resolution, 
+	double path_tolerance_percent)
 {
 	int mid_point_index = ((points.count() - 2) / 2) + 1;
-	return arc::try_create_arc(c, points[0], points[mid_point_index], points[points.count() - 1], approximate_length, resolution, target_arc);
+	return arc::try_create_arc(c, points[0], points[mid_point_index], points[points.count() - 1], approximate_length, target_arc, resolution, path_tolerance_percent);
 }
 #pragma endregion
 
-segmented_shape::segmented_shape(int min_segments, int max_segments, double resolution_mm) : points_(max_segments)
+segmented_shape::segmented_shape(int min_segments, int max_segments, double resolution_mm, double path_tolerance_percnet) : points_(max_segments)
 {
 	
+	xyz_precision_ = DEFAULT_XYZ_PRECISION;
+	e_precision_ = DEFAULT_E_PRECISION;
 	max_segments_ = max_segments;
+	path_tolerance_percent_ = path_tolerance_percnet;
 	resolution_mm_ = resolution_mm / 2.0; // divide by 2 because it is + or - 1/2 of the desired resolution.
 	e_relative_ = 0;
 	is_shape_ = false;
@@ -324,6 +360,27 @@ segmented_shape::segmented_shape(int min_segments, int max_segments, double reso
 segmented_shape::~segmented_shape()
 {
 	
+}
+
+void segmented_shape::reset_precision()
+{
+	xyz_precision_ = DEFAULT_XYZ_PRECISION;
+	e_precision_ = DEFAULT_E_PRECISION;
+}
+void segmented_shape::update_xyz_precision(double precision)
+{
+	if (xyz_precision_ < precision)
+	{
+		xyz_precision_ = precision;
+	}
+}
+void segmented_shape::update_e_precision(double precision)
+{
+	if (e_precision_ < precision)
+	{
+		e_precision_ = precision;
+	}
+
 }
 
 bool segmented_shape::is_extruding()
@@ -394,6 +451,12 @@ double segmented_shape::get_resolution_mm()
 {
 	return resolution_mm_;
 }
+
+double segmented_shape::get_path_tolerance_percent()
+{
+	return path_tolerance_percent_;
+}
+
 void segmented_shape::set_resolution_mm(double resolution_mm)
 {
 	resolution_mm_ = resolution_mm;

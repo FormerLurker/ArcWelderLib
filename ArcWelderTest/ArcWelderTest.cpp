@@ -234,24 +234,35 @@ static gcode_position_args get_5_extruder_position_args()
 static void TestAntiStutter(std::string filePath)
 {
 	double max_resolution = DEFAULT_RESOLUTION_MM;
+	//double max_resolution = 0.05;
 	double max_radius_mm = DEFAULT_MAX_RADIUS_MM;
+	double path_tolerance_percent = 0.01; // 1 percent
 	std::vector<std::string> logger_names;
 	logger_names.push_back("arc_welder.gcode_conversion");
 	std::vector<int> logger_levels;
 	//logger_levels.push_back(log_levels::DEBUG);
 	logger_levels.push_back(log_levels::INFO);
 	logger* p_logger = new logger(logger_names, logger_levels);
-	p_logger->set_log_level(VERBOSE);
+	p_logger->set_log_level(INFO);
 	//arc_welder arc_welder_obj(BENCHY_0_5_MM_NO_WIPE, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50, static_cast<progress_callback>(on_progress));
 	//arc_welder arc_welder_obj(SIX_SPEED_TEST, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50, on_progress);
-	arc_welder arc_welder_obj(BENCHY_L1_DIFFICULT, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, max_radius_mm, false, 50, on_progress);
+	arc_welder arc_welder_obj(
+		BENCHY_L1_DIFFICULT, 
+		"C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", 
+		p_logger, 
+		max_resolution, 
+		path_tolerance_percent, 
+		max_radius_mm, 
+		false, 
+		DEFAULT_GCODE_BUFFER_SIZE, 
+		on_progress);
 	//BENCHY_LAYER_1GCODE
 	//SMALL_TEST
 	//FACE_SHIELD
 	//BENCHY_LAYER_1_NO_WIPE
 	//BENCHY_0_5_MM_NO_WIPE
 	//BENCHY_CURA_RELATIVE_E_NOWIPE
-	//BENCHY_GYROID_ABSOLUTE_E_NOWIPE
+	//BENCHY_GYROID_ABSOLUTE_E_NOWIPEd
 	//BENCHY_GYROID_RELATIVE_E_NOWIPE
 	//BENCHY_STACK_RELATIVE
 	//BENCHY_STACK_ABSOLUTE
@@ -263,6 +274,7 @@ static void TestAntiStutter(std::string filePath)
 	//ISSUE_PRICKLYPEAR_LAYER_0_114
 	//BARBARIAN
 	// BENCHY_L1_DIFFICULT
+	// SPIRAL_TEST
 	arc_welder_results results = arc_welder_obj.process();
 	p_logger->log(0, INFO, results.progress.detail_str());
 	p_logger->log(0, INFO, "Processing Complete.");
@@ -285,7 +297,7 @@ void TestDoubleToString()
 		double r = (double)rand() / RAND_MAX;
 		r = -1000000.0 + r * (1000000.0 - -1000000.0);
 		std::cout << std::fixed << std::setprecision(10) << "Number: " << r << std::endl;
-		utilities::to_string(r, 5, buffer);
+		utilities::to_string(r, 5, buffer, true);
 		std::cout << buffer << std::endl;
 	}
 	

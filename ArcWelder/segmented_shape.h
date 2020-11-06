@@ -29,8 +29,11 @@
 //#define CIRCLE_GENERATION_A_ZERO_TOLERANCE 0.0000000001 // fail
 //#define CIRCLE_GENERATION_A_ZERO_TOLERANCE 0.001 // pass
 //#define CIRCLE_GENERATION_A_ZERO_TOLERANCE 0.0001 // pass
-#define CIRCLE_GENERATION_A_ZERO_TOLERANCE 0.00001 // PASS
-//#define CIRCLE_GENERATION_A_ZERO_TOLERANCE 0.000001 // pass 
+// Todo:  Figure out EXACTLY what this should be!!!  0.00001 is conservative
+//#define CIRCLE_GENERATION_A_ZERO_TOLERANCE 0.00001 // PASS , but fails to draw spiral test
+//#define CIRCLE_GENERATION_A_ZERO_TOLERANCE 0.000005 // Pass, but fails the spiral test
+//#define CIRCLE_GENERATION_A_ZERO_TOLERANCE 0.0000025 // Passes both...  This is tricky...
+//#define CIRCLE_GENERATION_A_ZERO_TOLERANCE 0.000001 // fails on barbarian test!!! 
 //#define CIRCLE_GENERATION_A_ZERO_TOLERANCE 0.0000001 // fail
 //#define CIRCLE_GENERATION_A_ZERO_TOLERANCE 0.0000005 // fail
 //#define CIRCLE_GENERATION_A_ZERO_TOLERANCE 0.00000075 // fail
@@ -42,24 +45,15 @@
 #include "array_list.h"
 // The minimum theta value allowed between any two arc in order for an arc to be
 // created.  This prevents sign calculation issues for very small values of theta
-
-//#define MIN_ALLOWED_ARC_THETA     0.0000046875f // Lowest discovered value for full theta
-
+#define DEFAULT_XYZ_PRECISION 3
+#define DEFAULT_E_PRECISION 5
+#define ARC_LENGTH_PERCENT_TOLERANCE_DEFAULT 0.01  // one percent
 struct point
 {
 public:
-	point() {
-		x = 0;
-		y = 0;
-		z = 0;
-		e_relative = 0;
-	}
-	point(double p_x, double p_y, double p_z, double p_e_relative) {
-		x = p_x;
-		y = p_y;
-		z = p_z;
-		e_relative = p_e_relative;
-	}
+	point() :x(0), y(0), z(0), e_relative(0){}
+	point(double x, double y, double z, double e_relative) 
+	  : x(x), y(y), z(z), e_relative(e_relative){}
 	double x;
 	double y;
 	double z;
@@ -125,7 +119,6 @@ struct circle {
 	point center;
 	double radius;
 
-	bool is_point_on_circle(point p, double resolution_mm);
 	static bool try_create_circle(point p1, point p2, point p3, double max_radius, circle& new_circle);
 	
 	double get_radians(const point& p1, const point& p2) const;
@@ -135,6 +128,7 @@ struct circle {
 	point get_closest_point(const point& p) const;
 };
 
+#define DEFAULT_RESOLUTION_MM 0.05
 struct arc : circle
 {
 	arc() {
@@ -163,28 +157,35 @@ struct arc : circle
 	double polar_end_theta;
 	point start_point;
 	point end_point;
-	static bool try_create_arc(const circle& c, const point& start_point, const point& mid_point, const point& end_point, double approximate_length, double resolution, arc& target_arc);
-	static bool try_create_arc(const circle& c, const array_list<point>& points, double approximate_length, double resolution, arc& target_arc);
+	static bool try_create_arc(const circle& c, const point& start_point, const point& mid_point, const point& end_point, double approximate_length, arc& target_arc, double resolution = DEFAULT_RESOLUTION_MM, double path_tolerance_percent = ARC_LENGTH_PERCENT_TOLERANCE_DEFAULT);
+	static bool try_create_arc(const circle& c, const array_list<point>& points, double approximate_length, arc& target_arc, double resolution = DEFAULT_RESOLUTION_MM, double path_tolerance_percent = ARC_LENGTH_PERCENT_TOLERANCE_DEFAULT);
 };
 double distance_from_segment(segment s, point p);
 
 #define DEFAULT_MIN_SEGMENTS 3
 #define DEFAULT_MAX_SEGMENTS 50
-#define DEFAULT_RESOLUTION_MM 0.05
 class segmented_shape
 {
 public:
 	
-	segmented_shape(int min_segments = DEFAULT_MIN_SEGMENTS, int max_segments = DEFAULT_MAX_SEGMENTS, double resolution_mm = DEFAULT_RESOLUTION_MM);
+	segmented_shape(int min_segments = DEFAULT_MIN_SEGMENTS,
+		int max_segments = DEFAULT_MAX_SEGMENTS, 
+		double resolution_mm = DEFAULT_RESOLUTION_MM, 
+		double path_tolerance_percent = ARC_LENGTH_PERCENT_TOLERANCE_DEFAULT
+	);
 	segmented_shape& operator=(const segmented_shape& pos);
 	virtual ~segmented_shape();
 	int get_num_segments();
 	int get_min_segments();
 	int get_max_segments();
 	double get_resolution_mm();
+	double get_path_tolerance_percent();
 	double get_shape_length();
 	double get_shape_e_relative();
 	void set_resolution_mm(double resolution_mm);
+	void reset_precision();
+	void update_xyz_precision(double precision);
+	void update_e_precision(double precision);
 	virtual bool is_shape() const;
 	// public virtual functions
 	virtual void clear();
@@ -197,11 +198,14 @@ public:
 protected:
 	array_list<point> points_;
 	void set_is_shape(bool value);
-	double original_shape_length_;
+	unsigned char xyz_precision_;
+	unsigned char e_precision_;
+	double original_shape_length_;	
 	double e_relative_;
 	bool is_extruding_;
 	double resolution_mm_;
 	bool is_shape_;
+	double path_tolerance_percent_;
 private:
 	int min_segments_;
 	int max_segments_;
