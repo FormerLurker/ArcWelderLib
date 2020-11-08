@@ -43,8 +43,9 @@ int main(int argc, char* argv[])
 {
 	std::string info = "Arc Straightener - Converts G2/G3 commands to G1/G2 commands..";
 
-  info.append("\nVersion: ").append(GIT_TAGGED_VERSION).append(" (branch:").append(GIT_BRANCH).append(", hash: )").append(GIT_COMMIT_HASH);
-  info.append("\nBuilt on ").append(BUILD_DATE);
+  info.append("\nVersion: ").append(GIT_TAGGED_VERSION);
+  info.append(", Branch: ").append(GIT_BRANCH);
+  info.append(", BuildDate: ").append(BUILD_DATE);
   info.append("\n").append("Copyright(C) ").append(COPYRIGHT_DATE).append(" - ").append(AUTHOR);
 
   std::stringstream arg_description_stream;

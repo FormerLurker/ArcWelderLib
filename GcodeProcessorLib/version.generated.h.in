@@ -5,6 +5,7 @@
 #define GIT_BRANCH "@GIT_BRANCH@"
 #define GIT_COMMIT_HASH "@GIT_COMMIT_HASH@"
 #define GIT_TAGGED_VERSION "@GIT_TAGGED_VERSION@"
+#define GIT_TAG "@GIT_TAG@"
 #define BUILD_DATE "@BUILD_DATE@"
 #define COPYRIGHT_DATE "@BUILD_YEAR@"
 #define AUTHOR "Brad Hochgesang"

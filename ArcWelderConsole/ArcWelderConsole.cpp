@@ -51,8 +51,9 @@ int main(int argc, char* argv[])
   // Add info about the application   
   std::string info = "Arc Welder: Anti-Stutter - Reduces the number of gcodes per second sent to a 3D printer that supports arc commands (G2 G3).";
   // Add the current vesion information
-  info.append("\nVersion: ").append(GIT_TAGGED_VERSION).append(" (branch:").append(GIT_BRANCH).append(", hash: )").append(GIT_COMMIT_HASH);
-  info.append("\nBuilt on ").append(BUILD_DATE);
+  info.append("\nVersion: ").append(GIT_TAGGED_VERSION);
+  info.append(", Branch: ").append(GIT_BRANCH);
+  info.append(", BuildDate: ").append(BUILD_DATE);
   info.append("\n").append("Copyright(C) ").append(COPYRIGHT_DATE).append(" - ").append(AUTHOR);
   
   std::stringstream arg_description_stream;
