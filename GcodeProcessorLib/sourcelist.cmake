@@ -21,4 +21,6 @@ set(GcodeProcessorLibSources ${GcodeProcessorLibSources}
     position.h
     utilities.cpp
     utilities.h
+    version.generated.h
+    version.h
 )

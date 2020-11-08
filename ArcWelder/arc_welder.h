@@ -132,34 +132,63 @@ struct source_target_segment_statistics {
 		std::stringstream format_stream;
 		const int min_column_size = 8;
 		int mm_col_size = max_width + max_precision + 2; // Adding 2 for the mm
+		int percent_precision = 1;
+		int min_percent_col_size = 7;
 		int min_max_label_col_size = 4;
-		int percent_col_size = 9;
+		int percent_col_size = min_percent_col_size;
 		int totals_row_label_size = 22;
-		int count_col_size;
+		int source_col_size= 0;
+		int target_col_size = 0;
 
-		// Calculate the count column size
-		int max_count = 0;
+		// Calculate the count columns and percent column sizes
+		int max_source = 0;
+		int max_target = 0;
+		int max_percent = 0;  // We only need to hold the integer part
+	
 		//if (p_logger_ != NULL) p_logger_->log(logger_type_, VERBOSE, "Calculating Column Size.");
 
 		for (int index = 0; index < source_segments.size(); index++)
 		{
 			int source_count = source_segments[index].count;
 			int target_count = target_segments[index].count;
-			if (max_count < source_count)
+			int percent = 0;
+			if (source_count > 0)
 			{
-				max_count = source_count;
+				percent = (((double)target_count - (double)source_count) / (double)source_count) * 100.0;
+				if (percent > max_percent)
+				{
+					max_percent = percent;
+				}
 			}
-			if (max_count < target_count)
+			if (max_source < source_count)
 			{
-				max_count = target_count;
+				max_source = source_count;
+			}
+			if (max_target < target_count)
+			{
+				max_target = target_count;
 			}
 		}
 		// Get the number of digits in the max count
-		count_col_size = utilities::get_num_digits(max_count);
+		source_col_size = utilities::get_num_digits(max_source);
 		// enforce the minimum of 6
-		if (count_col_size < min_column_size)
+		if (source_col_size < min_column_size)
 		{
-			count_col_size = min_column_size;
+			source_col_size = min_column_size;
+		}
+		// Get the number of digits in the max count
+		target_col_size = utilities::get_num_digits(max_target);
+		// enforce the minimum of 6
+		if (target_col_size < min_column_size)
+		{
+			target_col_size = min_column_size;
+		}
+		// Get the percent column size, including one point of precision, the decimal point, a precent, and a space.
+		percent_col_size = utilities::get_num_digits(max_percent) +  percent_precision + 3; // add two for . and %
+		// enforce the minumum percent col size
+		if (percent_col_size < min_percent_col_size)
+		{
+			percent_col_size = min_percent_col_size;
 		}
 
 		if (max_precision > 0)
@@ -174,7 +203,7 @@ struct source_target_segment_statistics {
 			mm_col_size = min_column_size;
 		}
 		// Get the table width
-		int table_width = mm_col_size + min_max_label_col_size + mm_col_size + count_col_size + count_col_size + percent_col_size;
+		int table_width = mm_col_size + min_max_label_col_size + mm_col_size + source_col_size + target_col_size + percent_col_size;
 		// Add a separator for the statistics
 		//output_stream << std::setw(table_width) << std::setfill('-') << "-" << "\n" << std::setfill(' ') ;
 		// Output the column headers
@@ -183,8 +212,8 @@ struct source_target_segment_statistics {
 		output_stream << std::setw(min_max_label_col_size) << "";
 		output_stream << utilities::center("Max", mm_col_size);
 		// right align the source, target and change columns
-		output_stream << std::setw(count_col_size) << std::right << "Source";
-		output_stream << std::setw(count_col_size) << std::right << "Target";
+		output_stream << std::setw(source_col_size) << std::right << "Source";
+		output_stream << std::setw(target_col_size) << std::right << "Target";
 		output_stream << std::setw(percent_col_size) << std::right << "Change";
 		output_stream << "\n";
 		output_stream << std::setw(table_width) << std::setfill('-') << "" << std::setfill(' ') << "\n";
@@ -197,7 +226,7 @@ struct source_target_segment_statistics {
 			int target_count = target_segments[index].count;
 			// Calculate the percent change	and create the string
 			// Construct the percent_change_string
-			std::string percent_change_string = utilities::get_percent_change_string(source_count, target_count, 1);
+			std::string percent_change_string = utilities::get_percent_change_string(source_count, target_count, percent_precision);
 
 			// Create the strings to hold the column values
 			std::string min_mm_string;
@@ -247,9 +276,9 @@ struct source_target_segment_statistics {
 				output_stream << std::setw(mm_col_size) << std::internal << max_mm_string;
 			}
 			// Add the source count
-			output_stream << std::setw(count_col_size) << source_count_string;
+			output_stream << std::setw(source_col_size) << source_count_string;
 			// Add the target count
-			output_stream << std::setw(count_col_size) << target_count_string;
+			output_stream << std::setw(target_col_size) << target_count_string;
 			// Add the percent change string
 			output_stream << std::setw(percent_col_size) << percent_change_string;
 			// End the line
@@ -376,7 +405,7 @@ struct arc_welder_results {
 	arc_welder_progress progress;
 };
 #define DEFAULT_GCODE_BUFFER_SIZE 100
-
+#define DEFAULT_G90_G91_INFLUENCES_EXTRUDER false
 class arc_welder
 {
 public:
@@ -387,7 +416,7 @@ public:
 		double resolution_mm,
 		double path_tolerance_percent,
 		double max_radius,
-		bool g90_g91_influences_extruder,
+		bool g90_g91_influences_extruder = DEFAULT_G90_G91_INFLUENCES_EXTRUDER,
 		int buffer_size = DEFAULT_GCODE_BUFFER_SIZE,
 		progress_callback callback = NULL);
 	void set_logger_type(int logger_type);

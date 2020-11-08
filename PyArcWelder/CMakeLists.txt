@@ -43,7 +43,7 @@ if(WIN32)
 endif()
 
 # Link to ArcWelder, GcodeProcessorLib and the Python Libraries
-target_link_libraries(${PROJECT_NAME} ArcWelder GcodeProcessorLib)
+target_link_libraries(${PROJECT_NAME} ArcWelder GcodeProcessorLib ${PYTHON_LIBRARIES})
 
 # On Windows, it is required to link to the Python libraries
 if(WIN32 OR APPLE)
@@ -60,3 +60,4 @@ set(${PROJECT_NAME}_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/
                                  ${ArcWelder_INCLUDE_DIRS}
                                  ${GcodeProcessorLib_INCLUDE_DIRS}
     CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE)
+     

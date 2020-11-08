@@ -41,7 +41,7 @@ arc_welder::arc_welder(
 	logger * log, 
 	double resolution_mm, 
 	double path_tolerance_percent,
-	double max_radius, 
+	double max_radius,
 	bool g90_g91_influences_extruder, 
 	int buffer_size, 
 	progress_callback callback) : current_arc_(
@@ -184,8 +184,8 @@ arc_welder_results results;
 	stream << "arc_welder::process - Parameters received: source_file_path: '" <<
 		source_path_ << "', target_file_path:'" << target_path_ << "', resolution_mm:" <<
 		resolution_mm_ << "mm (+-" << current_arc_.get_resolution_mm() << "mm), path_tolerance_percent: " << current_arc_.get_path_tolerance_percent()  
-		<< ", max_radius_mm:" << current_arc_.get_max_radius() << 
-		"mm, g90_91_influences_extruder: " << (p_source_position_->get_g90_91_influences_extruder() ? "True" : "False");
+		<< ", max_radius_mm:" << current_arc_.get_max_radius() 
+		<< ", g90_91_influences_extruder: " << (p_source_position_->get_g90_91_influences_extruder() ? "True" : "False");
 	p_logger_->log(logger_type_, INFO, stream.str());
 
 
@@ -422,7 +422,7 @@ int arc_welder::process_gcode(parsed_command cmd, bool is_end, bool is_reprocess
 				(previous_extruder.is_retracting && extruder_current.is_retracting)
 			) &&
 			p_cur_pos->is_extruder_relative == p_pre_pos->is_extruder_relative &&
-			(/*!waiting_for_arc_ || */p_pre_pos->f == p_cur_pos->f) && // might need to skip the waiting for arc check...
+			(!waiting_for_arc_ || p_pre_pos->f == p_cur_pos->f) && // might need to skip the waiting for arc check...
 			(!waiting_for_arc_ || p_pre_pos->feature_type_tag == p_cur_pos->feature_type_tag)
 			)
 	) {
@@ -450,6 +450,7 @@ int arc_welder::process_gcode(parsed_command cmd, bool is_end, bool is_reprocess
 			if (!waiting_for_arc_)
 			{
 				waiting_for_arc_ = true;
+				previous_feedrate_ = p_pre_pos->f;
 			}
 			else
 			{
@@ -726,8 +727,7 @@ int arc_welder::write_gcode_to_file(std::string gcode)
 int arc_welder::write_unwritten_gcodes_to_file()
 {
 	int size = unwritten_commands_.count();
-	std::string gcode_to_write;
-	
+	std::string lines_to_write;
 	
 	for (int index = 0; index < size; index++)
 	{
@@ -737,9 +737,10 @@ int arc_welder::write_unwritten_gcodes_to_file()
 		{
 			segment_statistics_.update(p.extrusion_length, false);
 		}
-		write_gcode_to_file(p.command.to_string());
+		lines_to_write.append(p.command.to_string()).append("\n");
 	}
 	
+	output_file_ << lines_to_write;
 	return size;
 }
 

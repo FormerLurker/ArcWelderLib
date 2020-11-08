@@ -47,7 +47,7 @@
 // created.  This prevents sign calculation issues for very small values of theta
 #define DEFAULT_XYZ_PRECISION 3
 #define DEFAULT_E_PRECISION 5
-#define ARC_LENGTH_PERCENT_TOLERANCE_DEFAULT 0.01  // one percent
+#define ARC_LENGTH_PERCENT_TOLERANCE_DEFAULT 0.05  // one percent
 struct point
 {
 public:
@@ -81,7 +81,7 @@ struct segment
 	point p2;
 
 	bool get_closest_perpendicular_point(point c, point& d);
-	static bool get_closest_perpendicular_point(point p1, point p2, point c, point& d);
+	static bool get_closest_perpendicular_point(const point& p1, const point& p2, const point& c, point& d);
 };
 
 struct vector : point
@@ -102,6 +102,7 @@ struct vector : point
 	
 };
 
+#define DEFAULT_MAX_RADIUS_MM 1000000.0 // 1km
 struct circle {
 	circle() {
 		center.x = 0;
@@ -119,13 +120,17 @@ struct circle {
 	point center;
 	double radius;
 
-	static bool try_create_circle(point p1, point p2, point p3, double max_radius, circle& new_circle);
+	static bool try_create_circle(const point &p1, const point &p2, const point &p3, const double max_radius, circle& new_circle);
 	
+	static bool try_create_circle(const array_list<point>& points, const double max_radius, const double resolutino_mm, circle& new_circle, bool check_middle_only=false);
+
 	double get_radians(const point& p1, const point& p2) const;
 
 	double get_polar_radians(const point& p1) const;
 
 	point get_closest_point(const point& p) const;
+
+	bool is_over_deviation(const array_list<point>& points, const double resolution_mm);
 };
 
 #define DEFAULT_RESOLUTION_MM 0.05
@@ -147,7 +152,7 @@ struct arc : circle
 		is_arc = false;
 		polar_start_theta = 0;
 		polar_end_theta = 0;
-			
+		max_deviation = 0;
 	}
 	
 	bool is_arc;
@@ -155,10 +160,13 @@ struct arc : circle
 	double angle_radians;
 	double polar_start_theta;
 	double polar_end_theta;
+	double max_deviation;
 	point start_point;
 	point end_point;
-	static bool try_create_arc(const circle& c, const point& start_point, const point& mid_point, const point& end_point, double approximate_length, arc& target_arc, double resolution = DEFAULT_RESOLUTION_MM, double path_tolerance_percent = ARC_LENGTH_PERCENT_TOLERANCE_DEFAULT);
-	static bool try_create_arc(const circle& c, const array_list<point>& points, double approximate_length, arc& target_arc, double resolution = DEFAULT_RESOLUTION_MM, double path_tolerance_percent = ARC_LENGTH_PERCENT_TOLERANCE_DEFAULT);
+	// Statis functions
+	static bool try_create_arc(const circle& c, const point& start_point, const point& mid_point, const point& end_point, arc& target_arc, double approximate_length, double resolution = DEFAULT_RESOLUTION_MM, double path_tolerance_percent = ARC_LENGTH_PERCENT_TOLERANCE_DEFAULT);
+	static bool try_create_arc(const circle& c, const array_list<point>& points, arc& target_arc, double approximate_length, double resolution = DEFAULT_RESOLUTION_MM, double path_tolerance_percent = ARC_LENGTH_PERCENT_TOLERANCE_DEFAULT);
+	static bool try_create_arc(const array_list<point>& points, arc& target_arc, double approximate_length, double max_radius = DEFAULT_MAX_RADIUS_MM, double resolution = DEFAULT_RESOLUTION_MM, double path_tolerance_percent = ARC_LENGTH_PERCENT_TOLERANCE_DEFAULT);
 };
 double distance_from_segment(segment s, point p);
 

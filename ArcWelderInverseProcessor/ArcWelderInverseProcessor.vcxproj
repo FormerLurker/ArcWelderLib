@@ -113,7 +113,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)\GcodeProcessorLib\;$(SolutionDir)\ArcWelder\;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <IncludePath>$(SolutionDir)\GcodeProcessorLib\;$(SolutionDir)\ArcWelder\;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)\TCLAP\</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -213,6 +213,9 @@
     </ProjectReference>
     <ProjectReference Include="..\GcodeProcessorLib\GcodeProcessorLib.vcxproj">
       <Project>{31478bae-104b-4cc3-9876-42fa90cbd5fe}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\TCLAP\TCLAP.vcxproj">
+      <Project>{38302600-81a7-45bb-a199-3360d6594365}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

@@ -12,8 +12,12 @@ include_directories(${GcodeProcessorLib_INCLUDE_DIRS} ${ArcWelder_INCLUDE_DIRS} 
 # ArcWelderConsoleSources variable
 include(sourcelist.cmake)
 
+
 # Add an executable our ArcWelderConsoleSources variable from our sourcelist file
 add_executable(${PROJECT_NAME} ${ArcWelderConsoleSources})
+# change the executable name to ArcWelder or ArcWelder.exe
+set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "ArcWelder")
+
 
 install(
     TARGETS ${PROJECT_NAME}

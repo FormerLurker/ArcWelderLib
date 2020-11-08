@@ -234,9 +234,10 @@ static gcode_position_args get_5_extruder_position_args()
 static void TestAntiStutter(std::string filePath)
 {
 	double max_resolution = DEFAULT_RESOLUTION_MM;
-	//double max_resolution = 0.05;
+	//double max_resolution = 0.0125;
 	double max_radius_mm = DEFAULT_MAX_RADIUS_MM;
-	double path_tolerance_percent = 0.01; // 1 percent
+	double path_tolerance_percent = ARC_LENGTH_PERCENT_TOLERANCE_DEFAULT; // 1 percent
+	//double path_tolerance_percent = 0.05;
 	std::vector<std::string> logger_names;
 	logger_names.push_back("arc_welder.gcode_conversion");
 	std::vector<int> logger_levels;
@@ -247,15 +248,16 @@ static void TestAntiStutter(std::string filePath)
 	//arc_welder arc_welder_obj(BENCHY_0_5_MM_NO_WIPE, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50, static_cast<progress_callback>(on_progress));
 	//arc_welder arc_welder_obj(SIX_SPEED_TEST, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50, on_progress);
 	arc_welder arc_welder_obj(
-		BENCHY_L1_DIFFICULT, 
+		BARBARIAN,
 		"C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", 
 		p_logger, 
 		max_resolution, 
 		path_tolerance_percent, 
-		max_radius_mm, 
+		max_radius_mm,
 		false, 
 		DEFAULT_GCODE_BUFFER_SIZE, 
 		on_progress);
+	//BENCHY_DIFFICULT
 	//BENCHY_LAYER_1GCODE
 	//SMALL_TEST
 	//FACE_SHIELD
@@ -281,7 +283,7 @@ static void TestAntiStutter(std::string filePath)
 	delete p_logger;
 }
 
-static bool on_progress(arc_welder_progress progress, logger * p_logger, int logger_type)
+bool on_progress(arc_welder_progress progress, logger * p_logger, int logger_type)
 {
 	p_logger->log(logger_type, INFO, progress.str());
 	return true;

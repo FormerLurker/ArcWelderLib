@@ -47,14 +47,21 @@ int main(int argc, char* argv[])
   std::string log_level_string;
   std::string log_level_string_default = "INFO";
   int log_level_value;
-  std::string version = "0.1.0";
-  std::string info = "Arc Welder: Anti-Stutter - Reduces the number of gcodes per second sent to a 3D printer that supports arc commands (G2 G3)\nCopyright(C) 2020 - Brad Hochgesang";
+
+  // Add info about the application   
+  std::string info = "Arc Welder: Anti-Stutter - Reduces the number of gcodes per second sent to a 3D printer that supports arc commands (G2 G3).";
+  // Add the current vesion information
+  info.append("\nVersion: ").append(GIT_TAGGED_VERSION).append(" (branch:").append(GIT_BRANCH).append(", hash: )").append(GIT_COMMIT_HASH);
+  info.append("\nBuilt on ").append(BUILD_DATE);
+  info.append("\n").append("Copyright(C) ").append(COPYRIGHT_DATE).append(" - ").append(AUTHOR);
+  
   std::stringstream arg_description_stream;
+  
   arg_description_stream << std::fixed << std::setprecision(5);
   // Extract arguments
   try {
     // Define the command line object
-    TCLAP::CmdLine cmd(info, '=', version);
+    TCLAP::CmdLine cmd(info, '=', GIT_TAGGED_VERSION);
 
     // Define Arguments
 
@@ -69,7 +76,10 @@ int main(int argc, char* argv[])
     TCLAP::ValueArg<double> resolution_arg("r", "resolution-mm", arg_description_stream.str(), false, DEFAULT_RESOLUTION_MM, "float");
 
     // -t --path-tolerance-percent
-    arg_description_stream << "This is the maximum allowable difference between the arc path and the original toolpath.  Expressed as a decimal percent, where 0.01 = 1%. Default Value: " << ARC_LENGTH_PERCENT_TOLERANCE_DEFAULT;
+    arg_description_stream.clear();
+    arg_description_stream.str("");
+    arg_description_stream << "This is the maximum allowable difference between the arc path and the original toolpath.  Since most slicers use interpolation when generating arc moves, this value can be relatively high without impacting print quality.";
+    arg_description_stream << "  Expressed as a decimal percent, where 0.05 = 5.0%. Default Value: " << ARC_LENGTH_PERCENT_TOLERANCE_DEFAULT;
     TCLAP::ValueArg<double> path_tolerance_percent_arg("t", "path-tolerance-percent", arg_description_stream.str(), false, DEFAULT_RESOLUTION_MM, "float");
 
     // -m --max-radius-mm
@@ -77,9 +87,12 @@ int main(int argc, char* argv[])
     arg_description_stream.str("");
     arg_description_stream << "The maximum radius of any arc in mm. Default Value: " << DEFAULT_MAX_RADIUS_MM;
     TCLAP::ValueArg<double> max_radius_arg("m", "max-radius-mm", arg_description_stream.str(), false, DEFAULT_MAX_RADIUS_MM, "float");
-    
+
     // -g --g90-influences-extruder
-    TCLAP::SwitchArg g90_arg("g", "g90-influences-extruder", "If supplied, G90/G91 influences the extruder axis.", false);
+    arg_description_stream.clear();
+    arg_description_stream.str("");
+    arg_description_stream << "If supplied, G90/G91 influences the extruder axis.  Default Value: " << DEFAULT_G90_G91_INFLUENCES_EXTRUDER;
+    TCLAP::SwitchArg g90_arg("g", "g90-influences-extruder", arg_description_stream.str(), false);
 
     // -g --hide-progress
     TCLAP::SwitchArg hide_progress_arg("p", "hide-progress", "If supplied, prevents progress updates from being displayed.", false);
@@ -126,6 +139,7 @@ int main(int argc, char* argv[])
     max_radius_mm = max_radius_arg.getValue();
     path_tolerance_percent = path_tolerance_percent_arg.getValue();
     g90_g91_influences_extruder = g90_arg.getValue();
+
     hide_progress = hide_progress_arg.getValue();
     log_level_string = log_level_arg.getValue();
     log_level_value = -1;
@@ -232,7 +246,7 @@ int main(int argc, char* argv[])
   
   log_messages << "\tResolution                   : " << resolution_mm << "mm (+-" << std::setprecision(5) << resolution_mm/2.0 << "mm)\n";
   log_messages << "\tPath Tolerance               : " << std::setprecision(3) << path_tolerance_percent*100.0 << "%\n";
-  log_messages << "\tMaximum Arc Radius in MM     : " << std::setprecision(0) << max_radius_mm << "\n";
+  log_messages << "\tMaximum Arc Radius           : " << std::setprecision(0) << max_radius_mm << "mm\n";
   log_messages << "\tG90/G91 Influences Extruder  : " << (g90_g91_influences_extruder ? "True" : "False") << "\n";
   log_messages << "\tLog Level                    : " << log_level_string << "\n";
   log_messages << "\tHide Progress Updates        : " << (hide_progress ? "True" : "False");
@@ -246,7 +260,7 @@ int main(int argc, char* argv[])
   if (!hide_progress)
     p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, path_tolerance_percent, max_radius_mm, g90_g91_influences_extruder, 50, on_progress);
   else
-    p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, path_tolerance_percent, max_radius_mm, g90_g91_influences_extruder, 50);
+    p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, path_tolerance_percent, max_radius_mm, g90_g91_influences_extruder, 50, suppress_progress);
 
   arc_welder_results results = p_arc_welder->process();
   if (results.success)
@@ -294,6 +308,10 @@ bool on_progress(arc_welder_progress progress, logger* p_logger, int logger_type
 {
   std::cout << "Progress: "<< progress.str() << std::endl;
   std::cout.flush();
+  return true;
+}
+bool suppress_progress(arc_welder_progress progress, logger* p_logger, int logger_type)
+{
   return true;
 }
 

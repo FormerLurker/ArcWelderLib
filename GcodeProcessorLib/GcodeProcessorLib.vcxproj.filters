@@ -48,6 +48,9 @@
     <ClInclude Include="utilities.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="array_list.cpp">
@@ -89,5 +92,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="sourcelist.cmake" />
+    <None Include="version.generated.h.in" />
   </ItemGroup>
 </Project>

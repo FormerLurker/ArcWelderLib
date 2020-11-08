@@ -1,4 +1,6 @@
 cmake_minimum_required (VERSION "3.13")
+set(CMAKE_VERBOSE_MAKEFILE ON)
+
 # You can tweak some common (for all subprojects) stuff here. For example:
 project(Build C CXX)
 
@@ -10,6 +12,11 @@ set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 set(CMAKE_DISABLE_SOURCE_CHANGES  ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 option(USE_CXX_EXCEPTIONS "Enable C++ exception support" ON)
+
+# add a definition so our libraries know that the version info is available
+add_definitions("-DHAS_GENERATED_VERSION")
+# include the generated header.
+include_directories("${CMAKE_BINARY_DIR}/GcodeProcessorLib/generated/")
 
 if ("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
   message(SEND_ERROR "In-source builds are not allowed.")
@@ -33,8 +40,11 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/TCLAP)
 add_subdirectory(${CMAKE_SOURCE_DIR}/GcodeProcessorLib)
 add_subdirectory(${CMAKE_SOURCE_DIR}/ArcWelder)
 add_subdirectory(${CMAKE_SOURCE_DIR}/ArcWelderConsole)
+#include(${CMAKE_CURRENT_SOURCE_DIR}/ArcWelderConsole/CMakeLists.txt)
 add_subdirectory(${CMAKE_SOURCE_DIR}/ArcWelderInverseProcessor)
 add_subdirectory(${CMAKE_SOURCE_DIR}/PyArcWelder)
+
+
 
 
 

@@ -3,7 +3,7 @@
 		{
 			"name": "x64-Release",
 			"generator": "Ninja",
-			"configurationType": "RelWithDebInfo",
+			"configurationType": "Release",
 			"buildRoot": "${projectDir}\\out\\build\\${name}",
 			"installRoot": "${projectDir}\\out\\install\\${name}",
 			"cmakeCommandArgs": "",
@@ -15,7 +15,7 @@
 		{
 			"name": "x86-Release",
 			"generator": "Ninja",
-			"configurationType": "RelWithDebInfo",
+			"configurationType": "Release",
 			"buildRoot": "${projectDir}\\out\\build\\${name}",
 			"installRoot": "${projectDir}\\out\\install\\${name}",
 			"cmakeCommandArgs": "",
@@ -43,13 +43,7 @@
 			"remoteCopyBuildOutput": false,
 			"remoteCopySourcesMethod": "rsync",
 			"addressSanitizerRuntimeFlags": "detect_leaks=0",
-			"variables": [
-				{
-					"name": "CMAKE_BUILD_TYPE",
-					"value": "RELEASE",
-					"type": "STRING"
-				}
-			]
+			"variables": []
 		}
 	]
 }
