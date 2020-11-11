@@ -227,11 +227,11 @@ int main(int argc, char* argv[])
     }
 
     // create a uuid with a tmp extension for the temporary file
-
-    log_messages << "Source and target path are the same.  The source file will be overwritten.  Temporary file path: " << target_file_path;
+    log_messages << "Source and target path are the same.  The source file will be overwritten.  Temporary file path: " << temp_file_path;
     p_logger->log(0, INFO, log_messages.str());
     log_messages.clear();
     log_messages.str("");
+    target_file_path = temp_file_path;
   }
   log_messages << "Processing Gcode\n";
   log_messages << "\tSource File Path             : " << source_file_path << "\n";

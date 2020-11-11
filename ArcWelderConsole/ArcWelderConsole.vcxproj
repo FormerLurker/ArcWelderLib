@@ -114,6 +114,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(SolutionDir)\GcodeProcessorLib\;$(SolutionDir)\ArcWelder\;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)\TCLAP\</IncludePath>
+    <TargetName>ArcWelder</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>

@@ -26,19 +26,6 @@
 #include <string>
 #include <limits>
 #define PI_DOUBLE 3.14159265358979323846
-//#define CIRCLE_GENERATION_A_ZERO_TOLERANCE 0.0000000001 // fail
-//#define CIRCLE_GENERATION_A_ZERO_TOLERANCE 0.001 // pass
-//#define CIRCLE_GENERATION_A_ZERO_TOLERANCE 0.0001 // pass
-// Todo:  Figure out EXACTLY what this should be!!!  0.00001 is conservative
-//#define CIRCLE_GENERATION_A_ZERO_TOLERANCE 0.00001 // PASS , but fails to draw spiral test
-//#define CIRCLE_GENERATION_A_ZERO_TOLERANCE 0.000005 // Pass, but fails the spiral test
-//#define CIRCLE_GENERATION_A_ZERO_TOLERANCE 0.0000025 // Passes both...  This is tricky...
-//#define CIRCLE_GENERATION_A_ZERO_TOLERANCE 0.000001 // fails on barbarian test!!! 
-//#define CIRCLE_GENERATION_A_ZERO_TOLERANCE 0.0000001 // fail
-//#define CIRCLE_GENERATION_A_ZERO_TOLERANCE 0.0000005 // fail
-//#define CIRCLE_GENERATION_A_ZERO_TOLERANCE 0.00000075 // fail
-//#define CIRCLE_GENERATION_A_ZERO_TOLERANCE 0.000000875 // fail
-
 
 #include <list> 
 #include "utilities.h"
