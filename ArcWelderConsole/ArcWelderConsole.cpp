@@ -44,6 +44,7 @@ int main(int argc, char* argv[])
   bool g90_g91_influences_extruder;
   bool hide_progress;
   bool overwrite_source_file = false;
+  bool allow_z_axis_changes = false;
   std::string log_level_string;
   std::string log_level_string_default = "INFO";
   int log_level_value;
@@ -259,9 +260,9 @@ int main(int argc, char* argv[])
     target_file_path = temp_file_path;
   }
   if (!hide_progress)
-    p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, path_tolerance_percent, max_radius_mm, g90_g91_influences_extruder, 50, on_progress);
+    p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, path_tolerance_percent, max_radius_mm, g90_g91_influences_extruder, allow_z_axis_changes,  DEFAULT_GCODE_BUFFER_SIZE, on_progress);
   else
-    p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, path_tolerance_percent, max_radius_mm, g90_g91_influences_extruder, 50, suppress_progress);
+    p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, path_tolerance_percent, max_radius_mm, g90_g91_influences_extruder, allow_z_axis_changes, DEFAULT_GCODE_BUFFER_SIZE, suppress_progress);
 
   arc_welder_results results = p_arc_welder->process();
   if (results.success)

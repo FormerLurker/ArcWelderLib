@@ -233,8 +233,8 @@ static gcode_position_args get_5_extruder_position_args()
 
 static void TestAntiStutter(std::string filePath)
 {
-	double max_resolution = DEFAULT_RESOLUTION_MM;
-	//double max_resolution = 0.0125;
+	//double max_resolution = DEFAULT_RESOLUTION_MM;
+	double max_resolution = 1;
 	double max_radius_mm = DEFAULT_MAX_RADIUS_MM;
 	double path_tolerance_percent = ARC_LENGTH_PERCENT_TOLERANCE_DEFAULT; // 1 percent
 	//double path_tolerance_percent = 0.05;
@@ -248,13 +248,14 @@ static void TestAntiStutter(std::string filePath)
 	//arc_welder arc_welder_obj(BENCHY_0_5_MM_NO_WIPE, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50, static_cast<progress_callback>(on_progress));
 	//arc_welder arc_welder_obj(SIX_SPEED_TEST, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50, on_progress);
 	arc_welder arc_welder_obj(
-		BARBARIAN,
+		SPIRAL_VASE_TEST_CYLINDER,
 		"C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", 
 		p_logger, 
 		max_resolution, 
 		path_tolerance_percent, 
 		max_radius_mm,
-		false, 
+		false,
+		true,
 		DEFAULT_GCODE_BUFFER_SIZE, 
 		on_progress);
 	//BENCHY_DIFFICULT
@@ -277,6 +278,7 @@ static void TestAntiStutter(std::string filePath)
 	//BARBARIAN
 	// BENCHY_L1_DIFFICULT
 	// SPIRAL_TEST
+	// SPIRAL_VASE_TEST_FUNNEL
 	arc_welder_results results = arc_welder_obj.process();
 	p_logger->log(0, INFO, results.progress.detail_str());
 	p_logger->log(0, INFO, "Processing Complete.");

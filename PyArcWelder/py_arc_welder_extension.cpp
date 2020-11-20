@@ -203,9 +203,9 @@ extern "C"
 		PyObject* p_results = Py_BuildValue(
 			"{s:i,s:i,s:s,s:O}",
 			"success",
-			results.success,
+			(long int)(results.success ? 1 : 0),
 			"is_cancelled",
-			results.cancelled,
+			(long int)(results.cancelled ? 1 : 0),
 			"message",
 			results.message.c_str(),
 			"progress",
