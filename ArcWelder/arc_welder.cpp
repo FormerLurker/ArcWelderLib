@@ -188,7 +188,8 @@ arc_welder_results results;
 		source_path_ << "', target_file_path:'" << target_path_ << "', resolution_mm:" <<
 		resolution_mm_ << "mm (+-" << current_arc_.get_resolution_mm() << "mm), path_tolerance_percent: " << current_arc_.get_path_tolerance_percent()  
 		<< ", max_radius_mm:" << current_arc_.get_max_radius() 
-		<< ", g90_91_influences_extruder: " << (p_source_position_->get_g90_91_influences_extruder() ? "True" : "False");
+		<< ", g90_91_influences_extruder: " << (p_source_position_->get_g90_91_influences_extruder() ? "True" : "False")
+		<< ", allow_z_axis_changes: " << (allow_z_axis_changes_ ? "True" : "False");
 	p_logger_->log(logger_type_, INFO, stream.str());
 
 
@@ -416,13 +417,12 @@ int arc_welder::process_gcode(parsed_command cmd, bool is_end, bool is_reprocess
 		}
 	}
 	
+	bool z_axis_ok = allow_z_axis_changes_ ||
+		utilities::is_equal(p_cur_pos->z, p_pre_pos->z);
+
 	if (
 		!is_end && cmd.is_known_command && !cmd.is_empty && (
-			is_g1_g2 &&
-			(
-				allow_z_axis_changes_ ||
-				utilities::is_equal(p_cur_pos->z, p_pre_pos->z)
-			) &&
+			is_g1_g2 && z_axis_ok &&
 			utilities::is_equal(p_cur_pos->x_offset, p_pre_pos->x_offset) &&
 			utilities::is_equal(p_cur_pos->y_offset, p_pre_pos->y_offset) &&
 			utilities::is_equal(p_cur_pos->z_offset, p_pre_pos->z_offset) &&
@@ -474,9 +474,7 @@ int arc_welder::process_gcode(parsed_command cmd, bool is_end, bool is_reprocess
 					{
 						p_logger_->log(logger_type_, DEBUG, "Adding point to arc from Gcode:" + cmd.gcode);
 					}
-					{
-						p_logger_->log(logger_type_, DEBUG, "Removed start point from arc and added a new point from Gcode:" + cmd.gcode);
-					}
+					
 				}
 			}
 		}
@@ -561,7 +559,7 @@ int arc_welder::process_gcode(parsed_command cmd, bool is_end, bool is_reprocess
 		}
 	}
 	
-	if (!arc_added)
+	if (!arc_added && !(cmd.is_empty && cmd.comment.length() == 0))
 	{
 		if (current_arc_.get_num_segments() < current_arc_.get_min_segments()) {
 			if (debug_logging_enabled_ && !cmd.is_empty)
@@ -690,7 +688,15 @@ int arc_welder::process_gcode(parsed_command cmd, bool is_end, bool is_reprocess
 		if (p_cur_pos->has_xy_position_changed && (cur_extruder.is_extruding || cur_extruder.is_retracting))
 		{
 			position* prev_pos = p_source_position_->get_previous_position_ptr();
-			length = utilities::get_cartesian_distance(cur_pos->x, cur_pos->y, prev_pos->x, prev_pos->y);
+			length = 0;
+			if (allow_z_axis_changes_)
+			{
+				length = utilities::get_cartesian_distance(cur_pos->x, cur_pos->y, cur_pos->z, prev_pos->x, prev_pos->y, prev_pos->z);
+			}
+			else {
+				length = utilities::get_cartesian_distance(cur_pos->x, cur_pos->y, prev_pos->x, prev_pos->y);
+			}
+			
 		}
 		
 		unwritten_commands_.push_back(unwritten_command(cur_pos, length));

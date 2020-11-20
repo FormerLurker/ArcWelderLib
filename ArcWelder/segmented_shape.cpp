@@ -381,6 +381,15 @@ bool arc::try_create_arc(
 	// but also could indicate that our vector calculation above
 	// got the direction wrong
 	double arc_length = c.radius * angle_radians;
+
+	if (allow_z_axis_changes)
+	{
+		// We may be traveling in 3 space, calculate the arc_length of the spiral
+		if (start_point.z != end_point.z)
+		{
+			arc_length = std::hypot(arc_length, end_point.z - start_point.z);
+		}
+	}
 	// Calculate the percent difference of the original path
 	double difference = (arc_length - approximate_length) / approximate_length;
 	if (!utilities::is_zero(difference, path_tolerance_percent))
@@ -395,6 +404,14 @@ bool arc::try_create_arc(
 		double test_radians = std::abs(angle_radians - 2 * PI_DOUBLE);
 		// Calculate the length of that arc
 		double test_arc_length = c.radius * test_radians;
+		if (allow_z_axis_changes)
+		{
+			// We may be traveling in 3 space, calculate the arc_length of the spiral
+			if (start_point.z != end_point.z)
+			{
+				test_arc_length = std::hypot(arc_length, end_point.z - start_point.z);
+			}
+		}
 		difference = (test_arc_length - approximate_length) / approximate_length;
 		if (!utilities::is_zero(difference, path_tolerance_percent))
 		{
@@ -408,7 +425,7 @@ bool arc::try_create_arc(
 	if (allow_z_axis_changes)
 	{
 		// Ensure the perimeter of the arc is less than that of a full circle
-		double perimeter = c.radius * 2.0 * PI_DOUBLE;
+		double perimeter = std::hypot(c.radius * 2.0 * PI_DOUBLE, end_point.z - start_point.z);
 		if (perimeter <= approximate_length) {
 			return false;
 		}

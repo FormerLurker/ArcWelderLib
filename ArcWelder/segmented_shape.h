@@ -25,7 +25,7 @@
 #pragma once
 #include <string>
 #include <limits>
-#define PI_DOUBLE 3.14159265358979323846
+#define PI_DOUBLE 3.14159265358979323846264338327950288
 
 #include <list> 
 #include "utilities.h"
@@ -121,7 +121,7 @@ struct circle {
 };
 
 #define DEFAULT_RESOLUTION_MM 0.05
-#define DEFAULT_ALLOW_Z_AXIS_CHANGES true
+#define DEFAULT_ALLOW_Z_AXIS_CHANGES false
 struct arc : circle
 {
 	arc() {

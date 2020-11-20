@@ -407,7 +407,7 @@ struct arc_welder_results {
 	std::string message;
 	arc_welder_progress progress;
 };
-#define DEFAULT_GCODE_BUFFER_SIZE 100
+#define DEFAULT_GCODE_BUFFER_SIZE 1000
 #define DEFAULT_G90_G91_INFLUENCES_EXTRUDER false
 class arc_welder
 {

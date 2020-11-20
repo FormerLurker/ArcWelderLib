@@ -94,7 +94,13 @@ int main(int argc, char* argv[])
     arg_description_stream.clear();
     arg_description_stream.str("");
     arg_description_stream << "If supplied, G90/G91 influences the extruder axis.  Default Value: " << DEFAULT_G90_G91_INFLUENCES_EXTRUDER;
-    TCLAP::SwitchArg g90_arg("g", "g90-influences-extruder", arg_description_stream.str(), false);
+    TCLAP::SwitchArg g90_arg("g", "g90-influences-extruder", arg_description_stream.str(), DEFAULT_G90_G91_INFLUENCES_EXTRUDER);
+
+    // -z --allow-z-axis-changes
+    arg_description_stream.clear();
+    arg_description_stream.str("");
+    arg_description_stream << "(experimental) - If supplied, z-axis changes will be allowed within arcs (supports spiral vase mode).  Default Value: " << DEFAULT_ALLOW_Z_AXIS_CHANGES;
+    TCLAP::SwitchArg allow_z_axis_changes_arg("z", "allow-z-axis-changes", arg_description_stream.str(), DEFAULT_ALLOW_Z_AXIS_CHANGES);
 
     // -g --hide-progress
     TCLAP::SwitchArg hide_progress_arg("p", "hide-progress", "If supplied, prevents progress updates from being displayed.", false);
@@ -121,6 +127,7 @@ int main(int argc, char* argv[])
     cmd.add(resolution_arg);
     cmd.add(path_tolerance_percent_arg);
     cmd.add(max_radius_arg);
+    cmd.add(allow_z_axis_changes_arg);
     cmd.add(g90_arg);
     cmd.add(hide_progress_arg);
     cmd.add(log_level_arg);
@@ -140,6 +147,7 @@ int main(int argc, char* argv[])
     resolution_mm = resolution_arg.getValue();
     max_radius_mm = max_radius_arg.getValue();
     path_tolerance_percent = path_tolerance_percent_arg.getValue();
+    allow_z_axis_changes = allow_z_axis_changes_arg.getValue();
     g90_g91_influences_extruder = g90_arg.getValue();
 
     hide_progress = hide_progress_arg.getValue();
@@ -249,6 +257,7 @@ int main(int argc, char* argv[])
   log_messages << "\tResolution                   : " << resolution_mm << "mm (+-" << std::setprecision(5) << resolution_mm/2.0 << "mm)\n";
   log_messages << "\tPath Tolerance               : " << std::setprecision(3) << path_tolerance_percent*100.0 << "%\n";
   log_messages << "\tMaximum Arc Radius           : " << std::setprecision(0) << max_radius_mm << "mm\n";
+  log_messages << "\tAllow Z-Axis Changes         : " << (allow_z_axis_changes ? "True" : "False") << "\n";
   log_messages << "\tG90/G91 Influences Extruder  : " << (g90_g91_influences_extruder ? "True" : "False") << "\n";
   log_messages << "\tLog Level                    : " << log_level_string << "\n";
   log_messages << "\tHide Progress Updates        : " << (hide_progress ? "True" : "False");

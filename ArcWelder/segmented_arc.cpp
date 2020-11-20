@@ -155,11 +155,18 @@ bool segmented_arc::try_add_point(point p, double e_relative)
 	{
 		// If we haven't added a point, and we have exactly min_segments_,
 		// pull off the initial arc point and try again
+
 		point old_initial_point = points_.pop_front();
 		// We have to remove the distance and e relative value
 		// accumulated between the old arc start point and the new
 		point new_initial_point = points_[0];
-		original_shape_length_ -= utilities::get_cartesian_distance(old_initial_point.x, old_initial_point.y, new_initial_point.x, new_initial_point.y);
+		if (allow_z_axis_changes_) {
+			original_shape_length_ -= utilities::get_cartesian_distance(old_initial_point.x, old_initial_point.y, old_initial_point.z, new_initial_point.x, new_initial_point.y, new_initial_point.z);
+		}
+		else {
+			original_shape_length_ -= utilities::get_cartesian_distance(old_initial_point.x, old_initial_point.y, new_initial_point.x, new_initial_point.y);
+		}
+		
 		e_relative_ -= new_initial_point.e_relative;
 		//std::cout << " failed - removing start point and retrying current point.\n";
 		return try_add_point(p, e_relative);

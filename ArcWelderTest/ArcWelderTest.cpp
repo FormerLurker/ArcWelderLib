@@ -241,14 +241,19 @@ static void TestAntiStutter(std::string filePath)
 	std::vector<std::string> logger_names;
 	logger_names.push_back("arc_welder.gcode_conversion");
 	std::vector<int> logger_levels;
-	//logger_levels.push_back(log_levels::DEBUG);
+	logger_levels.push_back(log_levels::NOSET);
+	logger_levels.push_back(log_levels::VERBOSE);
+	logger_levels.push_back(log_levels::DEBUG);
 	logger_levels.push_back(log_levels::INFO);
+	logger_levels.push_back(log_levels::WARNING);
+	logger_levels.push_back(log_levels::ERROR);
+	logger_levels.push_back(log_levels::CRITICAL);
 	logger* p_logger = new logger(logger_names, logger_levels);
 	p_logger->set_log_level(INFO);
 	//arc_welder arc_welder_obj(BENCHY_0_5_MM_NO_WIPE, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50, static_cast<progress_callback>(on_progress));
 	//arc_welder arc_welder_obj(SIX_SPEED_TEST, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50, on_progress);
 	arc_welder arc_welder_obj(
-		SPIRAL_VASE_TEST_CYLINDER,
+		SPIRAL_VASE_TEST_DOUBLE_SPIRAL,
 		"C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", 
 		p_logger, 
 		max_resolution, 

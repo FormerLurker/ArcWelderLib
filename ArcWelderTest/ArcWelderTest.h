@@ -83,6 +83,8 @@ static std::string SPIRAL_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStu
 static std::string SPIRAL_TEST_PRECISION = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\smoothietest\\SPIRAL_TEST_precision.gcode";
 static std::string SPIRAL_VASE_TEST_DOUBLE_SPIRAL = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\SpiralVaseTest\\SpiralVaseTest_DOUBLE_SPIRAL.gcode"; 
 static std::string SPIRAL_VASE_TEST_CYLINDER = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\SpiralVaseTest\\SpiralVaseTest_Cylinder.gcode";
+static std::string SPIRAL_VASE_TEST_SINGLE_LAYER_CYLINDER = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\SpiralVaseTest\\SpiralVaseSingleLayer_Cylinder.gcode";
+static std::string SPIRAL_VASE_TEST_PI_BOWL = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\SpiralVaseTest\\SpiralVaseTest_PiBowl.gcode";
 
 
 

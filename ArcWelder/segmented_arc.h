@@ -28,7 +28,7 @@
 #include <iomanip>
 #include <sstream>
 
-#define GCODE_CHAR_BUFFER_SIZE 100
+#define GCODE_CHAR_BUFFER_SIZE 1000
 
 class segmented_arc :
 	public segmented_shape
