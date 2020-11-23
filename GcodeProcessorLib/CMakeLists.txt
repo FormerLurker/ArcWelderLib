@@ -20,9 +20,17 @@ execute_process(
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
+# get the tag for the current branch
+execute_process(
+  COMMAND git describe --abbrev=0
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE GIT_TAG
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
 # get the most recent tagged version
 execute_process(
-  COMMAND git describe --tags
+  COMMAND git describe
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   OUTPUT_VARIABLE GIT_TAGGED_VERSION
   OUTPUT_STRIP_TRAILING_WHITESPACE

@@ -38,12 +38,12 @@ typedef signed char int8_t;
 #define M_PI       3.14159265358979323846   // pi
 enum AxisEnum { X_AXIS = 0, Y_AXIS= 1, Z_AXIS = 2, E_AXIS = 3, X_HEAD = 4, Y_HEAD = 5 };
 // Arc interpretation settings:
-#define DEFAULT_MM_PER_ARC_SEGMENT 100.0 // REQUIRED - The enforced maximum length of an arc segment
-#define DEFAULT_MIN_MM_PER_ARC_SEGMENT 0.2 /* OPTIONAL - the enforced minimum length of an interpolated segment.  Must be smaller than
+#define DEFAULT_MM_PER_ARC_SEGMENT 1.0 // REQUIRED - The enforced maximum length of an arc segment
+#define DEFAULT_MIN_MM_PER_ARC_SEGMENT 0 /* OPTIONAL - the enforced minimum length of an interpolated segment.  Must be smaller than
 	MM_PER_ARC_SEGMENT.  Only has an effect if MIN_ARC_SEGMENTS > 0 or ARC_SEGMENTS_PER_SEC > 0 */
 	// If both MIN_ARC_SEGMENTS and ARC_SEGMENTS_PER_SEC is defined, the minimum calculated segment length is used.
-#define DEFAULT_MIN_ARC_SEGMENTS 10 // OPTIONAL - The enforced minimum segments in a full circle of the same radius.
-#define DEFAULT_ARC_SEGMENTS_PER_SEC 30 // OPTIONAL - Use feedrate to choose segment length.
+#define DEFAULT_MIN_ARC_SEGMENTS 0 // OPTIONAL - The enforced minimum segments in a full circle of the same radius.
+#define DEFAULT_ARC_SEGMENTS_PER_SEC 0 // OPTIONAL - Use feedrate to choose segment length.
 // approximation will not be used for the first segment.  Subsequent segments will be corrected following DEFAULT_N_ARC_CORRECTION.
 
 struct ConfigurationStore {
@@ -53,19 +53,21 @@ struct ConfigurationStore {
 		min_arc_segments = DEFAULT_MIN_ARC_SEGMENTS;
 		arc_segments_per_sec = DEFAULT_ARC_SEGMENTS_PER_SEC;
 	}
-	float mm_per_arc_segment;
-	float min_mm_per_arc_segment;
+	float mm_per_arc_segment; // This value is ALWAYS used.
+	float min_mm_per_arc_segment;  // if less than or equal to 0, this is disabled
 	int min_arc_segments; // If less than or equal to zero, this is disabled
-	int arc_segments_per_sec; // If less than or equal to zero, this is disabled
+	double arc_segments_per_sec; // If less than or equal to zero, this is disabled
+	
 };
 class inverse_processor {
 public:
-	inverse_processor(std::string source_path, std::string target_path, bool g90_g91_influences_extruder, int buffer_size);
+	inverse_processor(std::string source_path, std::string target_path, bool g90_g91_influences_extruder, int buffer_size, ConfigurationStore cs = ConfigurationStore());
 	virtual ~inverse_processor();
 	void process();
 	void mc_arc(float* position, float* target, float* offset, float feed_rate, float radius, uint8_t isclockwise, uint8_t extruder);
-	ConfigurationStore cs;
+	
 private:
+	ConfigurationStore cs_;
 	gcode_position_args get_args_(bool g90_g91_influences_extruder, int buffer_size);
 	std::string source_path_;
 	std::string target_path_;

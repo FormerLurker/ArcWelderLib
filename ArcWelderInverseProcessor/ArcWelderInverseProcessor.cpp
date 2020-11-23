@@ -55,6 +55,12 @@ int main(int argc, char* argv[])
   std::string target_file_path;
   bool overwrite_source_file = false;
   bool g90_g91_influences_extruder;
+
+  ConfigurationStore cs;
+  double mm_per_arc_segment;
+  double min_mm_per_arc_segment;
+  int min_arc_segments;
+  double arc_segments_per_sec;
   
   std::string log_level_string;
   std::string log_level_string_default = "INFO";
@@ -77,7 +83,31 @@ int main(int argc, char* argv[])
     arg_description_stream.str("");
     arg_description_stream << "If supplied, G90/G91 influences the extruder axis.  Default Value: " << DEFAULT_G90_G91_INFLUENCES_EXTRUDER;
     TCLAP::SwitchArg g90_arg("g", "g90-influences-extruder", arg_description_stream.str(), false);
-    
+
+    // -m --mm-per-arc-segment
+    arg_description_stream.clear();
+    arg_description_stream.str("");
+    arg_description_stream << "The default segment length. Default Value: " << DEFAULT_MM_PER_ARC_SEGMENT;
+    TCLAP::ValueArg<double> mm_per_arc_segment_arg("m", "mm-per-arc-segment", arg_description_stream.str(), false, DEFAULT_MM_PER_ARC_SEGMENT, "float");
+
+    // -n --min-mm-per-arc-segment
+    arg_description_stream.clear();
+    arg_description_stream.str("");
+    arg_description_stream << "The minimum mm per arc segment.  Used to prevent unnecessarily small segments from being generated. A value less than or equal to 0 will disable this feature. Default Value: " << DEFAULT_MIN_MM_PER_ARC_SEGMENT;
+    TCLAP::ValueArg<double> min_mm_per_arc_segment_arg("n", "min-mm-per-arc-segment", arg_description_stream.str(), false, DEFAULT_MIN_MM_PER_ARC_SEGMENT, "float");
+
+    // -s --min-arc-segments
+    arg_description_stream.clear();
+    arg_description_stream.str("");
+    arg_description_stream << "The minimum number of segments within a circle of the same radius as the arc.  Can be used to increase detail on small arcs.  The smallest segment generated will be no larger than min_mm_per_arc_segment.  A value less than or equal to 0 will disable this feature.  Default Value: " << DEFAULT_MIN_ARC_SEGMENTS;
+    TCLAP::ValueArg<int> min_arc_segments_arg("r", "min-arc-segments", arg_description_stream.str(), false, DEFAULT_MIN_ARC_SEGMENTS, "int");
+
+    // -s --arc-segments-per-second
+    arg_description_stream.clear();
+    arg_description_stream.str("");
+    arg_description_stream << "The number of segments per second.  This will produce a constant number of arcs, clamped between mm-per-arc-segment and min-mm-per-arc-segment.  Can be used to prevent stuttering when printing very quickly.  A value less than or equal to 0 will disable this feature.  Default Value: " << DEFAULT_ARC_SEGMENTS_PER_SEC;
+    TCLAP::ValueArg<double> arc_segments_per_sec_arg("s", "arc-segments-per-second", arg_description_stream.str(), false, DEFAULT_MIN_MM_PER_ARC_SEGMENT, "float");
+
     // -l --log-level
     std::vector<std::string> log_levels_vector;
     log_levels_vector.push_back("NOSET");
@@ -98,6 +128,12 @@ int main(int argc, char* argv[])
     cmd.add(source_arg);
     cmd.add(target_arg);
     cmd.add(g90_arg);
+
+    cmd.add(mm_per_arc_segment_arg);
+    cmd.add(min_mm_per_arc_segment_arg);
+    cmd.add(min_arc_segments_arg);
+    cmd.add(arc_segments_per_sec_arg);
+
     cmd.add(log_level_arg);
 
     // Parse the argv array.
@@ -106,6 +142,15 @@ int main(int argc, char* argv[])
     // Get the value parsed by each arg. 
     source_file_path = source_arg.getValue();
     target_file_path = target_arg.getValue();
+    mm_per_arc_segment = mm_per_arc_segment_arg.getValue();
+    min_mm_per_arc_segment = min_mm_per_arc_segment_arg.getValue();
+    min_arc_segments = min_arc_segments_arg.getValue();
+    arc_segments_per_sec = arc_segments_per_sec_arg.getValue();
+
+    cs.mm_per_arc_segment = (float)mm_per_arc_segment;
+    cs.min_mm_per_arc_segment = (float)min_mm_per_arc_segment;
+    cs.min_arc_segments = min_arc_segments;
+    cs.arc_segments_per_sec = arc_segments_per_sec;
 
     if (target_file_path.size() == 0)
     {
@@ -188,7 +233,7 @@ int main(int argc, char* argv[])
     target_file_path = temp_file_path;
   }
   
-  inverse_processor processor(source_file_path, target_file_path, g90_g91_influences_extruder, 50);
+  inverse_processor processor(source_file_path, target_file_path, g90_g91_influences_extruder, 50, cs);
   processor.process();
   // Todo:  get some results!
   if (true)

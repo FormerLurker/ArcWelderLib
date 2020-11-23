@@ -54,11 +54,12 @@
 //#include "stepper.h"
 //#include "planner.h"
 
-inverse_processor::inverse_processor(std::string source_path, std::string target_path, bool g90_g91_influences_extruder, int buffer_size)
+inverse_processor::inverse_processor(std::string source_path, std::string target_path, bool g90_g91_influences_extruder, int buffer_size, ConfigurationStore cs)
 {
     source_path_ = source_path;
     target_path_ = target_path;
     p_source_position_ = new gcode_position(get_args_(g90_g91_influences_extruder, buffer_size));
+    cs_ = cs;
     // ** Gloabal Variable Definition **
     // 20200417 - FormerLurker - Declare two globals and pre-calculate some values that will reduce the
     // amount of trig funcitons we need to call while printing.  For the price of having two globals we
@@ -259,50 +260,50 @@ void inverse_processor::mc_arc(float* position, float* target, float* offset, fl
     float rt_x = t_x - center_axis_x;
     float rt_y = t_y - center_axis_y;
     // 20200419 - Add a variable that will be used to hold the arc segment length
-    float mm_per_arc_segment = cs.mm_per_arc_segment;
+    float mm_per_arc_segment = cs_.mm_per_arc_segment;
 
     // CCW angle between position and target from circle center. Only one atan2() trig computation required.
     float angular_travel_total = atan2(r_axis_x * rt_y - r_axis_y * rt_x, r_axis_x * rt_x + r_axis_y * rt_y);
-    if (angular_travel_total < 0) { angular_travel_total += 2 * M_PI; }
+    if (angular_travel_total < 0) { angular_travel_total += (float)(2 * M_PI); }
 
     bool check_mm_per_arc_segment_max = false;
-    if (cs.min_arc_segments > 0)
+    if (cs_.min_arc_segments > 0)
     {
         // 20200417 - FormerLurker - Implement MIN_ARC_SEGMENTS if it is defined - from Marlin 2.0 implementation
         // Do this before converting the angular travel for clockwise rotation
-        mm_per_arc_segment = radius * ((2.0f * M_PI) / cs.min_arc_segments);
+        mm_per_arc_segment = (float)(radius * ((2.0f * M_PI) / cs_.min_arc_segments));
         check_mm_per_arc_segment_max = true;
     }
 
-    if (cs.arc_segments_per_sec > 0)
+    if (cs_.arc_segments_per_sec > 0)
     {
         // 20200417 - FormerLurker - Implement MIN_ARC_SEGMENTS if it is defined - from Marlin 2.0 implementation
-        float mm_per_arc_segment_sec = (feed_rate / 60.0f) * (1.0f / cs.arc_segments_per_sec);
+        float mm_per_arc_segment_sec = (float)((feed_rate / 60.0f) * (1.0f / cs_.arc_segments_per_sec));
         if (mm_per_arc_segment_sec < mm_per_arc_segment)
             mm_per_arc_segment = mm_per_arc_segment_sec;
         check_mm_per_arc_segment_max = true;
     }
 
-    if (cs.min_mm_per_arc_segment > 0)
+    if (cs_.min_mm_per_arc_segment > 0)
     {
         check_mm_per_arc_segment_max = true;
         // 20200417 - FormerLurker - Implement MIN_MM_PER_ARC_SEGMENT if it is defined
         // This prevents a very high number of segments from being generated for curves of a short radius
-        if (mm_per_arc_segment < cs.min_mm_per_arc_segment)  mm_per_arc_segment = cs.min_mm_per_arc_segment;
+        if (mm_per_arc_segment < cs_.min_mm_per_arc_segment)  mm_per_arc_segment = cs_.min_mm_per_arc_segment;
     }
 
-    if (check_mm_per_arc_segment_max && mm_per_arc_segment > cs.mm_per_arc_segment) mm_per_arc_segment = cs.mm_per_arc_segment;
+    if (check_mm_per_arc_segment_max && mm_per_arc_segment > cs_.mm_per_arc_segment) mm_per_arc_segment = cs_.mm_per_arc_segment;
 
 
 
     // Adjust the angular travel if the direction is clockwise
-    if (isclockwise) { angular_travel_total -= 2 * M_PI; }
+    if (isclockwise) { angular_travel_total -= (float)(2 * M_PI); }
 
     //20141002:full circle for G03 did not work, e.g. G03 X80 Y80 I20 J0 F2000 is giving an Angle of zero so head is not moving
     //to compensate when start pos = target pos && angle is zero -> angle = 2Pi
     if (p_x == t_x && p_y == t_y && angular_travel_total == 0)
     {
-        angular_travel_total += 2 * M_PI;
+        angular_travel_total += (float)(2 * M_PI);
     }
     //end fix G03
 
@@ -388,15 +389,8 @@ void inverse_processor::plan_buffer_line(float x, float y, float z, const float&
     //output_file_ <<
 
     stream << "G1 X" << std::setprecision(3) << x << " Y" << y;
-    if (output_relative_)
-    {
-        stream << std::setprecision(5) << " E" << output_relative_;
-    }
-    else
-    {
-        stream << std::setprecision(5) << " E" << e;
-    }
-
+    stream << std::setprecision(5) << " E" << e;
+    
     stream << std::setprecision(0) << " F" << feed_rate << "\n";
     output_file_ << stream.str();
 }

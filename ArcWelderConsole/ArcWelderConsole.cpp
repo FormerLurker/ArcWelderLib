@@ -40,6 +40,8 @@ int main(int argc, char* argv[])
   std::string target_file_path;
   double resolution_mm;
   double max_radius_mm;
+  int min_arc_segments;
+  double mm_per_arc_segment;
   double path_tolerance_percent;
   bool g90_g91_influences_extruder;
   bool hide_progress;
@@ -90,6 +92,19 @@ int main(int argc, char* argv[])
     arg_description_stream << "The maximum radius of any arc in mm. Default Value: " << DEFAULT_MAX_RADIUS_MM;
     TCLAP::ValueArg<double> max_radius_arg("m", "max-radius-mm", arg_description_stream.str(), false, DEFAULT_MAX_RADIUS_MM, "float");
 
+
+    // -s --mm-per-arc-segment
+    arg_description_stream.clear();
+    arg_description_stream.str("");
+    arg_description_stream << "The mm per arc segment as defined in your firmware.   Used to compensate for firmware without min-arc-segments setting.  Requires that min-arc-segments be set.  Default Value: " << DEFAULT_MAX_RADIUS_MM;
+    TCLAP::ValueArg<double> mm_per_arc_segment_arg("s", "mm-per-arc-segment", arg_description_stream.str(), false, DEFAULT_MAX_RADIUS_MM, "float");
+
+    // -a --min-arc-segments
+    arg_description_stream.clear();
+    arg_description_stream.str("");
+    arg_description_stream << "The minimum number of segments in a full circle of the same radius as any given arc.  Can only be used if --mm-per-arc-segment is also set.  Used to compensate for firmware without min-arc-segments setting.  Default: " << DEFAULT_MIN_ARC_SEGMENTS;
+    TCLAP::ValueArg<int> min_arc_segments_arg("a", "min-arc-segments", arg_description_stream.str(), false, DEFAULT_MIN_ARC_SEGMENTS, "int");
+
     // -g --g90-influences-extruder
     arg_description_stream.clear();
     arg_description_stream.str("");
@@ -127,6 +142,8 @@ int main(int argc, char* argv[])
     cmd.add(resolution_arg);
     cmd.add(path_tolerance_percent_arg);
     cmd.add(max_radius_arg);
+    cmd.add(min_arc_segments_arg);
+    cmd.add(mm_per_arc_segment_arg);
     cmd.add(allow_z_axis_changes_arg);
     cmd.add(g90_arg);
     cmd.add(hide_progress_arg);
@@ -146,6 +163,8 @@ int main(int argc, char* argv[])
 
     resolution_mm = resolution_arg.getValue();
     max_radius_mm = max_radius_arg.getValue();
+    min_arc_segments = min_arc_segments_arg.getValue();
+    mm_per_arc_segment = mm_per_arc_segment_arg.getValue();
     path_tolerance_percent = path_tolerance_percent_arg.getValue();
     allow_z_axis_changes = allow_z_axis_changes_arg.getValue();
     g90_g91_influences_extruder = g90_arg.getValue();
@@ -172,6 +191,20 @@ int main(int argc, char* argv[])
     {
       // warning
       std::cout << "warning: The provided path max radius of " << max_radius_mm << "mm is greater than 1000000 (1km), which is not recommended." << std::endl;
+    }
+
+    if (min_arc_segments < 0)
+    {
+      // warning
+      std::cout << "warning: The provided min_arc_segments " << min_arc_segments << " is less than zero.  Setting to 0." << std::endl;
+      min_arc_segments = 0;
+    }
+
+    if (mm_per_arc_segment < 0)
+    {
+      // warning
+      std::cout << "warning: The provided mm_per_arc_segment " << mm_per_arc_segment << "mm is less than zero.  Setting to 0." << std::endl;
+      mm_per_arc_segment = 0;
     }
 
     if (path_tolerance_percent > 0.05)
@@ -257,6 +290,8 @@ int main(int argc, char* argv[])
   log_messages << "\tResolution                   : " << resolution_mm << "mm (+-" << std::setprecision(5) << resolution_mm/2.0 << "mm)\n";
   log_messages << "\tPath Tolerance               : " << std::setprecision(3) << path_tolerance_percent*100.0 << "%\n";
   log_messages << "\tMaximum Arc Radius           : " << std::setprecision(0) << max_radius_mm << "mm\n";
+  log_messages << "\tMin Arc Segments             : " << std::setprecision(0) << min_arc_segments << "\n";
+  log_messages << "\tMM Per Arc Segment           : " << std::setprecision(3) << mm_per_arc_segment << "\n";
   log_messages << "\tAllow Z-Axis Changes         : " << (allow_z_axis_changes ? "True" : "False") << "\n";
   log_messages << "\tG90/G91 Influences Extruder  : " << (g90_g91_influences_extruder ? "True" : "False") << "\n";
   log_messages << "\tLog Level                    : " << log_level_string << "\n";
@@ -269,9 +304,9 @@ int main(int argc, char* argv[])
     target_file_path = temp_file_path;
   }
   if (!hide_progress)
-    p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, path_tolerance_percent, max_radius_mm, g90_g91_influences_extruder, allow_z_axis_changes,  DEFAULT_GCODE_BUFFER_SIZE, on_progress);
+    p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, path_tolerance_percent, max_radius_mm, min_arc_segments, mm_per_arc_segment, g90_g91_influences_extruder, allow_z_axis_changes,  DEFAULT_GCODE_BUFFER_SIZE, on_progress);
   else
-    p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, path_tolerance_percent, max_radius_mm, g90_g91_influences_extruder, allow_z_axis_changes, DEFAULT_GCODE_BUFFER_SIZE, suppress_progress);
+    p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, path_tolerance_percent, max_radius_mm, min_arc_segments, mm_per_arc_segment, g90_g91_influences_extruder, allow_z_axis_changes, DEFAULT_GCODE_BUFFER_SIZE, suppress_progress);
 
   arc_welder_results results = p_arc_welder->process();
   if (results.success)
