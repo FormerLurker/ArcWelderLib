@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
   bool g90_g91_influences_extruder;
   bool hide_progress;
   bool overwrite_source_file = false;
-  bool allow_z_axis_changes = false;
+  bool allow_3d_arcs = false;
   std::string log_level_string;
   std::string log_level_string_default = "INFO";
   int log_level_value;
@@ -111,11 +111,11 @@ int main(int argc, char* argv[])
     arg_description_stream << "If supplied, G90/G91 influences the extruder axis.  Default Value: " << DEFAULT_G90_G91_INFLUENCES_EXTRUDER;
     TCLAP::SwitchArg g90_arg("g", "g90-influences-extruder", arg_description_stream.str(), DEFAULT_G90_G91_INFLUENCES_EXTRUDER);
 
-    // -z --allow-z-axis-changes
+    // -z --allow-3d-arcs
     arg_description_stream.clear();
     arg_description_stream.str("");
-    arg_description_stream << "(experimental) - If supplied, z-axis changes will be allowed within arcs (supports spiral vase mode).  Default Value: " << DEFAULT_ALLOW_Z_AXIS_CHANGES;
-    TCLAP::SwitchArg allow_z_axis_changes_arg("z", "allow-z-axis-changes", arg_description_stream.str(), DEFAULT_ALLOW_Z_AXIS_CHANGES);
+    arg_description_stream << "(experimental) - If supplied, 3D arcs will be allowed (supports spiral vase mode).  Not all firmware supports this.  Default Value: " << DEFAULT_allow_3d_arcs;
+    TCLAP::SwitchArg allow_3d_arcs_arg("z", "allow-3d-arcs", arg_description_stream.str(), DEFAULT_allow_3d_arcs);
 
     // -g --hide-progress
     TCLAP::SwitchArg hide_progress_arg("p", "hide-progress", "If supplied, prevents progress updates from being displayed.", false);
@@ -144,7 +144,7 @@ int main(int argc, char* argv[])
     cmd.add(max_radius_arg);
     cmd.add(min_arc_segments_arg);
     cmd.add(mm_per_arc_segment_arg);
-    cmd.add(allow_z_axis_changes_arg);
+    cmd.add(allow_3d_arcs_arg);
     cmd.add(g90_arg);
     cmd.add(hide_progress_arg);
     cmd.add(log_level_arg);
@@ -166,7 +166,7 @@ int main(int argc, char* argv[])
     min_arc_segments = min_arc_segments_arg.getValue();
     mm_per_arc_segment = mm_per_arc_segment_arg.getValue();
     path_tolerance_percent = path_tolerance_percent_arg.getValue();
-    allow_z_axis_changes = allow_z_axis_changes_arg.getValue();
+    allow_3d_arcs = allow_3d_arcs_arg.getValue();
     g90_g91_influences_extruder = g90_arg.getValue();
 
     hide_progress = hide_progress_arg.getValue();
@@ -292,7 +292,7 @@ int main(int argc, char* argv[])
   log_messages << "\tMaximum Arc Radius           : " << std::setprecision(0) << max_radius_mm << "mm\n";
   log_messages << "\tMin Arc Segments             : " << std::setprecision(0) << min_arc_segments << "\n";
   log_messages << "\tMM Per Arc Segment           : " << std::setprecision(3) << mm_per_arc_segment << "\n";
-  log_messages << "\tAllow Z-Axis Changes         : " << (allow_z_axis_changes ? "True" : "False") << "\n";
+  log_messages << "\tAllow Z-Axis Changes         : " << (allow_3d_arcs ? "True" : "False") << "\n";
   log_messages << "\tG90/G91 Influences Extruder  : " << (g90_g91_influences_extruder ? "True" : "False") << "\n";
   log_messages << "\tLog Level                    : " << log_level_string << "\n";
   log_messages << "\tHide Progress Updates        : " << (hide_progress ? "True" : "False");
@@ -304,9 +304,9 @@ int main(int argc, char* argv[])
     target_file_path = temp_file_path;
   }
   if (!hide_progress)
-    p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, path_tolerance_percent, max_radius_mm, min_arc_segments, mm_per_arc_segment, g90_g91_influences_extruder, allow_z_axis_changes,  DEFAULT_GCODE_BUFFER_SIZE, on_progress);
+    p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, path_tolerance_percent, max_radius_mm, min_arc_segments, mm_per_arc_segment, g90_g91_influences_extruder, allow_3d_arcs,  DEFAULT_GCODE_BUFFER_SIZE, on_progress);
   else
-    p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, path_tolerance_percent, max_radius_mm, min_arc_segments, mm_per_arc_segment, g90_g91_influences_extruder, allow_z_axis_changes, DEFAULT_GCODE_BUFFER_SIZE, suppress_progress);
+    p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, path_tolerance_percent, max_radius_mm, min_arc_segments, mm_per_arc_segment, g90_g91_influences_extruder, allow_3d_arcs, DEFAULT_GCODE_BUFFER_SIZE, suppress_progress);
 
   arc_welder_results results = p_arc_welder->process();
   if (results.success)
