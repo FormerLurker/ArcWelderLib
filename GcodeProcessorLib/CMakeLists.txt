@@ -7,7 +7,7 @@ project(GcodeProcessorLib C CXX)
 # First get the current branch and store to GIT_BRANCH variable
 execute_process(
   COMMAND git rev-parse --abbrev-ref HEAD
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   OUTPUT_VARIABLE GIT_BRANCH
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
@@ -15,7 +15,7 @@ execute_process(
 # get the current commit version
 execute_process(
   COMMAND git log -1 --format=%h
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   OUTPUT_VARIABLE GIT_COMMIT_HASH
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
@@ -23,7 +23,7 @@ execute_process(
 # get the tag for the current branch
 execute_process(
   COMMAND git describe --abbrev=0
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   OUTPUT_VARIABLE GIT_TAG
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
@@ -31,7 +31,7 @@ execute_process(
 # get the most recent tagged version
 execute_process(
   COMMAND git describe
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   OUTPUT_VARIABLE GIT_TAGGED_VERSION
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
