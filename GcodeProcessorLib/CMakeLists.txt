@@ -52,7 +52,7 @@ configure_file(
 include_directories("${CMAKE_BINARY_DIR}/GcodeProcessorLib/generated/")
 
 # copy version.h file to the source folder for later deployment
-file(COPY "${CMAKE_BINARY_DIR}/GcodeProcessorLib/version.generated.h" DESTINATION "${PROJECT_SOURCE_DIR}/deploy")
+file(COPY "${CMAKE_BINARY_DIR}/GcodeProcessorLib/generated/version.generated.h" DESTINATION "${PROJECT_SOURCE_DIR}/deploy")
 file(RENAME "${PROJECT_SOURCE_DIR}/deploy/version.generated.h" "${PROJECT_SOURCE_DIR}/deploy/version.h")
 
 option(USE_CXX_EXCEPTIONS "Enable C++ exception support" ON)
