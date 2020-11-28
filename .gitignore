@@ -346,3 +346,4 @@ ASALocalRun/
 healthchecksdb
 /DeployCodeToPlugin.bat
 /DeployCodeToPlugin_Exclude.txt
+/GcodeProcessorLib/deploy/version.h
