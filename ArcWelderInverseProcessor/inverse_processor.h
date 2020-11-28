@@ -45,6 +45,7 @@ enum AxisEnum { X_AXIS = 0, Y_AXIS= 1, Z_AXIS = 2, E_AXIS = 3, X_HEAD = 4, Y_HEA
 #define DEFAULT_MIN_ARC_SEGMENTS 0 // OPTIONAL - The enforced minimum segments in a full circle of the same radius.
 #define DEFAULT_ARC_SEGMENTS_PER_SEC 0 // OPTIONAL - Use feedrate to choose segment length.
 // approximation will not be used for the first segment.  Subsequent segments will be corrected following DEFAULT_N_ARC_CORRECTION.
+#define DEFAULT_N_ARC_CORRECTIONS 24
 
 struct ConfigurationStore {
 	ConfigurationStore() {
@@ -52,11 +53,13 @@ struct ConfigurationStore {
 		min_mm_per_arc_segment = DEFAULT_MIN_MM_PER_ARC_SEGMENT;
 		min_arc_segments = DEFAULT_MIN_ARC_SEGMENTS;
 		arc_segments_per_sec = DEFAULT_ARC_SEGMENTS_PER_SEC;
+		n_arc_correction = DEFAULT_N_ARC_CORRECTIONS;
 	}
 	float mm_per_arc_segment; // This value is ALWAYS used.
 	float min_mm_per_arc_segment;  // if less than or equal to 0, this is disabled
 	int min_arc_segments; // If less than or equal to zero, this is disabled
 	double arc_segments_per_sec; // If less than or equal to zero, this is disabled
+	int n_arc_correction;
 	
 };
 class inverse_processor {

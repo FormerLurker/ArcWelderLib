@@ -347,16 +347,39 @@ void inverse_processor::mc_arc(float* position, float* target, float* offset, fl
     if (segments > 1)
     {
         // Initialize the extruder axis
+        float cos_T, sin_T, sin_Ti, cos_Ti;
+        //float cos_T = cos(theta_per_segment);
+        //float sin_T = sin(theta_per_segment);
+        float sq_theta_per_segment = theta_per_segment * theta_per_segment;
+        sin_T = theta_per_segment - sq_theta_per_segment * theta_per_segment / 6;
+        cos_T = 1 - 0.5f * sq_theta_per_segment; // Small angle approximation
 
-        float cos_T = cos(theta_per_segment);
-        float sin_T = sin(theta_per_segment);
+        //cos_T = 1 - 0.5 * theta_per_segment * theta_per_segment; // Small angle approximation
+        //sin_T = theta_per_segment;
         float r_axisi;
         uint16_t i;
-
+        int8_t count = 0;
         for (i = 1; i < segments; i++) { // Increment (segments-1)
+
+          if (count < cs_.n_arc_correction) {
+            // Apply vector rotation matrix 
             r_axisi = r_axis_x * sin_T + r_axis_y * cos_T;
             r_axis_x = r_axis_x * cos_T - r_axis_y * sin_T;
             r_axis_y = r_axisi;
+            count++;
+          }
+          else {
+            // Arc correction to radius vector. Computed only every N_ARC_CORRECTION increments.
+            // Compute exact location by applying transformation matrix from initial radius vector(=-offset).
+            cos_Ti = cos(i * theta_per_segment);
+            sin_Ti = sin(i * theta_per_segment);
+            r_axis_x = -offset[X_AXIS] * cos_Ti + offset[Y_AXIS] * sin_Ti;
+            r_axis_y = -offset[X_AXIS] * sin_Ti - offset[Y_AXIS] * cos_Ti;
+            count = 0;
+
+          }
+
+            
 
             // Update arc_target location
             p_x = center_axis_x + r_axis_x;
