@@ -51,6 +51,10 @@ configure_file(
 )
 include_directories("${CMAKE_BINARY_DIR}/GcodeProcessorLib/generated/")
 
+# copy version.h file to the source folder for later deployment
+file(COPY "${CMAKE_BINARY_DIR}/GcodeProcessorLib/version.generated.h" DESTINATION "${PROJECT_SOURCE_DIR}/deploy")
+file(RENAME "${PROJECT_SOURCE_DIR}/deploy/version.generated.h" "${PROJECT_SOURCE_DIR}/deploy/version.h")
+
 option(USE_CXX_EXCEPTIONS "Enable C++ exception support" ON)
 
 # include sourcelist.cmake, which contains our source list and exposes it as the
@@ -64,7 +68,7 @@ add_library(${PROJECT_NAME} STATIC ${GcodeProcessorLibSources})
 install(
     TARGETS ${PROJECT_NAME}
     ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib  # <-- Add this line
+    LIBRARY DESTINATION lib
     COMPONENT library
 )
 

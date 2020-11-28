@@ -4,6 +4,7 @@ project(ArcWelderInverseProcessor C CXX)
 
 # add definitions from the GcodeProcessorLib and ArcWelder libraries
 add_definitions(${GcodeProcessorLib_DEFINITIONS} ${ArcWelder_DEFINITIONS})
+add_definitions("-DHAS_GENERATED_VERSION")
 
 # Include the GcodeProcessorLib and ArcWelder's directories
 include_directories(${GcodeProcessorLib_INCLUDE_DIRS} ${ArcWelder_INCLUDE_DIRS} ${TCLAP_INCLUDE_DIRS})
