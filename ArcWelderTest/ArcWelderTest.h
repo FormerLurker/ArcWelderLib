@@ -88,6 +88,7 @@ static std::string SPIRAL_VASE_TEST_PI_BOWL = "C:\\Users\\Brad\\Documents\\3DPri
 
 static std::string FIRMWARE_COMPENSATION_TEST_1 = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\cylinder_tests\\cylinder_test_0.1_5.0_0.1.gcode";
 static std::string BENCHY_MIN_RADIUS_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\BenchyMinRadiusTest.gcode";
+static std::string ISSUE_85 = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\Issue85.gcode";
 
 
 

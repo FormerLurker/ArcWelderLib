@@ -34,7 +34,7 @@
 			"buildCommandArgs": "",
 			"ctestCommandArgs": "",
 			"inheritEnvironments": [ "linux_arm" ],
-			"remoteMachineName": "${defaultRemoteMachineName}",
+			"remoteMachineName": "1047335263;Tako3 (username=pi, port=22, authentication=Password)",
 			"remoteCMakeListsRoot": "$HOME/.vs/${projectDirName}/${workspaceHash}/src",
 			"remoteBuildRoot": "$HOME/.vs/${projectDirName}/${workspaceHash}/out/build/${name}",
 			"remoteInstallRoot": "$HOME/.vs/${projectDirName}/${workspaceHash}/out/install/${name}",
