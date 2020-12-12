@@ -237,11 +237,11 @@ static void TestAntiStutter(std::string filePath)
 	double max_resolution = 0.05;
 	double max_radius_mm = 100000;
 	//int min_arc_segments = DEFAULT_MIN_ARC_SEGMENTS;
-	int min_arc_segments = 12;
+	int min_arc_segments = 0;
 	double mm_per_arc_segment = 1;
 
 	//double path_tolerance_percent = ARC_LENGTH_PERCENT_TOLERANCE_DEFAULT; // 1 percent
-	double path_tolerance_percent = 0.05;
+	double path_tolerance_percent = 0.05;					 
 	//double path_tolerance_percent = 0.05;
 	std::vector<std::string> logger_names;
 	logger_names.push_back("arc_welder.gcode_conversion");
@@ -259,7 +259,7 @@ static void TestAntiStutter(std::string filePath)
 	//arc_welder arc_welder_obj(BENCHY_0_5_MM_NO_WIPE, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50, static_cast<progress_callback>(on_progress));
 	//arc_welder arc_welder_obj(SIX_SPEED_TEST, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50, on_progress);
 	arc_welder arc_welder_obj(
-		ISSUE_85,
+		ISSUE_93,
 		"C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", 
 		p_logger, 
 		max_resolution, 
@@ -269,6 +269,9 @@ static void TestAntiStutter(std::string filePath)
 		mm_per_arc_segment,
 		false,
 		true,
+		DEFAULT_ALLOW_DYNAMIC_PRECISION,
+		DEFAULT_XYZ_PRECISION,
+		DEFAULT_E_PRECISION,
 		DEFAULT_GCODE_BUFFER_SIZE, 
 		on_progress);
 	//FIRMWARE_COMPENSATION_TEST_1

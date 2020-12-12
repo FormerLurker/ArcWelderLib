@@ -47,6 +47,9 @@ int main(int argc, char* argv[])
   bool hide_progress;
   bool overwrite_source_file = false;
   bool allow_3d_arcs = false;
+  bool allow_dynamic_precision = DEFAULT_ALLOW_DYNAMIC_PRECISION;
+  unsigned char default_xyz_precision = DEFAULT_XYZ_PRECISION;
+  unsigned char default_e_precision = DEFAULT_E_PRECISION;
   std::string log_level_string;
   std::string log_level_string_default = "INFO";
   int log_level_value;
@@ -114,8 +117,26 @@ int main(int argc, char* argv[])
     // -z --allow-3d-arcs
     arg_description_stream.clear();
     arg_description_stream.str("");
-    arg_description_stream << "(experimental) - If supplied, 3D arcs will be allowed (supports spiral vase mode).  Not all firmware supports this.  Default Value: " << DEFAULT_allow_3d_arcs;
-    TCLAP::SwitchArg allow_3d_arcs_arg("z", "allow-3d-arcs", arg_description_stream.str(), DEFAULT_allow_3d_arcs);
+    arg_description_stream << "(experimental) - If supplied, 3D arcs will be allowed (supports spiral vase mode).  Not all firmware supports this.  Default Value: " << DEFAULT_ALLOW_3D_ARCS;
+    TCLAP::SwitchArg allow_3d_arcs_arg("z", "allow-3d-arcs", arg_description_stream.str(), DEFAULT_ALLOW_3D_ARCS);
+
+    // -d --allow-dynamic-precision
+    arg_description_stream.clear();
+    arg_description_stream.str("");
+    arg_description_stream << "If supplied, arcwelder will adjust the precision of the outputted gcode based on the precision of the input gcode.  Default Value: " << DEFAULT_ALLOW_DYNAMIC_PRECISION;
+    TCLAP::SwitchArg allow_dynamic_precision_arg("d", "allow-dynamic-precision", arg_description_stream.str(), DEFAULT_ALLOW_DYNAMIC_PRECISION);
+
+    // -x --default-xyz-precision
+    arg_description_stream.clear();
+    arg_description_stream.str("");
+    arg_description_stream << "The default precision of X, Y, Z, I and J output gcode parameters.  The precision may be larger than this value if allow-dynamic-precision is set to true.  Default Value: " << DEFAULT_XYZ_PRECISION;
+    TCLAP::ValueArg<unsigned char> default_xyz_precision_arg("x", "default-xyz-precision", arg_description_stream.str(), false, DEFAULT_XYZ_PRECISION, "unsigned char");
+
+    // -e --default-e-precision
+    arg_description_stream.clear();
+    arg_description_stream.str("");
+    arg_description_stream << "The default precision of E output gcode parameters.  The precision may be larger than this value if allow-dynamic-precision is set to true.  Default Value: " << DEFAULT_E_PRECISION;
+    TCLAP::ValueArg<unsigned char> default_e_precision_arg("e", "default-e-precision", arg_description_stream.str(), false, DEFAULT_E_PRECISION, "unsigned char");
 
     // -g --hide-progress
     TCLAP::SwitchArg hide_progress_arg("p", "hide-progress", "If supplied, prevents progress updates from being displayed.", false);
@@ -145,6 +166,9 @@ int main(int argc, char* argv[])
     cmd.add(min_arc_segments_arg);
     cmd.add(mm_per_arc_segment_arg);
     cmd.add(allow_3d_arcs_arg);
+    cmd.add(allow_dynamic_precision_arg);
+    cmd.add(default_xyz_precision_arg);
+    cmd.add(default_e_precision_arg);
     cmd.add(g90_arg);
     cmd.add(hide_progress_arg);
     cmd.add(log_level_arg);
@@ -168,6 +192,9 @@ int main(int argc, char* argv[])
     path_tolerance_percent = path_tolerance_percent_arg.getValue();
     allow_3d_arcs = allow_3d_arcs_arg.getValue();
     g90_g91_influences_extruder = g90_arg.getValue();
+    allow_dynamic_precision = allow_dynamic_precision_arg.getValue();
+    default_xyz_precision = default_xyz_precision_arg.getValue();
+    default_e_precision = default_e_precision_arg.getValue();
 
     hide_progress = hide_progress_arg.getValue();
     log_level_string = log_level_arg.getValue();
@@ -216,6 +243,34 @@ int main(int argc, char* argv[])
     {
       // warning
       std::cout << "warning: The provided path tolerance percent of " << path_tolerance_percent << " is less than greater than 0.001 (0.1%), which is not recommended." << std::endl;
+    }
+
+    if (default_xyz_precision < 3)
+    {
+      // warning
+      std::cout << "warning: The provided default_xyz_precision " << default_xyz_precision << "mm is less than 3, with will cause issues printing arcs.  A value of 3 will be used instead." << std::endl;
+      default_xyz_precision = 3;
+    }
+
+    if (default_e_precision < DEFAULT_E_PRECISION)
+    {
+      // warning
+      std::cout << "warning: The provided default_e_precision " << default_e_precision << "mm is less than 3, with will cause extrusion issues.  A value of 3 will be used instead." << std::endl;
+      default_e_precision = 3;
+    }
+
+    if (default_xyz_precision > 6)
+    {
+      // warning
+      std::cout << "warning: The provided default_xyz_precision " << default_xyz_precision << "mm is greater than 6, which may cause gcode checksum errors while printing depending on your firmeware, so a value of 6 will be used instead." << std::endl;
+      default_xyz_precision = 6;
+    }
+
+    if (default_e_precision > 6)
+    {
+      // warning
+      std::cout << "warning: The provided default_e_precision " << default_e_precision << "mm is greater than 6, which may cause gcode checksum errors while printing depending on your firmeware, so value of 6 will be used instead." << std::endl;
+      default_e_precision = 6;
     }
 
     if (has_error)
@@ -292,7 +347,10 @@ int main(int argc, char* argv[])
   log_messages << "\tMaximum Arc Radius           : " << std::setprecision(0) << max_radius_mm << "mm\n";
   log_messages << "\tMin Arc Segments             : " << std::setprecision(0) << min_arc_segments << "\n";
   log_messages << "\tMM Per Arc Segment           : " << std::setprecision(3) << mm_per_arc_segment << "\n";
-  log_messages << "\tAllow Z-Axis Changes         : " << (allow_3d_arcs ? "True" : "False") << "\n";
+  log_messages << "\tAllow 3D Arcs                : " << (allow_3d_arcs ? "True" : "False") << "\n";
+  log_messages << "\tAllow Dynamic Precision      : " << (allow_dynamic_precision ? "True" : "False") << "\n";
+  log_messages << "\tDefault XYZ Precision        : " << std::setprecision(0) << static_cast<int>(default_xyz_precision) << "\n";
+  log_messages << "\tDefault E Precision          : " << std::setprecision(0) << static_cast<int>(default_e_precision) << "\n";
   log_messages << "\tG90/G91 Influences Extruder  : " << (g90_g91_influences_extruder ? "True" : "False") << "\n";
   log_messages << "\tLog Level                    : " << log_level_string << "\n";
   log_messages << "\tHide Progress Updates        : " << (hide_progress ? "True" : "False");
@@ -304,9 +362,9 @@ int main(int argc, char* argv[])
     target_file_path = temp_file_path;
   }
   if (!hide_progress)
-    p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, path_tolerance_percent, max_radius_mm, min_arc_segments, mm_per_arc_segment, g90_g91_influences_extruder, allow_3d_arcs,  DEFAULT_GCODE_BUFFER_SIZE, on_progress);
+    p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, path_tolerance_percent, max_radius_mm, min_arc_segments, mm_per_arc_segment, g90_g91_influences_extruder, allow_3d_arcs, allow_dynamic_precision, default_xyz_precision, default_e_precision,  DEFAULT_GCODE_BUFFER_SIZE, on_progress);
   else
-    p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, path_tolerance_percent, max_radius_mm, min_arc_segments, mm_per_arc_segment, g90_g91_influences_extruder, allow_3d_arcs, DEFAULT_GCODE_BUFFER_SIZE, suppress_progress);
+    p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, path_tolerance_percent, max_radius_mm, min_arc_segments, mm_per_arc_segment, g90_g91_influences_extruder, allow_3d_arcs, allow_dynamic_precision, default_xyz_precision, default_e_precision, DEFAULT_GCODE_BUFFER_SIZE, suppress_progress);
 
   arc_welder_results results = p_arc_welder->process();
   if (results.success)
