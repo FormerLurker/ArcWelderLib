@@ -45,9 +45,11 @@ static gcode_position_args get_5_shared_extruder_position_args();
 static gcode_position_args get_5_extruder_position_args();
 static void TestAntiStutter(std::string filePath);
 bool on_progress(arc_welder_progress progress, logger* p_logger, int logger_type);
-static void TestDoubleToString();
 static void TestParsingCase();
-
+bool CompareDoubleToStringResult(double value, unsigned char precision);
+bool TestIntToStringRandom(int low, int high, int num_runs);
+bool TestDoubleToStringRandom(double low, double high, int num_runs);
+bool TestProblemDoubles();
 
 static std::string ANTI_STUTTER_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\5x5_cylinder_2000Fn_0.2mm_PLA_MK2.5MMU2_4m.gcode";
 static std::string BENCHY_GCODE = "C:\\Users\\Brad\\Documents\\3DPrinter\\Calibration\\Benchy\\3DBenchy_0.2mm_PLA_MK2.5MMU2.gcode";
@@ -75,6 +77,7 @@ static std::string SIX_SPEED_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\Anti
 // Issues
 static std::string ISSUE_MIMUPREFERIDA = "C:\\Users\\Brad\\Documents\\AntiStutter\\Issues\\MIMUPREFERIDA\\TESTSTUTTER.gcode";
 static std::string BARBARIAN = "C:\\Users\\Brad\\Documents\\AntiStutter\\Issues\\PricklyPear\\Barbarian.gcode";
+static std::string BAD_ARC = "C:\\Users\\Brad\\Documents\\AntiStutter\\Issues\\PricklyPear\\bad_arc.gcode";
 static std::string ISSUE_PRICKLYPEAR_LAYER_0_114 = "C:\\Users\\Brad\\Documents\\AntiStutter\\Issues\\PricklyPear\\Layers0_114.gcode";
 // Sanity tests
 static std::string COLINEAR_TEST_1 = "C:\\Users\\Brad\\Documents\\AntiStutter\\Sanity Checks\\G2_colinear_test.gcode";

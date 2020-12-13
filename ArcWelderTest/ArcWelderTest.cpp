@@ -33,6 +33,7 @@ int main(int argc, char* argv[])
 
 int run_tests(int argc, char* argv[])
 {
+
 	_CrtMemState state;
 	// This line will take a snapshot
 	// of the memory allocated at this point.
@@ -51,6 +52,7 @@ int run_tests(int argc, char* argv[])
 	for (unsigned int index = 0; index < num_runs; index++)
 	{
 		std::cout << "Processing test run " << index + 1 << " of " << num_runs << ".\r\n";
+		
 		TestAntiStutter(ANTI_STUTTER_TEST);
 		//TestParsingCase();
 		//TestDoubleToString();
@@ -58,6 +60,37 @@ int run_tests(int argc, char* argv[])
 		//TestCircularBuffer();
 		//TestSegmentedLine();
 		//TestSegmentedArc();
+		/*
+		if (!TestProblemDoubles())
+		{
+			std::cout << "Test Failed!" << std::endl;
+		}
+
+		if (!TestIntToStringRandom(-1000000, 1000000, 1000000))
+		{
+			std::cout << "Test Failed!" << std::endl;
+		}
+
+		
+		if (!TestDoubleToStringRandom(-0.5, 0.5, 1000000))
+		{
+			std::cout << "Test Failed!" << std::endl;
+		}
+		if (!TestDoubleToStringRandom(-100, 100, 1000000))
+		{
+			std::cout << "Test Failed!" << std::endl;
+		}
+		if (!TestDoubleToStringRandom(-1, 1, 1000000))
+		{
+			std::cout << "Test Failed!" << std::endl;
+		}
+		if (!TestDoubleToStringRandom(-1000000, 1000000, 1000000))
+		{
+			std::cout << "Test Failed!" << std::endl;
+		}		
+		*/
+	
+		 
 
 	}
 	auto end = std::chrono::high_resolution_clock::now();
@@ -259,7 +292,7 @@ static void TestAntiStutter(std::string filePath)
 	//arc_welder arc_welder_obj(BENCHY_0_5_MM_NO_WIPE, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50, static_cast<progress_callback>(on_progress));
 	//arc_welder arc_welder_obj(SIX_SPEED_TEST, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50, on_progress);
 	arc_welder arc_welder_obj(
-		ISSUE_93,
+		BARBARIAN,
 		"C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", 
 		p_logger, 
 		max_resolution, 
@@ -268,7 +301,7 @@ static void TestAntiStutter(std::string filePath)
 		min_arc_segments,
 		mm_per_arc_segment,
 		false,
-		true,
+		false,
 		DEFAULT_ALLOW_DYNAMIC_PRECISION,
 		DEFAULT_XYZ_PRECISION,
 		DEFAULT_E_PRECISION,
@@ -309,21 +342,6 @@ bool on_progress(arc_welder_progress progress, logger * p_logger, int logger_typ
 	return true;
 }
 
-void TestDoubleToString()
-{
-	char buffer[100];
-
-	
-	for (int index = 0; index < 1000; index++)
-	{
-		double r = (double)rand() / RAND_MAX;
-		r = -1000000.0 + r * (1000000.0 - -1000000.0);
-		std::cout << std::fixed << std::setprecision(10) << "Number: " << r << std::endl;
-		utilities::to_string(r, 5, buffer, true);
-		std::cout << buffer << std::endl;
-	}
-	
-}
 
 static void TestParsingCase()
 {
@@ -334,4 +352,69 @@ static void TestParsingCase()
 	parsed_command command3 = parser.parse_gcode("G0 X1 y2; test", true);
 	
 
+}
+
+bool TestIntToStringRandom(int low, int high, int num_runs)
+{
+	bool all_success = true;
+	for (int index = 0; index < num_runs; index++)
+	{
+		int value = utilities::rand_range(low, high);
+		unsigned char precision = utilities::rand_range(static_cast<unsigned char>(0), static_cast<unsigned char>(6));
+		if (!CompareDoubleToStringResult(static_cast<double>(value), precision))
+		{
+			all_success = false;
+		}
+	}
+	return all_success;
+}
+
+
+bool TestDoubleToStringRandom(double low, double high, int num_runs)
+{
+	bool all_success = true;
+	for (int index = 0; index < num_runs; index++)
+	{
+		double value = utilities::rand_range(low, high);
+		unsigned char precision = utilities::rand_range(static_cast<unsigned char>(0), static_cast<unsigned char>(6));
+		if (!CompareDoubleToStringResult(value, precision))
+		{
+			all_success = false;
+		}
+	}
+	return all_success;
+}
+
+bool CompareDoubleToStringResult(double value, unsigned char precision)
+{
+	
+	std::ostringstream stream;
+	stream << std::fixed;
+	stream << std::setprecision(precision) << value;
+	//std::cout << std::fixed << "Testing: " << std::setprecision(12) << value << " precision: " << std::setprecision(0) << static_cast <int> (precision);
+	std::string test_string = utilities::dtos(value, precision);
+	if (test_string != stream.str())
+	{
+		std::cout << std::fixed << "Failed to convert: " << std::setprecision(24) << value << " Precision:" << std::setprecision(0) << static_cast <int> (precision) << " String:" << test_string << " Stream:" << stream.str() << std::endl;
+		return false;
+	}
+	//std::cout << std::endl;
+	return true;
+	
+}
+
+bool TestProblemDoubles()
+{
+	bool result = true;
+	result = result && CompareDoubleToStringResult(-0.000030518509475996325, 4);
+	result = result && CompareDoubleToStringResult(0.500000000000000000000000, static_cast<unsigned int>(2));
+	result = result && CompareDoubleToStringResult(9.9999999999999, static_cast<unsigned int>(2));
+	result = result && CompareDoubleToStringResult(9.9950, static_cast<unsigned int>(2));
+	result = result && CompareDoubleToStringResult(39.6, static_cast<unsigned int>(3));
+
+	result = result && CompareDoubleToStringResult(39.600000000000001421085472, static_cast<unsigned int>(3));
+	result = result && CompareDoubleToStringResult(40.228999999999999204192136, static_cast<unsigned int>(3));
+	
+	
+	return result;
 }

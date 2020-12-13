@@ -197,6 +197,7 @@
     <ClInclude Include="array_list.h" />
     <ClInclude Include="circular_buffer.h" />
     <ClInclude Include="extruder.h" />
+    <ClInclude Include="fpconv.h" />
     <ClInclude Include="gcode_comment_processor.h" />
     <ClInclude Include="gcode_parser.h" />
     <ClInclude Include="gcode_position.h" />
@@ -211,6 +212,7 @@
     <ClCompile Include="array_list.cpp" />
     <ClCompile Include="circular_buffer.cpp" />
     <ClCompile Include="extruder.cpp" />
+    <ClCompile Include="fpconv.cpp" />
     <ClCompile Include="gcode_comment_processor.cpp" />
     <ClCompile Include="gcode_parser.cpp" />
     <ClCompile Include="gcode_position.cpp" />
