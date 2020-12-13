@@ -21,6 +21,8 @@ set(GcodeProcessorLibSources ${GcodeProcessorLibSources}
     position.h
     utilities.cpp
     utilities.h
+    fpconv.h
+    fpconv.cpp
     version.generated.h
     version.h
 )
