@@ -309,7 +309,7 @@ void inverse_processor::mc_arc(float* position, float* target, float* offset, fl
 
     // 20200417 - FormerLurker - rename millimeters_of_travel to millimeters_of_travel_arc to better describe what we are
     // calculating here
-    float millimeters_of_travel_arc = hypot(angular_travel_total * radius, std::abs(travel_z));
+    float millimeters_of_travel_arc = hypot(angular_travel_total * radius, std::fabs(travel_z));
     if (millimeters_of_travel_arc < 0.001) { return; }
     // Calculate the total travel per segment
     // Calculate the number of arc segments
@@ -389,13 +389,17 @@ void inverse_processor::mc_arc(float* position, float* target, float* offset, fl
             // We can't clamp to the target because we are interpolating!  We would need to update a position, clamp to it
             // after updating from calculated values.
             //clamp_to_software_endstops(position);
-            plan_buffer_line(p_x, p_y, p_z, p_e, feed_rate, extruder);
+            plan_buffer_line(p_x, p_y, travel_z > 0, p_z, p_e, feed_rate, extruder);
         }
     }
     // Ensure last segment arrives at target location.
     // Here we could clamp, but why bother.  We would need to update our current position, clamp to it
     //clamp_to_software_endstops(target);
-    plan_buffer_line(t_x, t_y, t_z, t_e, feed_rate, extruder);
+    plan_buffer_line(t_x, t_y, travel_z> 0, t_z, t_e, feed_rate, extruder);
+    position[X_AXIS] = t_x;
+    position[Y_AXIS] = t_y;
+    position[Z_AXIS] = t_z;
+    position[E_AXIS] = t_e;
 }
 
 void inverse_processor::clamp_to_software_endstops(float* target)
@@ -404,7 +408,7 @@ void inverse_processor::clamp_to_software_endstops(float* target)
     return;
 }
 
-void inverse_processor::plan_buffer_line(float x, float y, float z, const float& e, float feed_rate, uint8_t extruder, const float* gcode_target)
+void inverse_processor::plan_buffer_line(float x, float y, bool has_z, float z, const float& e, float feed_rate, uint8_t extruder, const float* gcode_target)
 {
     std::stringstream stream;
     stream << std::fixed;
@@ -412,6 +416,10 @@ void inverse_processor::plan_buffer_line(float x, float y, float z, const float&
     //output_file_ <<
 
     stream << "G1 X" << std::setprecision(3) << x << " Y" << y;
+    if (has_z)
+    {
+      stream << " Z" << z;
+    }
     stream << std::setprecision(5) << " E" << e;
     
     stream << std::setprecision(0) << " F" << feed_rate << "\n";

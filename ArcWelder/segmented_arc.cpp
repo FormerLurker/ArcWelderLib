@@ -76,7 +76,7 @@ segmented_arc::~segmented_arc()
 {
 }
 
-point segmented_arc::pop_front(double e_relative)
+printer_point segmented_arc::pop_front(double e_relative)
 {
   e_relative_ -= e_relative;
   if (points_.count() == get_min_segments())
@@ -85,7 +85,7 @@ point segmented_arc::pop_front(double e_relative)
   }
   return points_.pop_front();
 }
-point segmented_arc::pop_back(double e_relative)
+printer_point segmented_arc::pop_back(double e_relative)
 {
   e_relative_ -= e_relative;
   return points_.pop_back();
@@ -118,8 +118,11 @@ bool segmented_arc::is_shape() const
 {
   return is_shape_;
 }
-
-bool segmented_arc::try_add_point(point p, double e_relative)
+double segmented_arc::get_shape_length()
+{
+  return current_arc_.length;
+}
+bool segmented_arc::try_add_point(printer_point p)
 {
 
   bool point_added = false;
@@ -129,42 +132,33 @@ bool segmented_arc::try_add_point(point p, double e_relative)
     // Too many points, we can't add more
     return false;
   }
-  double distance = 0;
   if (points_.count() > 0)
   {
-    point p1 = points_[points_.count() - 1];
-    if (allow_3d_arcs_) {
-      // If we can draw arcs in 3 space, add in the distance of the z axis changes
-      distance = utilities::get_cartesian_distance(p1.x, p1.y, p1.z, p.x, p.y, p.z);
-    }
-    else {
-      distance = utilities::get_cartesian_distance(p1.x, p1.y, p.x, p.y);
-      if (!utilities::is_equal(p1.z, p.z))
-      {
-        // Z axis changes aren't allowed
-        return false;
-      }
+    printer_point p1 = points_[points_.count() - 1];
+    if (!allow_3d_arcs_ && !utilities::is_equal(p1.z, p.z))
+    {
+      // Z axis changes aren't allowed
+      return false;
     }
 
-    if (utilities::is_zero(distance))
+    if (utilities::is_zero(p.distance))
     {
       // there must be some distance between the points
       // to make an arc.
       return false;
     }
-
   }
 
   if (points_.count() < get_min_segments() - 1)
   {
     point_added = true;
     points_.push_back(p);
-    original_shape_length_ += distance;
+    original_shape_length_ += p.distance;
   }
   else
   {
     // if we're here, we need to see if the new point can be included in the shape
-    point_added = try_add_point_internal_(p, distance);
+    point_added = try_add_point_internal_(p);
   }
   if (point_added)
   {
@@ -172,7 +166,7 @@ bool segmented_arc::try_add_point(point p, double e_relative)
     if (points_.count() > 1)
     {
       // Only add the relative distance to the second point on up.
-      e_relative_ += e_relative;
+      e_relative_ += p.e_relative;
     }
     //std::cout << " success - " << points_.count() << " points.\n";
   }
@@ -180,27 +174,20 @@ bool segmented_arc::try_add_point(point p, double e_relative)
   {
     // If we haven't added a point, and we have exactly min_segments_,
     // pull off the initial arc point and try again
-
-    point old_initial_point = points_.pop_front();
-    // We have to remove the distance and e relative value
-    // accumulated between the old arc start point and the new
-    point new_initial_point = points_[0];
-    if (allow_3d_arcs_) {
-      original_shape_length_ -= utilities::get_cartesian_distance(old_initial_point.x, old_initial_point.y, old_initial_point.z, new_initial_point.x, new_initial_point.y, new_initial_point.z);
-    }
-    else {
-      original_shape_length_ -= utilities::get_cartesian_distance(old_initial_point.x, old_initial_point.y, new_initial_point.x, new_initial_point.y);
-    }
-
+    points_.pop_front();
+    // Get the new initial point
+    printer_point new_initial_point = points_[0];
+    // The length and e_relative distance of the arc has been reduced 
+    // by removing the front point.  Calculate this.
+    original_shape_length_ -= new_initial_point.distance;
     e_relative_ -= new_initial_point.e_relative;
-    //std::cout << " failed - removing start point and retrying current point.\n";
-    return try_add_point(p, e_relative);
+    return try_add_point(p);
   }
 
   return point_added;
 }
 
-bool segmented_arc::try_add_point_internal_(point p, double pd)
+bool segmented_arc::try_add_point_internal_(printer_point p)
 {
   // If we don't have enough points (at least min_segments) return false
   if (points_.count() < get_min_segments() - 1)
@@ -212,14 +199,15 @@ bool segmented_arc::try_add_point_internal_(point p, double pd)
   // the circle is new..  we have to test it now, which is expensive :(
   points_.push_back(p);
   double previous_shape_length = original_shape_length_;
-  original_shape_length_ += pd;
+  original_shape_length_ += p.distance;
   arc original_arc = current_arc_;
   if (arc::try_create_arc(points_, current_arc_, original_shape_length_, max_radius_mm_, resolution_mm_, path_tolerance_percent_, min_arc_segments_, mm_per_arc_segment_, get_xyz_tolerance(), allow_3d_arcs_))
   {
-    // See how many arcs will be interpolated
     bool abort_arc = false;
     if (min_arc_segments_ > 0 && mm_per_arc_segment_ > 0)
     {
+      // Apply firmware compensation
+      // See how many arcs will be interpolated
       double circumference = 2.0 * PI_DOUBLE * current_arc_.radius;
       int num_segments = (int)std::floor(circumference / min_arc_segments_);
       if (num_segments < min_arc_segments_) {
@@ -231,15 +219,20 @@ bool segmented_arc::try_add_point_internal_(point p, double pd)
         }
       }
     }
-    // check for I=0 and J=0
-    if (!abort_arc && utilities::is_zero(current_arc_.get_i(), get_xyz_tolerance()) && utilities::is_zero(current_arc_.get_j(), get_xyz_tolerance()))
+    if (!abort_arc)
     {
-      abort_arc = true;
+      if (utilities::is_zero(current_arc_.get_i(), get_xyz_tolerance()) && utilities::is_zero(current_arc_.get_j(), get_xyz_tolerance()))
+      {
+        // I and J are both 0, which is invalid!  Abort!
+        abort_arc = true;
+      }
+      else if (current_arc_.length < get_xyz_tolerance())
+      {
+        // the arc length is below our tolerance, abort!
+        abort_arc = true;
+      }
     }
-    if (!abort_arc && current_arc_.length < get_xyz_tolerance())
-    {
-      abort_arc = true;
-    }
+    
     if (abort_arc)
     {
       // This arc has been cancelled either due to firmware correction,

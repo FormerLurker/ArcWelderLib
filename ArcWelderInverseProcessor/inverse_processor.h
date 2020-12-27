@@ -84,7 +84,7 @@ private:
 	int lines_processed_ = 0;
 	void clamp_to_software_endstops(float* target);
 
-	void plan_buffer_line(float x, float y, float z, const float& e, float feed_rate, uint8_t extruder, const float* gcode_target=NULL);
+	void plan_buffer_line(float x, float y, bool has_z, float z, const float& e, float feed_rate, uint8_t extruder, const float* gcode_target=NULL);
 	
 };
 

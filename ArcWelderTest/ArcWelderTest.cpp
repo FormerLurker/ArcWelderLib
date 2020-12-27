@@ -271,10 +271,10 @@ static void TestAntiStutter(std::string filePath)
 	double max_radius_mm = 100000;
 	//int min_arc_segments = DEFAULT_MIN_ARC_SEGMENTS;
 	int min_arc_segments = 0;
-	double mm_per_arc_segment = 1;
+	double mm_per_arc_segment = 0;
 
 	//double path_tolerance_percent = ARC_LENGTH_PERCENT_TOLERANCE_DEFAULT; // 1 percent
-	double path_tolerance_percent = 0.05;					 
+	double path_tolerance_percent = 100000;					 
 	//double path_tolerance_percent = 0.05;
 	std::vector<std::string> logger_names;
 	logger_names.push_back("arc_welder.gcode_conversion");
@@ -301,7 +301,7 @@ static void TestAntiStutter(std::string filePath)
 		min_arc_segments,
 		mm_per_arc_segment,
 		false,
-		false,
+		true,
 		DEFAULT_ALLOW_DYNAMIC_PRECISION,
 		DEFAULT_XYZ_PRECISION,
 		DEFAULT_E_PRECISION,
@@ -342,7 +342,6 @@ bool on_progress(arc_welder_progress progress, logger * p_logger, int logger_typ
 	return true;
 }
 
-
 static void TestParsingCase()
 {
 	gcode_parser parser;
@@ -350,8 +349,6 @@ static void TestParsingCase()
 	parsed_command command2 = parser.parse_gcode(" M73 P0 R93", true);
 	//parsed_command command2 = parser.parse_gcode("M204 P2000 R1500 T2000 ; sets acceleration (P, T) and retract acceleration (R), mm/sec^2", true);
 	parsed_command command3 = parser.parse_gcode("G0 X1 y2; test", true);
-	
-
 }
 
 bool TestIntToStringRandom(int low, int high, int num_runs)
