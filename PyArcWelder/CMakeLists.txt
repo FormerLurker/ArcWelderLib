@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION "3.13")
+cmake_minimum_required (VERSION "3.15")
 
 project(PyArcWelder C CXX)
 
@@ -14,6 +14,12 @@ include_directories(${PYTHON_INCLUDE_DIRS} ${ArcWelder_INCLUDE_DIRS} ${GcodeProc
 # include sourcelist.cmake, which contains our source list and exposes it as the
 # PyArcWelderSources variable
 include(sourcelist.cmake)
+
+
+if(MSVC)
+    # link to the msvc runtime statically, keeping debug info if we are in debug config
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
 
 # Create our library
 add_library(${PROJECT_NAME} SHARED ${PyArcWelderSources})

@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION "3.13")
+cmake_minimum_required (VERSION "3.15")
 
 project(ArcWelderInverseProcessor C CXX)
 
@@ -12,6 +12,12 @@ include_directories(${GcodeProcessorLib_INCLUDE_DIRS} ${ArcWelder_INCLUDE_DIRS} 
 # include sourcelist.cmake, which contains our source list and exposes it as the
 # ArcWelderConsoleSources variable
 include(sourcelist.cmake)
+
+
+if(MSVC)
+    # link to the msvc runtime statically, keeping debug info if we are in debug config
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
 
 # Add an executable our ArcWelderConsoleSources variable from our sourcelist file
 add_executable(
@@ -28,3 +34,4 @@ install(
 
 # specify linking to the GcodeProcessorLib and ArcWelder libraries
 target_link_libraries(${PROJECT_NAME} TCLAP GcodeProcessorLib ArcWelder)
+

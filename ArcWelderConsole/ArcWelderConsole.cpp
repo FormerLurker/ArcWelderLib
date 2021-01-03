@@ -61,6 +61,8 @@ int main(int argc, char* argv[])
   info.append(", Branch: ").append(GIT_BRANCH);
   info.append(", BuildDate: ").append(BUILD_DATE);
   info.append("\n").append("Copyright(C) ").append(COPYRIGHT_DATE).append(" - ").append(AUTHOR);
+  info.append("\n").append("An algorithm for producing fast floating point strings, fpconv, was added with the following notice:  Copyright (C) 2014 Milo Yip");
+  info.append("\n").append("The original fpconv algorithm provides the following notice: Copyright(c) 2013 Andreas Samoljuk");
   
   std::stringstream arg_description_stream;
   

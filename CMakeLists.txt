@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION "3.13")
+cmake_minimum_required (VERSION "3.15")
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 # You can tweak some common (for all subprojects) stuff here. For example:
@@ -18,6 +18,12 @@ IF(CMAKE_COMPILER_IS_GNUCC)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0")
 ENDIF(CMAKE_COMPILER_IS_GNUCC)
+
+
+if(MSVC)
+    # link to the msvc runtime statically, keeping debug info if we are in debug config
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
 
 # add a definition so our libraries know that the version info is available
 add_definitions("-DHAS_GENERATED_VERSION")

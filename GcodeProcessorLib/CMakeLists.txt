@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION "3.13")
+cmake_minimum_required (VERSION "3.15")
 
 project(GcodeProcessorLib C CXX)
 
@@ -60,6 +60,11 @@ option(USE_CXX_EXCEPTIONS "Enable C++ exception support" ON)
 # include sourcelist.cmake, which contains our source list and exposes it as the
 # GcodeProcessorLibSources variable
 include(sourcelist.cmake)
+
+if(MSVC)
+    # link to the msvc runtime statically, keeping debug info if we are in debug config
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
 
 # Add a library using our GcodeProcessorLibSources variable from our sourcelist file
 add_library(${PROJECT_NAME} STATIC ${GcodeProcessorLibSources})
