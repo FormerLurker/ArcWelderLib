@@ -150,7 +150,7 @@ std::istream& utilities::safe_get_line(std::istream& is, std::string& t)
 	}
 }
 
-std::string utilities::center(std::string input, int width) 
+std::string utilities::center(std::string input, int width)
 {
 	int input_width = (int)input.length();
 	int difference = width - input_width;
@@ -158,7 +158,7 @@ std::string utilities::center(std::string input, int width)
 	{
 		return input;
 	}
-	int left_padding = difference /2;
+	int left_padding = difference / 2;
 	int right_padding = width - left_padding - input_width;
 	return std::string(left_padding, ' ') + input + std::string(right_padding, ' ');
 }
@@ -213,7 +213,7 @@ int utilities::get_num_digits(int x)
 
 int utilities::get_num_digits(double x)
 {
-	return get_num_digits((int) x);
+	return get_num_digits((int)x);
 }
 
 // Nice utility function found here: https://stackoverflow.com/questions/8520560/get-a-file-name-from-a-path
@@ -244,7 +244,7 @@ std::vector<std::string> utilities::splitpath(const std::string& str)
 	return result;
 }
 
-bool utilities::get_file_path(const std::string& file_path, std::string & path)
+bool utilities::get_file_path(const std::string& file_path, std::string& path)
 {
 	std::vector<std::string> file_parts = splitpath(file_path);
 	if (file_parts.size() == 0)
@@ -298,14 +298,14 @@ std::string utilities::dtos(double x, unsigned char precision)
 	static char buffer[FPCONV_BUFFER_LENGTH];
 	char* p = buffer;
 	buffer[fpconv_dtos(x, buffer, precision)] = '\0';
-	/* This is code that can be used to compare the output of the 
+	/* This is code that can be used to compare the output of the
 		 modified fpconv_dtos function to the ofstream output
 		 Note:  It currently only fails for some checks where the original double does not store
-					  perfectly.  In this case I actually think the dtos output is better than ostringstream!
+						perfectly.  In this case I actually think the dtos output is better than ostringstream!
 	std::ostringstream stream;
 	stream << std::fixed;
 	stream << std::setprecision(precision) << x;
-	
+
 	if (std::string(buffer) != stream.str())
 	{
 		std::cout << std::fixed << "Failed to convert: " << std::setprecision(24) << x << " Precision:" << std::setprecision(0) << static_cast <int> (precision) << " String:" << std::string(buffer) << " Stream:" << stream.str() << std::endl;
@@ -314,7 +314,7 @@ std::string utilities::dtos(double x, unsigned char precision)
 	return buffer;
 }
 
-bool utilities::is_equal_caseless(const std::string &lhs, const std::string &rhs)
+bool utilities::is_equal_caseless(const std::string& lhs, const std::string& rhs)
 {
 	unsigned int sz = lhs.size();
 	if (rhs.size() != sz)
@@ -337,7 +337,7 @@ bool utilities::is_equal_caseless_trim(const std::string& lhs, const std::string
 
 	unsigned int lhend = lhs.find_last_not_of(WHITESPACE_);
 	unsigned int lhstart = lhs.find_first_not_of(WHITESPACE_);
-	
+
 	unsigned int rhend = rhs.find_last_not_of(WHITESPACE_);
 	unsigned int rhstart = rhs.find_first_not_of(WHITESPACE_);
 
@@ -351,7 +351,7 @@ bool utilities::is_equal_caseless_trim(const std::string& lhs, const std::string
 	// The sizes match, loop through and compare
 	for (unsigned int i = 0; i < size; ++i)
 	{
-		if (std::tolower(lhs[i+lhstart]) != std::tolower(rhs[i+rhstart]))
+		if (std::tolower(lhs[i + lhstart]) != std::tolower(rhs[i + rhstart]))
 		{
 			// Something didn't match, return false
 			return false;
@@ -373,7 +373,7 @@ bool utilities::is_in_caseless_trim(const std::string& lhs, const char** rhs)
 	unsigned int lhstart = lhs.find_first_not_of(WHITESPACE_);
 	unsigned int size = lhend - lhstart + 1;
 	int index = 0;
-	
+
 	while (rhs[index] != NULL)
 	{
 		const char* rhString = rhs[index++];
@@ -398,7 +398,7 @@ bool utilities::is_in_caseless_trim(const std::string& lhs, const char** rhs)
 		}
 		return true;
 	}
-	
+
 	// If we are here, this string does not appear
 	return false;
 }
