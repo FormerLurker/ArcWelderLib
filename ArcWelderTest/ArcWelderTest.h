@@ -50,7 +50,7 @@ bool CompareDoubleToStringResult(double value, unsigned char precision);
 bool TestIntToStringRandom(int low, int high, int num_runs);
 bool TestDoubleToStringRandom(double low, double high, int num_runs);
 bool TestProblemDoubles();
-
+bool TestIsInCaselessTrim();
 static std::string ANTI_STUTTER_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\5x5_cylinder_2000Fn_0.2mm_PLA_MK2.5MMU2_4m.gcode";
 static std::string BENCHY_GCODE = "C:\\Users\\Brad\\Documents\\3DPrinter\\Calibration\\Benchy\\3DBenchy_0.2mm_PLA_MK2.5MMU2.gcode";
 static std::string BENCHY_CURA_RELATIVE_E_NOWIPE = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\3DBenchy_CuraRelative_Gyroid_0.2mm.gcode";
@@ -97,6 +97,7 @@ static std::string ISSUE_99 = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutte
 static std::string CONE_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\ConeTest.gcode";
 static std::string CONE_TEST_VASE = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\ConeTestVase.gcode";
 static std::string BAD_ARC_DIRECTIONS = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\BadArcDirections.gcode";
+static std::string BAD_ARC_DIRECTIONS_2 = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\BadArcDirections2.gcode";
 static std::string UNICODE_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\BenchyMinRadiusTest_with_unicode.gcode";
 
 

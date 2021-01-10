@@ -448,9 +448,9 @@ private:
 	progress_callback progress_callback_;
 	int process_gcode(parsed_command cmd, bool is_end, bool is_reprocess);
 	int write_gcode_to_file(std::string gcode);
-	std::string get_arc_gcode_relative(double f, const std::string comment);
-	std::string get_arc_gcode_absolute(double e, double f, const std::string comment);
-	std::string get_comment_for_arc();
+	void write_arc_gcodes(bool is_extruder_relative, double previous_feedrate);
+	std::string get_comment_for_arc(int num_points);
+	int write_unwritten_gcodes_to_file(int num_commands);
 	int write_unwritten_gcodes_to_file();
 	std::string create_g92_e(double absolute_e);
 	std::string source_path_;

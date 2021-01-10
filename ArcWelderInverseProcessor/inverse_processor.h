@@ -45,7 +45,7 @@ enum AxisEnum { X_AXIS = 0, Y_AXIS= 1, Z_AXIS = 2, E_AXIS = 3, X_HEAD = 4, Y_HEA
 #define DEFAULT_MIN_ARC_SEGMENTS 0 // OPTIONAL - The enforced minimum segments in a full circle of the same radius.
 #define DEFAULT_ARC_SEGMENTS_PER_SEC 0 // OPTIONAL - Use feedrate to choose segment length.
 // approximation will not be used for the first segment.  Subsequent segments will be corrected following DEFAULT_N_ARC_CORRECTION.
-#define DEFAULT_N_ARC_CORRECTIONS 24
+#define DEFAULT_N_ARC_CORRECTIONS 1
 
 struct ConfigurationStore {
 	ConfigurationStore() {
@@ -70,7 +70,7 @@ public:
 	void mc_arc(float* position, float* target, float* offset, float feed_rate, float radius, uint8_t isclockwise, uint8_t extruder);
 	
 private:
-	ConfigurationStore cs_;
+	ConfigurationStore cs;
 	gcode_position_args get_args_(bool g90_g91_influences_extruder, int buffer_size);
 	std::string source_path_;
 	std::string target_path_;
@@ -84,7 +84,7 @@ private:
 	int lines_processed_ = 0;
 	void clamp_to_software_endstops(float* target);
 
-	void plan_buffer_line(float x, float y, bool has_z, float z, const float& e, float feed_rate, uint8_t extruder, const float* gcode_target=NULL);
+	void plan_buffer_line(float x, float y, float z, const float& e, float feed_rate, uint8_t extruder, const float* gcode_target=NULL);
 	
 };
 
