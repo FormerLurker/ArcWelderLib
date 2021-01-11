@@ -48,7 +48,7 @@ public:
 	virtual bool try_add_point(printer_point p);
 	virtual double get_shape_length();
 
-	bool get_next_arc(arc &arc, int& num_points);
+	bool get_next_arc(arc &arc, int& num_points, bool test_current_arc);
 
 	static std::string get_shape_gcode(const arc& arc, bool is_relative, double f, unsigned char xyz_precision, unsigned char e_precision, double xyz_tolerance);
 	//std::string get_shape_gcode_absolute(double e, double f);

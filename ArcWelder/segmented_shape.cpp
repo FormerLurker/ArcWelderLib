@@ -656,7 +656,7 @@ bool arc::try_create_first_arc(
   // we have to loop through each point, starting with the first 3 (3 points are required for an arc)
   // and see how many points we can add before running into an error
   int max_index_found = -1;
-  arc test_arc;
+  
   circle test_circle;
 
   if (points.count() < 3)
@@ -679,7 +679,7 @@ bool arc::try_create_first_arc(
     approximate_length += points[index].distance;
     e_relative += points[index].e_relative;
     int mid_point_index = ((index - 1) / 2) + 1;
-
+    arc test_arc;
     if (!arc::try_create_arc(test_circle, points[0], points[mid_point_index], points[index], test_arc, approximate_length, resolution_mm, path_tolerance_percent, allow_3d_arcs))
     {
       break;
@@ -687,6 +687,7 @@ bool arc::try_create_first_arc(
     if (arc::are_points_within_slice(test_arc, points, index + 1))
     {
       max_index_found = index;
+      target_arc = test_arc;
     }
     else
     {
@@ -695,7 +696,6 @@ bool arc::try_create_first_arc(
   }
   if (max_index_found > -1)
   {
-    target_arc = test_arc;
     target_arc.offset_e = points[max_index_found].offset_e;
     target_arc.e_relative = e_relative;
     num_points = max_index_found + 1;
@@ -709,11 +709,22 @@ bool arc::are_points_within_slice(const arc& test_arc, const array_list<printer_
   
   // Loop through the points and see if they fit inside of the angles
   double previous_polar = test_arc.polar_start_theta;
+  bool will_cross_zero = false;
   bool crossed_zero = false;
 
   point start_norm((test_arc.start_point.x - test_arc.center.x) / test_arc.radius, (test_arc.start_point.y - test_arc.center.y) / test_arc.radius, 0.0);
   point end_norm((test_arc.end_point.x - test_arc.center.x) / test_arc.radius, (test_arc.end_point.y - test_arc.center.y) / test_arc.radius, 0.0);
-  
+
+  if (test_arc.direction == DirectionEnum::COUNTERCLOCKWISE)
+  {
+    will_cross_zero = test_arc.polar_start_theta > test_arc.polar_end_theta;
+  }
+  else
+  {
+    will_cross_zero = test_arc.polar_start_theta < test_arc.polar_end_theta;
+  }
+
+  // Need to see if point 1 to point 2 cross zero
   for (int index = 1; index < point_count; index++)
   {
     double polar_test;
@@ -732,12 +743,14 @@ bool arc::are_points_within_slice(const arc& test_arc, const array_list<printer_
       // Only check to see if we are within the arc if this isn't the endpoint
       if (index < point_count - 1)
       {
-        // First test to see if this point lies within the arc
-        if (test_arc.polar_start_theta < test_arc.polar_end_theta && !(test_arc.polar_start_theta < polar_test && polar_test < test_arc.polar_end_theta))
+        if (will_cross_zero)
         {
-          return false;
+          if (!(polar_test > test_arc.polar_start_theta || polar_test < test_arc.polar_end_theta))
+          {
+            return false;
+          }
         }
-        else if (test_arc.polar_start_theta > test_arc.polar_end_theta && !(polar_test > test_arc.polar_start_theta || polar_test < test_arc.polar_end_theta))
+        else if (!(test_arc.polar_start_theta < polar_test && polar_test < test_arc.polar_end_theta))
         {
           return false;
         }
@@ -745,31 +758,42 @@ bool arc::are_points_within_slice(const arc& test_arc, const array_list<printer_
       // Now make sure the angles are increasing
       if (previous_polar > polar_test)
       {
+        if (!will_cross_zero)
+        {
+          return false;
+        }
+
         // Allow the angle to cross zero once
         if (crossed_zero)
         {
           return false;
         }
-        crossed_zero = true;
+        will_cross_zero = false;
       }
     }
     else 
     {
       if (index < point_count - 1)
       {
-        if (test_arc.polar_start_theta > test_arc.polar_end_theta && !(test_arc.polar_start_theta > polar_test && polar_test > test_arc.polar_end_theta))
+        if (will_cross_zero)
         {
-          return false;
+          if (!(polar_test < test_arc.polar_start_theta || polar_test > test_arc.polar_end_theta))
+          {
+            return false;
+          }
         }
-        else if (test_arc.polar_start_theta < test_arc.polar_end_theta && !(polar_test < test_arc.polar_start_theta || polar_test > test_arc.polar_end_theta))
+        else if (!(test_arc.polar_start_theta > polar_test && polar_test > test_arc.polar_end_theta))
         {
           return false;
         }
       }
-
       // Now make sure the angles are decreasing
       if (previous_polar < polar_test)
       {
+        if (!will_cross_zero)
+        {
+          return false;
+        }
         // Allow the angle to cross zero once
         if (crossed_zero)
         {
@@ -784,6 +808,12 @@ bool arc::are_points_within_slice(const arc& test_arc, const array_list<printer_
       return false;
     previous_polar = polar_test;
   }
+  
+  if (will_cross_zero != crossed_zero)
+  {
+    return false;
+  }
+  
   return true;
 }
 

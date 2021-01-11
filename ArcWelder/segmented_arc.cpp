@@ -256,7 +256,7 @@ bool segmented_arc::try_add_point_internal_(printer_point p)
 }
 
 
-bool segmented_arc::get_next_arc(arc& arc, int& num_points)
+bool segmented_arc::get_next_arc(arc& arc, int& num_points, bool test_current_arc)
 {
   num_points = 0;
   if (points_.count() < 3)
@@ -268,7 +268,7 @@ bool segmented_arc::get_next_arc(arc& arc, int& num_points)
   // update it as we return arcs and pop points.
 
   // Test for the most common case, which is a valid arc.  This will speed things up a ton for very large circles.
-  if (arc::are_points_within_slice(current_arc_, points_, points_.count()))
+  if (test_current_arc && arc::are_points_within_slice(current_arc_, points_, points_.count()))
   {
     arc = current_arc_;
     arc.e_relative = e_relative_;
@@ -291,7 +291,7 @@ bool segmented_arc::get_next_arc(arc& arc, int& num_points)
     original_shape_length_ -= arc.original_shape_length;
     
     // Remove the points we've added to the arc
-    for (int index = 0; index < num_points; index++)
+    for (int index = 0; index < num_points-1; index++)
     {
       points_.pop_front();
     }

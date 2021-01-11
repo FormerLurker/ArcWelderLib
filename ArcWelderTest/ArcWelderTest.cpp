@@ -293,7 +293,7 @@ static void TestAntiStutter(std::string filePath)
 	//arc_welder arc_welder_obj(BENCHY_0_5_MM_NO_WIPE, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50, static_cast<progress_callback>(on_progress));
 	//arc_welder arc_welder_obj(SIX_SPEED_TEST, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50, on_progress);
 	arc_welder arc_welder_obj(
-		BAD_ARC_DIRECTIONS_2,
+		BARBARIAN,
 		"C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", 
 		p_logger, 
 		max_resolution, 
@@ -416,7 +416,7 @@ bool TestProblemDoubles()
 	
 	return result;
 }
-
+/*
 bool TestIsInCaselessTrim()
 {
 	std::string test("This is a test");
@@ -428,4 +428,4 @@ bool TestIsInCaselessTrim()
 	const char* test_3[] = { "t1", "", "this is a test", NULL };
 	result = utilities::is_in_caseless_trim(test, test_3);
 	return result;
-}
+}	*/

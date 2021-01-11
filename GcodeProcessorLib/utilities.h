@@ -39,10 +39,6 @@ public:
 	static bool less_than(double x, double y, double tolerance = ZERO_TOLERANCE);
 	static bool less_than_or_equal(double x, double y, double tolerance = ZERO_TOLERANCE);
 	
-	static bool is_equal_caseless(const std::string& lhs, const std::string& rhs);
-	static bool is_equal_caseless_trim(const std::string& lhs, const std::string& rhs);
-	static bool is_in_caseless_trim(const std::string& lhs, const char** rhs);
-	
 	static double get_cartesian_distance(double x1, double y1, double x2, double y2);
 	static double get_cartesian_distance(double x1, double y1, double z1, double x2, double y2, double z2);
 	static std::string to_string(double value);

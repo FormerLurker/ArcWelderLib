@@ -92,7 +92,6 @@ arc_welder::arc_welder(
 	arcs_created_ = 0;
 	waiting_for_arc_ = false;
 	previous_feedrate_ = -1;
-	previous_is_extruder_relative_ = false;
 	gcode_position_args_.set_num_extruders(8);
 	for (int index = 0; index < 8; index++)
 	{
@@ -456,7 +455,6 @@ int arc_welder::process_gcode(parsed_command cmd, bool is_end, bool is_reprocess
 		printer_point p(p_cur_pos->get_gcode_x(), p_cur_pos->get_gcode_y(), p_cur_pos->get_gcode_z(), extruder_current.e_relative, extruder_current.get_offset_e(), movement_length_mm);
 		if (!waiting_for_arc_)
 		{
-			previous_is_extruder_relative_ = p_pre_pos->is_extruder_relative;
 			if (debug_logging_enabled_)
 			{
 				p_logger_->log(logger_type_, DEBUG, "Starting new arc from Gcode:" + cmd.gcode);
@@ -589,19 +587,15 @@ int arc_welder::process_gcode(parsed_command cmd, bool is_end, bool is_reprocess
 		}
 		else if (waiting_for_arc_)
 		{
-
 			if (current_arc_.is_shape())
 			{
 				write_arc_gcodes(p_pre_pos->is_extruder_relative, p_pre_pos->f);
 				// IMPORTANT NOTE: p_cur_pos and p_pre_pos will NOT be usable beyond this point.
 				p_pre_pos = NULL;
 				p_cur_pos = NULL;
-				
-				// Now clear the arc and flag the processor as not waiting for an arc
-				waiting_for_arc_ = false;
-				current_arc_.clear();
-				
 
+				// Now clear the arc and flag the processor as not waiting for an arc
+				waiting_for_arc_ = current_arc_.get_num_segments() > 0;
 				// Reprocess this line
 				if (!is_end)
 				{
@@ -615,6 +609,8 @@ int arc_welder::process_gcode(parsed_command cmd, bool is_end, bool is_reprocess
 					}
 					return 0;
 				}
+
+				
 					
 			}
 			else
@@ -624,7 +620,6 @@ int arc_welder::process_gcode(parsed_command cmd, bool is_end, bool is_reprocess
 					p_logger_->log(logger_type_, DEBUG, "The current arc is not a valid arc, resetting.");
 				}
 				current_arc_.clear();
-				waiting_for_arc_ = false;
 			}
 		}
 		else if (debug_logging_enabled_)
@@ -649,7 +644,7 @@ int arc_welder::process_gcode(parsed_command cmd, bool is_end, bool is_reprocess
 
 void arc_welder::write_arc_gcodes(bool is_extruder_relative, double previous_feedrate)
 {
-
+	bool test_current_arc = true;
 	// Loop through each generated arc
 	int num_points;
 	arc current_arc;
@@ -673,7 +668,8 @@ void arc_welder::write_arc_gcodes(bool is_extruder_relative, double previous_fee
 	while (current_arc_.get_num_segments() > 2)
 	{
 		// try to create an arc from the current points
-		bool arc_created = current_arc_.get_next_arc(current_arc, num_points);
+		bool arc_created = current_arc_.get_next_arc(current_arc, num_points, test_current_arc);
+		test_current_arc = false;
 
 		if (!arc_created)
 		{
@@ -719,7 +715,7 @@ void arc_welder::write_arc_gcodes(bool is_extruder_relative, double previous_fee
 		{
 			char buffer[20];
 			std::string message = "Arc created with ";
-			sprintf(buffer, "%d", current_arc_.get_num_segments());
+			sprintf(buffer, "%d", num_points);
 			message += buffer;
 			message += " segments: ";
 			message += gcode;
@@ -739,7 +735,11 @@ void arc_welder::write_arc_gcodes(bool is_extruder_relative, double previous_fee
 	
 	// write all unwritten commands (if we don't do this we'll mess up absolute e by adding an offset to the arc)
 	// including the most recent arc command BEFORE updating the absolute e offset
-	write_unwritten_gcodes_to_file();
+	//write_unwritten_gcodes_to_file();
+
+	
+	//current_arc_.clear();
+
 }
 
 std::string arc_welder::get_comment_for_arc(int num_points)
