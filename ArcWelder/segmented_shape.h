@@ -118,7 +118,7 @@ struct circle {
 
 	static bool try_create_circle(const point &p1, const point &p2, const point &p3, const double max_radius, circle& new_circle);
 	
-	static bool try_create_circle(const array_list<printer_point>& points, const double max_radius, const double resolutino_mm, const double xyz_tolerance, bool allow_3d_arcs, bool check_middle_only, circle& new_circle);
+	static bool try_create_circle(const array_list<printer_point>& points, const double max_radius, const double resolutino_mm, const double xyz_tolerance, bool allow_3d_arcs, circle& new_circle);
 
 	double get_polar_radians(const point& p1) const;
 

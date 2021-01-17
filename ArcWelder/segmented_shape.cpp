@@ -196,70 +196,19 @@ bool circle::try_create_circle(const point& p1, const point& p2, const point& p3
 
   return true;
 }
-/*
-bool circle::try_create_circle(const array_list<printer_point>& points, const double max_radius, const double resolution_mm, const double xyz_tolerance, bool allow_3d_arcs, bool check_middle_only, circle& new_circle)
-{
-  int middle_index = points.count() / 2;
-  int check_index;
-  int step = 0;
-  bool is_right = true;
-  while (true) {
 
-    check_index = middle_index + (is_right ? step : -1 * step);
-    // Check the index
-    if (circle::try_create_circle(points[0], points[check_index], points[points.count() - 1], max_radius, new_circle))
-    {
-      if (!new_circle.is_over_deviation(points, resolution_mm, xyz_tolerance, allow_3d_arcs))
-      {
-        return true;
-      }
-    }
-    if (is_right)
-    {
-      if (check_index == points.count() - 1)
-      {
-        return false;
-      }
-      if (check_index == middle_index)
-      {
-        if (check_middle_only)
-        {
-          return false;
-        }
-        step++;
-        continue;
-      }
-    }
-    else
-    {
-      if (check_index == 0)
-      {
-        return false;
-      }
-      step++;
-    }
-    is_right = !is_right;
-  }
-  return false;
-}
-*/
-bool circle::try_create_circle(const array_list<printer_point>& points, const double max_radius, const double resolution_mm, const double xyz_tolerance, bool allow_3d_arcs, bool check_middle_only, circle& new_circle)
+bool circle::try_create_circle(const array_list<printer_point>& points, const double max_radius, const double resolution_mm, const double xyz_tolerance, bool allow_3d_arcs, circle& new_circle)
 {
   int count = points.count();
-  
+
   int middle_index = count / 2;
+
   // The middle point will almost always produce the best arcs.
   if (circle::try_create_circle(points[0], points[middle_index], points[count - 1], max_radius, new_circle) && !new_circle.is_over_deviation(points, resolution_mm, xyz_tolerance, allow_3d_arcs))
   {
     return true;
   }
-  
-  if (check_middle_only || count == 3)
-  {
-    // If we are only checking the middle, or if we only have 3 points return
-    return false;
-  }
-  
+
   // Find the circle with the least deviation, if one exists.
   // Note, this could possibly take a LONG time in the worst case, but it's a pretty unlikely.
   // However, if the midpoint check doesn't pass, it's worth it to spend a bit more time 
@@ -535,7 +484,7 @@ bool arc::try_create_arc(
   return true;
 
 }
-/*
+
 bool arc::try_create_arc(
   const array_list<printer_point>& points,
   arc& target_arc,
@@ -548,35 +497,14 @@ bool arc::try_create_arc(
   double xyz_tolerance,
   bool allow_3d_arcs)
 {
-  circle test_circle;
-  if (circle::try_create_circle(points, max_radius_mm, resolution_mm, xyz_tolerance, allow_3d_arcs, false, test_circle))
-  {
-    // We could save a bit of processing power and do our firmware compensation here, but we won't be able to track statistics for this easily.
-    // moved check to segmented_arc.cpp
-    int mid_point_index = ((points.count() - 2) / 2) + 1;
-    return arc::try_create_arc(test_circle, points[0], points[mid_point_index], points[points.count() - 1], target_arc, approximate_length, resolution_mm, path_tolerance_percent, allow_3d_arcs);
-  }
-  return false;
-}
-*/
-bool arc::try_create_arc(
-  const array_list<printer_point>& points,
-  arc& target_arc,
-  double approximate_length,
-  double max_radius_mm,
-  double resolution_mm,
-  double path_tolerance_percent,
-  int min_arc_segments,
-  double mm_per_arc_segment,
-  double xyz_tolerance,
-  bool allow_3d_arcs)
-{
-  circle test_circle;
-  if (!circle::try_create_circle(points, max_radius_mm, resolution_mm, xyz_tolerance, allow_3d_arcs, false, test_circle))
+  circle test_circle = (circle)target_arc;
+
+  
+  if (!circle::try_create_circle(points, max_radius_mm, resolution_mm, xyz_tolerance, allow_3d_arcs, test_circle))
   {
     return false;
   }
-
+  
   // We could save a bit of processing power and do our firmware compensation here, but we won't be able to track statistics for this easily.
   // moved check to segmented_arc.cpp
   int mid_point_index = ((points.count() - 2) / 2) + 1;
@@ -617,7 +545,7 @@ bool arc::are_points_within_slice(const arc& test_arc, const array_list<printer_
   }
 
   // Need to see if point 1 to point 2 cross zero
-  for (int index = 1; index < point_count; index++)
+  for (int index = point_count - 2; index < point_count; index++)
   {
     double polar_test;
     if (index < point_count - 1)

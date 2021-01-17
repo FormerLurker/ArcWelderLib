@@ -447,6 +447,7 @@ private:
 	static gcode_position_args get_args_(bool g90_g91_influences_extruder, int buffer_size);
 	progress_callback progress_callback_;
 	int process_gcode(parsed_command cmd, bool is_end, bool is_reprocess);
+	void write_arc_gcodes(bool is_extruder_relative, double current_feedrate);
 	int write_gcode_to_file(std::string gcode);
 	std::string get_arc_gcode_relative(double f, const std::string comment);
 	std::string get_arc_gcode_absolute(double e, double f, const std::string comment);
