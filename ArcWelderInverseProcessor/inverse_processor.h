@@ -35,17 +35,22 @@
 typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
 typedef signed char int8_t;
-#define M_PI       3.14159265358979323846   // pi
+#define M_PI 3.14159265358979323846f   // pi
 enum AxisEnum { X_AXIS = 0, Y_AXIS= 1, Z_AXIS = 2, E_AXIS = 3, X_HEAD = 4, Y_HEAD = 5 };
+enum InterpolationFunction {INT_SEGMENTS = 0, FLOAT_SEGMENTS = 1};
+static const int interpolation_function_names_size = 2;
+static const char* interpolation_function_names[] = { "INT_SEGMENTS", "FLOAT_SEGMENTS"};
+
 // Arc interpretation settings:
 #define DEFAULT_MM_PER_ARC_SEGMENT 1.0 // REQUIRED - The enforced maximum length of an arc segment
 #define DEFAULT_MIN_MM_PER_ARC_SEGMENT 0 /* OPTIONAL - the enforced minimum length of an interpolated segment.  Must be smaller than
 	MM_PER_ARC_SEGMENT.  Only has an effect if MIN_ARC_SEGMENTS > 0 or ARC_SEGMENTS_PER_SEC > 0 */
 	// If both MIN_ARC_SEGMENTS and ARC_SEGMENTS_PER_SEC is defined, the minimum calculated segment length is used.
-#define DEFAULT_MIN_ARC_SEGMENTS 0 // OPTIONAL - The enforced minimum segments in a full circle of the same radius.
+#define DEFAULT_MIN_ARC_SEGMENTS 24 // OPTIONAL - The enforced minimum segments in a full circle of the same radius.
 #define DEFAULT_ARC_SEGMENTS_PER_SEC 0 // OPTIONAL - Use feedrate to choose segment length.
 // approximation will not be used for the first segment.  Subsequent segments will be corrected following DEFAULT_N_ARC_CORRECTION.
-#define DEFAULT_N_ARC_CORRECTIONS 1
+#define DEFAULT_N_ARC_CORRECTIONS 25
+#define DEFAULT_INTERPOLATION_FUNCTION InterpolationFunction::INT_SEGMENTS
 
 struct ConfigurationStore {
 	ConfigurationStore() {
@@ -54,12 +59,14 @@ struct ConfigurationStore {
 		min_arc_segments = DEFAULT_MIN_ARC_SEGMENTS;
 		arc_segments_per_sec = DEFAULT_ARC_SEGMENTS_PER_SEC;
 		n_arc_correction = DEFAULT_N_ARC_CORRECTIONS;
+		interpolation_function = DEFAULT_INTERPOLATION_FUNCTION;
 	}
 	float mm_per_arc_segment; // This value is ALWAYS used.
 	float min_mm_per_arc_segment;  // if less than or equal to 0, this is disabled
 	int min_arc_segments; // If less than or equal to zero, this is disabled
 	double arc_segments_per_sec; // If less than or equal to zero, this is disabled
 	int n_arc_correction;
+	InterpolationFunction interpolation_function;
 	
 };
 class inverse_processor {
@@ -67,7 +74,8 @@ public:
 	inverse_processor(std::string source_path, std::string target_path, bool g90_g91_influences_extruder, int buffer_size, ConfigurationStore cs = ConfigurationStore());
 	virtual ~inverse_processor();
 	void process();
-	void mc_arc(float* position, float* target, float* offset, float feed_rate, float radius, uint8_t isclockwise, uint8_t extruder);
+	void mc_arc_float_segments(float* position, float* target, float* offset, float feed_rate, float radius, uint8_t isclockwise, uint8_t extruder);
+	void mc_arc_int_segments(float* position, float* target, float* offset, float feed_rate, float radius, uint8_t isclockwise, uint8_t extruder);
 	
 private:
 	ConfigurationStore cs;
@@ -82,6 +90,7 @@ private:
 	float total_e_adjustment;
 	int trig_calc_count = 0;
 	int lines_processed_ = 0;
+	float max_extrusion_rate_difference = 0; 
 	void clamp_to_software_endstops(float* target);
 
 	void plan_buffer_line(float x, float y, float z, const float& e, float feed_rate, uint8_t extruder, const float* gcode_target=NULL);

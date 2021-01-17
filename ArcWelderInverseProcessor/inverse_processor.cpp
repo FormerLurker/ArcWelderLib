@@ -200,7 +200,15 @@ void inverse_processor::process()
                     float radius = hypot(offset[X_AXIS], offset[Y_AXIS]); // Compute arc radius for mc_arc
                     uint8_t isclockwise = cmd.command == "G2" ? 1 : 0;
                     output_relative_ = p_cur_pos->is_extruder_relative;
-                    mc_arc(position, target, offset, static_cast<float>(p_cur_pos->f), radius, isclockwise, 0);
+                    switch (cs.interpolation_function)
+                    {
+                      case InterpolationFunction::INT_SEGMENTS:
+                        mc_arc_int_segments(position, target, offset, static_cast<float>(p_cur_pos->f), radius, isclockwise, 0);
+                        break;
+                      case InterpolationFunction::FLOAT_SEGMENTS:
+                        mc_arc_float_segments(position, target, offset, static_cast<float>(p_cur_pos->f), radius, isclockwise, 0);
+                    }
+                    
                 }
                 else
                 {
@@ -237,59 +245,53 @@ void inverse_processor::process()
 
 // The arc is approximated by generating a huge number of tiny, linear segments. The length of each 
 // segment is configured in settings.mm_per_arc_segment.  
-void inverse_processor::mc_arc(float* position, float* target, float* offset, float feed_rate, float radius, uint8_t isclockwise, uint8_t extruder)
+void inverse_processor::mc_arc_int_segments(float* position, float* target, float* offset, float feed_rate, float radius, uint8_t isclockwise, uint8_t extruder)
 {
   float r_axis_x = -offset[X_AXIS];  // Radius vector from center to current location
   float r_axis_y = -offset[Y_AXIS];
   float center_axis_x = position[X_AXIS] - r_axis_x;
   float center_axis_y = position[Y_AXIS] - r_axis_y;
   float travel_z = target[Z_AXIS] - position[Z_AXIS];
-  float extruder_travel_total = target[E_AXIS] - position[E_AXIS];
-
   float rt_x = target[X_AXIS] - center_axis_x;
   float rt_y = target[Y_AXIS] - center_axis_y;
   // 20200419 - Add a variable that will be used to hold the arc segment length
   float mm_per_arc_segment = cs.mm_per_arc_segment;
   // 20210109 - Add a variable to hold the n_arc_correction value
-  bool correction_enabled = cs.n_arc_correction > 1;
   uint8_t n_arc_correction = cs.n_arc_correction;
 
   // CCW angle between position and target from circle center. Only one atan2() trig computation required.
   float angular_travel_total = atan2(r_axis_x * rt_y - r_axis_y * rt_x, r_axis_x * rt_x + r_axis_y * rt_y);
   if (angular_travel_total < 0) { angular_travel_total += 2 * M_PI; }
 
-  bool check_mm_per_arc_segment_max = false;
   if (cs.min_arc_segments > 0)
   {
     // 20200417 - FormerLurker - Implement MIN_ARC_SEGMENTS if it is defined - from Marlin 2.0 implementation
     // Do this before converting the angular travel for clockwise rotation
     mm_per_arc_segment = radius * ((2.0f * M_PI) / cs.min_arc_segments);
-    check_mm_per_arc_segment_max = true;
   }
-
   if (cs.arc_segments_per_sec > 0)
   {
     // 20200417 - FormerLurker - Implement MIN_ARC_SEGMENTS if it is defined - from Marlin 2.0 implementation
     float mm_per_arc_segment_sec = (feed_rate / 60.0f) * (1.0f / cs.arc_segments_per_sec);
     if (mm_per_arc_segment_sec < mm_per_arc_segment)
       mm_per_arc_segment = mm_per_arc_segment_sec;
-    check_mm_per_arc_segment_max = true;
   }
 
-  if (cs.min_mm_per_arc_segment > 0)
+  // Note:  no need to check to see if min_mm_per_arc_segment is enabled or not (i.e. = 0), since mm_per_arc_segment can never be below 0.
+  if (mm_per_arc_segment < cs.min_mm_per_arc_segment)
   {
-    check_mm_per_arc_segment_max = true;
     // 20200417 - FormerLurker - Implement MIN_MM_PER_ARC_SEGMENT if it is defined
     // This prevents a very high number of segments from being generated for curves of a short radius
-    if (mm_per_arc_segment < cs.min_mm_per_arc_segment)  mm_per_arc_segment = cs.min_mm_per_arc_segment;
+    mm_per_arc_segment = cs.min_mm_per_arc_segment;
+  }
+  else if (mm_per_arc_segment > cs.mm_per_arc_segment) {
+    // 20210113 - This can be implemented in an else if since  we can't be below the min AND above the max at the same time.
+    // 20200417 - FormerLurker - Implement MIN_MM_PER_ARC_SEGMENT if it is defined
+    mm_per_arc_segment = cs.mm_per_arc_segment;
   }
 
-  if (check_mm_per_arc_segment_max && mm_per_arc_segment > cs.mm_per_arc_segment) mm_per_arc_segment = cs.mm_per_arc_segment;
-
-
-
   // Adjust the angular travel if the direction is clockwise
-  if (isclockwise) { angular_travel_total -= 2 * M_PI; }
+  if (isclockwise) { angular_travel_total -= 2.0f * M_PI; }
 
   //20141002:full circle for G03 did not work, e.g. G03 X80 Y80 I20 J0 F2000 is giving an Angle of zero so head is not moving
   //to compensate when start pos = target pos && angle is zero -> angle = 2Pi
@@ -301,18 +303,13 @@ void inverse_processor::mc_arc(float* position, float* target, float* offset, fl
 
   // 20200417 - FormerLurker - rename millimeters_of_travel to millimeters_of_travel_arc to better describe what we are
   // calculating here
-  float millimeters_of_travel_arc = hypot(angular_travel_total * radius, fabs(travel_z));
-  if (millimeters_of_travel_arc < 0.001) { return; }
+  const float millimeters_of_travel_arc = hypot(angular_travel_total * radius, fabs(travel_z));
+  if (millimeters_of_travel_arc < 0.001f) { return; }
   // Calculate the total travel per segment
-  // Calculate the number of arc segments
+  // Calculate the number of arc segments as a float.  This is important so that the extrusion
+  // and z travel is consistant throughout the arc.  Otherwise we will see artifacts and gaps
   uint16_t segments = static_cast<uint16_t>(ceil(millimeters_of_travel_arc / mm_per_arc_segment));
 
-
-  // Calculate theta per segments and linear (z) travel per segment
-  float theta_per_segment = angular_travel_total / segments;
-  float linear_per_segment = travel_z / (segments);
-  // Calculate the extrusion amount per segment
-  float segment_extruder_travel = extruder_travel_total / (segments);
   /* Vector rotation by transformation matrix: r is the original vector, r_T is the rotated vector,
      and phi is the angle of rotation. Based on the solution approach by Jens Geisler.
          r_T = [cos(phi) -sin(phi);
@@ -334,44 +331,201 @@ void inverse_processor::mc_arc(float* position, float* target, float* offset, fl
      Finding a faster way to approximate sin, knowing that there can be substantial deviations from the true
      arc when using the previous approximation, would be beneficial.
   */
-
-  // Don't bother calculating cot_T or sin_T if there is only 1 segment.
+  //std::cout << "Generating arc with " << segments << " segments.  Extruding " << target[E_AXIS] - position[E_AXIS] << "mm.\n";
+  // There must be more than 1 segment, else this is just a linear move
+  float interpolatedExtrusion = 0;
+  float interpolatedTravel = 0;
+  float totalExtrusion = target[E_AXIS] - position[E_AXIS];
   if (segments > 1)
   {
-    // Initialize the extruder axis
-
-    float cos_T;
-    float sin_T;
-
-    if (correction_enabled > 1) {
-      float sq_theta_per_segment = theta_per_segment * theta_per_segment;
-      // Small angle approximation
+    
+    // Calculate theta per segments and linear (z) travel per segment
+    const float theta_per_segment = angular_travel_total / segments,
+      linear_per_segment = travel_z / (segments),
+      segment_extruder_travel = (target[E_AXIS] - position[E_AXIS]) / (segments),
+      sq_theta_per_segment = theta_per_segment * theta_per_segment,
       sin_T = theta_per_segment - sq_theta_per_segment * theta_per_segment / 6,
-        cos_T = 1 - 0.5f * sq_theta_per_segment;
-    }
-    else {
-      cos_T = cos(theta_per_segment);
-      sin_T = sin(theta_per_segment);
-    }
-
-    float r_axisi;
-    uint16_t i;
-
-    for (i = 1; i < segments; i++) { // Increment (segments-1)
-      if (correction_enabled && --n_arc_correction == 0) {
+      cos_T = 1 - 0.5f * sq_theta_per_segment;
+    //  Calculate the number of interpolations we will do, but use the ceil 
+    // function so that we can start our index with I=1.  This is important
+    // so that the arc correction starts out with segment 1, and not 0, without
+    // doing extra calculations
+    
+    for (uint16_t i = 1; i < segments; i++) { // Increment (segments-1)
+      if (n_arc_correction-- == 0) {
         // Calculate the actual position for r_axis_x and r_axis_y
-        const float cos_Ti = cos(i * theta_per_segment), sin_Ti = sin(i * theta_per_segment);
+        const float cos_Ti = cos((i) * theta_per_segment), sin_Ti = sin((i) * theta_per_segment);
         r_axis_x = -offset[X_AXIS] * cos_Ti + offset[Y_AXIS] * sin_Ti;
         r_axis_y = -offset[X_AXIS] * sin_Ti - offset[Y_AXIS] * cos_Ti;
         // reset n_arc_correction
         n_arc_correction = cs.n_arc_correction;
       }
       else {
-        r_axisi = r_axis_x * sin_T + r_axis_y * cos_T;
+        const float r_axisi = r_axis_x * sin_T + r_axis_y * cos_T;
         r_axis_x = r_axis_x * cos_T - r_axis_y * sin_T;
         r_axis_y = r_axisi;
       }
+      interpolatedExtrusion += segment_extruder_travel;
+      interpolatedTravel += hypot(position[X_AXIS] - (center_axis_x + r_axis_x), position[Y_AXIS] - (center_axis_y + r_axis_y));
+      // Update arc_target location
+      position[X_AXIS] = center_axis_x + r_axis_x;
+      position[Y_AXIS] = center_axis_y + r_axis_y;
+      position[Z_AXIS] += linear_per_segment;
+      position[E_AXIS] += segment_extruder_travel;
+      // We can't clamp to the target because we are interpolating!  We would need to update a position, clamp to it
+      // after updating from calculated values.
+      clamp_to_software_endstops(position);
+      
+      plan_buffer_line(position[X_AXIS], position[Y_AXIS], position[Z_AXIS], position[E_AXIS], feed_rate, extruder);
+    }
+  }
+  // Ensure last segment arrives at target location.
+  // Here we could clamp, but why bother.  We would need to update our current position, clamp to it
+  clamp_to_software_endstops(target);
+  if (segments > 1)
+  {
+    float fil_per_mm_interpolated = interpolatedTravel == 0 ? 0 : interpolatedExtrusion / interpolatedTravel;
+    float mm_travel_final = hypot(target[X_AXIS] - position[X_AXIS], target[Y_AXIS] - position[Y_AXIS]);
+    float extrusion_final = target[E_AXIS] - position[E_AXIS];
+    float fil_per_mm_final = mm_travel_final == 0 ? 0 : extrusion_final / mm_travel_final;
+    float fil_per_mm_difference = fabs(fil_per_mm_interpolated - fil_per_mm_final);
+    //if (mm_travel_final > 0.001 && totalExtrusion - (interpolatedExtrusion + extrusion_final) > 0.00001f && max_extrusion_rate_difference < fil_per_mm_difference)
+    if (mm_travel_final > 0.001 && (totalExtrusion - interpolatedExtrusion) > 0.00001f && max_extrusion_rate_difference < fil_per_mm_difference)
+    {
+      max_extrusion_rate_difference = fil_per_mm_difference;
+      std::cout << "New Maximum extrusion rate difference detected:" << max_extrusion_rate_difference << "\n";
+    }
+  }
 
+  plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], feed_rate, extruder);
+
+}
+
+
+// The arc is approximated by generating a huge number of tiny, linear segments. The length of each 
+// segment is configured in settings.mm_per_arc_segment.  
+void inverse_processor::mc_arc_float_segments(float* position, float* target, float* offset, float feed_rate, float radius, uint8_t isclockwise, uint8_t extruder)
+{
+  float r_axis_x = -offset[X_AXIS];  // Radius vector from center to current location
+  float r_axis_y = -offset[Y_AXIS];
+  float center_axis_x = position[X_AXIS] - r_axis_x;
+  float center_axis_y = position[Y_AXIS] - r_axis_y;
+  float travel_z = target[Z_AXIS] - position[Z_AXIS];
+  float rt_x = target[X_AXIS] - center_axis_x;
+  float rt_y = target[Y_AXIS] - center_axis_y;
+  // 20200419 - Add a variable that will be used to hold the arc segment length
+  float mm_per_arc_segment = cs.mm_per_arc_segment;
+  // 20210109 - Add a variable to hold the n_arc_correction value
+  uint8_t n_arc_correction = cs.n_arc_correction;
+
+  // CCW angle between position and target from circle center. Only one atan2() trig computation required.
+  float angular_travel_total = atan2(r_axis_x * rt_y - r_axis_y * rt_x, r_axis_x * rt_x + r_axis_y * rt_y);
+  if (angular_travel_total < 0) { angular_travel_total += 2 * M_PI; }
+
+  if (cs.min_arc_segments > 0)
+  {
+    // 20200417 - FormerLurker - Implement MIN_ARC_SEGMENTS if it is defined - from Marlin 2.0 implementation
+    // Do this before converting the angular travel for clockwise rotation
+    mm_per_arc_segment = radius * ((2.0f * M_PI) / cs.min_arc_segments);
+  }
+  if (cs.arc_segments_per_sec > 0)
+  {
+    // 20200417 - FormerLurker - Implement MIN_ARC_SEGMENTS if it is defined - from Marlin 2.0 implementation
+    float mm_per_arc_segment_sec = (feed_rate / 60.0f) * (1.0f / cs.arc_segments_per_sec);
+    if (mm_per_arc_segment_sec < mm_per_arc_segment)
+      mm_per_arc_segment = mm_per_arc_segment_sec;
+  }
+
+  // Note:  no need to check to see if min_mm_per_arc_segment is enabled or not (i.e. = 0), since mm_per_arc_segment can never be below 0.
+  if (mm_per_arc_segment < cs.min_mm_per_arc_segment)
+  {
+    // 20200417 - FormerLurker - Implement MIN_MM_PER_ARC_SEGMENT if it is defined
+    // This prevents a very high number of segments from being generated for curves of a short radius
+    mm_per_arc_segment = cs.min_mm_per_arc_segment;
+  }
+  else if (mm_per_arc_segment > cs.mm_per_arc_segment) {
+    // 20210113 - This can be implemented in an else if since  we can't be below the min AND above the max at the same time.
+    // 20200417 - FormerLurker - Implement MIN_MM_PER_ARC_SEGMENT if it is defined
+    mm_per_arc_segment = cs.mm_per_arc_segment;
+  }
+
+  // Adjust the angular travel if the direction is clockwise
+  if (isclockwise) { angular_travel_total -= 2 * M_PI; }
+
+  //20141002:full circle for G03 did not work, e.g. G03 X80 Y80 I20 J0 F2000 is giving an Angle of zero so head is not moving
+  //to compensate when start pos = target pos && angle is zero -> angle = 2Pi
+  if (position[X_AXIS] == target[X_AXIS] && position[Y_AXIS] == target[Y_AXIS] && angular_travel_total == 0)
+  {
+    angular_travel_total += 2 * M_PI;
+  }
+  //end fix G03
+
+  // 20200417 - FormerLurker - rename millimeters_of_travel to millimeters_of_travel_arc to better describe what we are
+  // calculating here
+  const float millimeters_of_travel_arc = hypot(angular_travel_total * radius, fabs(travel_z));
+  if (millimeters_of_travel_arc < 0.001) { return; }
+  // Calculate the total travel per segment
+  // Calculate the number of arc segments as a float.  This is important so that the extrusion
+  // and z travel is consistant throughout the arc.  Otherwise we will see artifacts and gaps
+  float segments = millimeters_of_travel_arc / mm_per_arc_segment;
+
+  /* Vector rotation by transformation matrix: r is the original vector, r_T is the rotated vector,
+     and phi is the angle of rotation. Based on the solution approach by Jens Geisler.
+         r_T = [cos(phi) -sin(phi);
+                sin(phi)  cos(phi] * r ;
+
+     For arc generation, the center of the circle is the axis of rotation and the radius vector is
+     defined from the circle center to the initial position. Each line segment is formed by successive
+     vector rotations. This requires only two cos() and sin() computations to form the rotation
+     matrix for the duration of the entire arc. Error may accumulate from numerical round-off, since
+     all double numbers are single precision on the Arduino. (True double precision will not have
+     round off issues for CNC applications.) Single precision error can accumulate to be greater than
+     tool precision in some cases. Therefore, arc path correction is implemented.
+
+     The small angle approximation was removed because of excessive errors for small circles (perhaps unique to
+     3d printing applications, causing significant path deviation and extrusion issues).
+     Now there will be no corrections applied, but an accurate initial sin and cos will be calculated.
+     This seems to work with a very high degree of accuracy and results in much simpler code.
+
+     Finding a faster way to approximate sin, knowing that there can be substantial deviations from the true
+     arc when using the previous approximation, would be beneficial.
+  */
+  float interpolatedExtrusion = 0;
+  float interpolatedTravel = 0;
+  float totalExtrusion = target[E_AXIS] - position[E_AXIS];
+  // There must be more than 1 segment, else this is just a linear move
+  if (segments > 1)
+  {
+    // Calculate theta per segments and linear (z) travel per segment
+    const float theta_per_segment = angular_travel_total / segments,
+      linear_per_segment = travel_z / (segments),
+      segment_extruder_travel = (target[E_AXIS] - position[E_AXIS]) / (segments),
+      sq_theta_per_segment = theta_per_segment * theta_per_segment,
+      //sin_T = theta_per_segment - sq_theta_per_segment * theta_per_segment / 6,
+      //cos_T = 1 - 0.5f * sq_theta_per_segment;
+      sin_T = sin(theta_per_segment),
+      cos_T = cos(theta_per_segment);
+    //  Calculate the number of interpolations we will do, but use the ceil 
+    // function so that we can start our index with I=1.  This is important
+    // so that the arc correction starts out with segment 1, and not 0, without
+    // doing extra calculations
+    uint16_t num_interpolations = static_cast<uint16_t>(ceil(segments));
+    for (uint16_t i = 1; i < num_interpolations; i++) { // Increment (segments-1)
+      /*if (n_arc_correction-- == 0) {
+        // Calculate the actual position for r_axis_x and r_axis_y
+        const float cos_Ti = cos((i)*theta_per_segment), sin_Ti = sin((i)*theta_per_segment);
+        r_axis_x = -offset[X_AXIS] * cos_Ti + offset[Y_AXIS] * sin_Ti;
+        r_axis_y = -offset[X_AXIS] * sin_Ti - offset[Y_AXIS] * cos_Ti;
+        // reset n_arc_correction
+        n_arc_correction = cs.n_arc_correction;
+      }
+      else { */
+        const float r_axisi = r_axis_x * sin_T + r_axis_y * cos_T;
+        r_axis_x = r_axis_x * cos_T - r_axis_y * sin_T;
+        r_axis_y = r_axisi;
+      //}
+      interpolatedExtrusion += segment_extruder_travel; 
+      interpolatedTravel += hypot(position[X_AXIS] - (center_axis_x + r_axis_x), position[Y_AXIS] - (center_axis_y + r_axis_y));
       // Update arc_target location
       position[X_AXIS] = center_axis_x + r_axis_x;
       position[Y_AXIS] = center_axis_y + r_axis_y;
@@ -386,7 +540,22 @@ void inverse_processor::mc_arc(float* position, float* target, float* offset, fl
   // Ensure last segment arrives at target location.
   // Here we could clamp, but why bother.  We would need to update our current position, clamp to it
   clamp_to_software_endstops(target);
+  if (segments > 1)
+  {
+    float fil_per_mm_interpolated = interpolatedTravel == 0 ? 0 : interpolatedExtrusion / interpolatedTravel;
+    float mm_travel_final = hypot(target[X_AXIS] - position[X_AXIS], target[Y_AXIS] - position[Y_AXIS]);
+    float extrusion_final = target[E_AXIS] - position[E_AXIS];
+    float fil_per_mm_final = mm_travel_final == 0 ? 0 : extrusion_final / mm_travel_final;
+    float fil_per_mm_difference = fabs(fil_per_mm_interpolated - fil_per_mm_final);
+    if (segments > 1 && mm_travel_final > 0.001 && totalExtrusion - (interpolatedExtrusion + extrusion_final) > 0.00001f && max_extrusion_rate_difference < fil_per_mm_difference)
+    {
+      max_extrusion_rate_difference = fil_per_mm_difference;
+      std::cout << "New Maximum extrusion rate difference detected:" << max_extrusion_rate_difference << "\n";
+    }
+  }
+  
   plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], feed_rate, extruder);
+
 }
 
 void inverse_processor::clamp_to_software_endstops(float* target)

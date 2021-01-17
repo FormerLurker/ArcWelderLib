@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION "3.15")
+cmake_minimum_required (VERSION "3.13")
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 # You can tweak some common (for all subprojects) stuff here. For example:

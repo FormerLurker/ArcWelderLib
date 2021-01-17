@@ -60,11 +60,17 @@ int main(int argc, char* argv[])
   double mm_per_arc_segment;
   double min_mm_per_arc_segment;
   int min_arc_segments;
+  int n_arc_corrections;
   double arc_segments_per_sec;
   
   std::string log_level_string;
   std::string log_level_string_default = "INFO";
   int log_level_value;
+
+  std::string interpolation_function_string;
+  std::string interpolation_function_string_default = "INT_SEGMENTS";
+  int interpolation_function_value;
+
   // Extract arguments
   try {
     // Define the command line object
@@ -102,6 +108,12 @@ int main(int argc, char* argv[])
     arg_description_stream << "The minimum number of segments within a circle of the same radius as the arc.  Can be used to increase detail on small arcs.  The smallest segment generated will be no larger than min_mm_per_arc_segment.  A value less than or equal to 0 will disable this feature.  Default Value: " << DEFAULT_MIN_ARC_SEGMENTS;
     TCLAP::ValueArg<int> min_arc_segments_arg("r", "min-arc-segments", arg_description_stream.str(), false, DEFAULT_MIN_ARC_SEGMENTS, "int");
 
+    // -c --n_arc_correction
+    arg_description_stream.clear();
+    arg_description_stream.str("");
+    arg_description_stream << "The number of segments to interpolate using the small angle approximation before correcting with real sin/cos values.  Default Value: " << DEFAULT_N_ARC_CORRECTIONS;
+    TCLAP::ValueArg<int> n_arc_corrections_arg("C", "n-arc-corrections", arg_description_stream.str(), false, DEFAULT_N_ARC_CORRECTIONS, "int");
+
     // -s --arc-segments-per-second
     arg_description_stream.clear();
     arg_description_stream.str("");
@@ -124,6 +136,17 @@ int main(int argc, char* argv[])
     arg_description_stream << "Sets console log level. Default Value: " << log_level_string_default;
     TCLAP::ValueArg<std::string> log_level_arg("l", "log-level", arg_description_stream.str(), false, log_level_string_default, &log_levels_constraint);
 
+    // -i --interpolation-function
+    std::vector<std::string> interpolation_functions_vector;
+    interpolation_functions_vector.push_back("INT_SEGMENTS");
+    interpolation_functions_vector.push_back("FLOAT_SEGMENTS");
+    TCLAP::ValuesConstraint<std::string> interpolation_functions_constraint(interpolation_functions_vector);
+    arg_description_stream.clear();
+    arg_description_stream.str("");
+    arg_description_stream << "Sets the interpolation function to be used.  Options are INT_SEGMENTS and FLOAT_SEGMENTS. Default Value: " << interpolation_function_string_default;
+    TCLAP::ValueArg<std::string> interpolation_function_arg("i", "interpolation-type", arg_description_stream.str(), false, interpolation_function_string_default, &interpolation_functions_constraint);
+
+
     // Add all arguments
     cmd.add(source_arg);
     cmd.add(target_arg);
@@ -132,9 +155,10 @@ int main(int argc, char* argv[])
     cmd.add(mm_per_arc_segment_arg);
     cmd.add(min_mm_per_arc_segment_arg);
     cmd.add(min_arc_segments_arg);
+    cmd.add(n_arc_corrections_arg);
     cmd.add(arc_segments_per_sec_arg);
-
     cmd.add(log_level_arg);
+    cmd.add(interpolation_function_arg);
 
     // Parse the argv array.
     cmd.parse(argc, argv);
@@ -145,11 +169,14 @@ int main(int argc, char* argv[])
     mm_per_arc_segment = mm_per_arc_segment_arg.getValue();
     min_mm_per_arc_segment = min_mm_per_arc_segment_arg.getValue();
     min_arc_segments = min_arc_segments_arg.getValue();
+    n_arc_corrections = n_arc_corrections_arg.getValue();
     arc_segments_per_sec = arc_segments_per_sec_arg.getValue();
+    interpolation_function_string = interpolation_function_arg.getValue();
 
     cs.mm_per_arc_segment = (float)mm_per_arc_segment;
     cs.min_mm_per_arc_segment = (float)min_mm_per_arc_segment;
     cs.min_arc_segments = min_arc_segments;
+    cs.n_arc_correction = n_arc_corrections;
     cs.arc_segments_per_sec = arc_segments_per_sec;
 
     if (target_file_path.size() == 0)
@@ -158,9 +185,25 @@ int main(int argc, char* argv[])
     }
     g90_g91_influences_extruder = g90_arg.getValue();
 
+    interpolation_function_string = interpolation_function_arg.getValue();
+    interpolation_function_value = -1;
+    for (unsigned int interpolation_function_index = 0; interpolation_function_index < interpolation_function_names_size; interpolation_function_index++)
+    {
+      if (interpolation_function_string == interpolation_function_names[interpolation_function_index])
+      {
+        interpolation_function_value = interpolation_function_index;
+        break;
+      }
+    }
+    if (interpolation_function_value == -1)
+    {
+      // TODO:  Does this work?
+      throw new TCLAP::ArgException("Unknown interpolation function");
+    }
+    cs.interpolation_function = (InterpolationFunction)interpolation_function_value;
+
     log_level_string = log_level_arg.getValue();
     log_level_value = -1;
-
     for (unsigned int log_name_index = 0; log_name_index < log_level_names_size; log_name_index++)
     {
       if (log_level_string == log_level_names[log_name_index])
@@ -174,6 +217,29 @@ int main(int argc, char* argv[])
       // TODO:  Does this work?
       throw new TCLAP::ArgException("Unknown log level");
     }
+
+    // Do some parameter sanity checking.
+    if (cs.n_arc_correction < 0)
+    {
+      cs.n_arc_correction = 0;
+    }
+    if (cs.mm_per_arc_segment <= 0)
+    {
+      cs.mm_per_arc_segment = 1;
+    }
+    if (cs.min_mm_per_arc_segment < cs.mm_per_arc_segment)
+    {
+      cs.min_mm_per_arc_segment = 0;
+    }
+    if (cs.min_arc_segments < 0)
+    {
+      cs.min_arc_segments = 0;
+    }
+    if (cs.arc_segments_per_sec < 0)
+    {
+      cs.arc_segments_per_sec = 0;
+    }
+    
 
   }
   // catch argument exceptions
@@ -224,8 +290,23 @@ int main(int argc, char* argv[])
   {
     log_messages << "\tTarget File File             : " << target_file_path << "\n";
   }
-
   log_messages << "\tLog Level                    : " << log_level_string << "\n";
+
+  // Log the parameters used 
+  log_messages << "\tMax MM Per Arc Segment           : " << cs.mm_per_arc_segment << "\n";
+  log_messages << "\tMin MM Per Arc Segment           : " << cs.min_mm_per_arc_segment << "\n";
+  log_messages << "\tMin Arc Segments                 : " << cs.min_arc_segments << "\n";
+  log_messages << "\tArc Segments per Second          : " << cs.arc_segments_per_sec << "\n";
+  log_messages << "\tN Arc Corrections                : " << cs.n_arc_correction << "\n";
+  log_messages << "\tInterpolation Function           : " << interpolation_function_string << "\n";
+
+  cs.mm_per_arc_segment = (float)mm_per_arc_segment;
+  cs.min_mm_per_arc_segment = (float)min_mm_per_arc_segment;
+  cs.min_arc_segments = min_arc_segments;
+  cs.n_arc_correction = n_arc_corrections;
+  cs.arc_segments_per_sec = arc_segments_per_sec;
+
+
   p_logger->log(0, INFO, log_messages.str());
   
   if (overwrite_source_file)

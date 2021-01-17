@@ -213,7 +213,7 @@ arc_welder_results results;
 	bool continue_processing = true;
 	
 	p_logger_->log(logger_type_, DEBUG, "Configuring progress updates.");
-	int read_lines_before_clock_check = 1000;
+	int read_lines_before_clock_check = 500;
 	double next_update_time = get_next_update_time();
 	const clock_t start_clock = clock();
 	p_logger_->log(logger_type_, DEBUG, "Getting source file size.");

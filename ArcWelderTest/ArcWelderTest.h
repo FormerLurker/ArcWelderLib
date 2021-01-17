@@ -73,7 +73,7 @@ static std::string BENCHY_DIFFICULT = "C:\\Users\\Brad\\Documents\\3DPrinter\\An
 static std::string BENCHY_L1_DIFFICULT = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\BenchyArc_L1_Difficult.gcode";
 
 
-static std::string SIX_SPEED_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\6_speed_test.gcode";
+static std::string SIX_SPEED_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\SixSpeedTest_print.gcode";
 // Issues
 static std::string ISSUE_MIMUPREFERIDA = "C:\\Users\\Brad\\Documents\\AntiStutter\\Issues\\MIMUPREFERIDA\\TESTSTUTTER.gcode";
 static std::string BARBARIAN = "C:\\Users\\Brad\\Documents\\AntiStutter\\Issues\\PricklyPear\\Barbarian.gcode";
@@ -101,6 +101,8 @@ static std::string BAD_ARC_DIRECTIONS_2 = "C:\\Users\\Brad\\Documents\\3DPrinter
 static std::string SLOW_COUPLER = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\Rob_Coupler.gcode";
 
 static std::string UNICODE_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\BenchyMinRadiusTest_with_unicode.gcode";
+
+
 
 
 
