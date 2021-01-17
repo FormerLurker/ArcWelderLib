@@ -96,10 +96,12 @@ static std::string ISSUE_99 = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutte
 
 static std::string CONE_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\ConeTest.gcode";
 static std::string CONE_TEST_VASE = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\ConeTestVase.gcode";
-static std::string BAD_ARC_DIRECTIONS = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\BadArcDirections.gcode";
 static std::string UNICODE_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\BenchyMinRadiusTest_with_unicode.gcode";
 
-
+static std::string BAD_ARC_DIRECTIONS = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\BadArcDirections.gcode";
+static std::string BAD_ARC_DIRECTIONS_2 = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\BadArcDirections2.gcode";
+static std::string WIPER_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\wiper_test.gcode";
+static std::string SLOW_COUPLER = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\Rob_Coupler.gcode";
 
 
 

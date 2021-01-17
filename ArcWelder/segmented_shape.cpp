@@ -596,18 +596,31 @@ bool arc::try_create_arc(
 
 bool arc::are_points_within_slice(const arc& test_arc, const array_list<printer_point>& points)
 {
-  
+
+
   // Loop through the points and see if they fit inside of the angles
   double previous_polar = test_arc.polar_start_theta;
+  bool will_cross_zero = false;
   bool crossed_zero = false;
+  const int point_count = points.count();
 
   point start_norm((test_arc.start_point.x - test_arc.center.x) / test_arc.radius, (test_arc.start_point.y - test_arc.center.y) / test_arc.radius, 0.0);
   point end_norm((test_arc.end_point.x - test_arc.center.x) / test_arc.radius, (test_arc.end_point.y - test_arc.center.y) / test_arc.radius, 0.0);
-  
-  for (int index = 1; index < points.count(); index++)
+
+  if (test_arc.direction == DirectionEnum::COUNTERCLOCKWISE)
+  {
+    will_cross_zero = test_arc.polar_start_theta > test_arc.polar_end_theta;
+  }
+  else
+  {
+    will_cross_zero = test_arc.polar_start_theta < test_arc.polar_end_theta;
+  }
+
+  // Need to see if point 1 to point 2 cross zero
+  for (int index = 1; index < point_count; index++)
   {
     double polar_test;
-    if (index < points.count() - 1)
+    if (index < point_count - 1)
     {
       polar_test = test_arc.get_polar_radians(points[index]);
     }
@@ -620,14 +633,16 @@ bool arc::are_points_within_slice(const arc& test_arc, const array_list<printer_
     if (test_arc.direction == DirectionEnum::COUNTERCLOCKWISE)
     {
       // Only check to see if we are within the arc if this isn't the endpoint
-      if (index < points.count() - 1)
+      if (index < point_count - 1)
       {
-        // First test to see if this point lies within the arc
-        if (test_arc.polar_start_theta < test_arc.polar_end_theta && !(test_arc.polar_start_theta < polar_test && polar_test < test_arc.polar_end_theta))
+        if (will_cross_zero)
         {
-          return false;
+          if (!(polar_test > test_arc.polar_start_theta || polar_test < test_arc.polar_end_theta))
+          {
+            return false;
+          }
         }
-        else if (test_arc.polar_start_theta > test_arc.polar_end_theta && !(polar_test > test_arc.polar_start_theta || polar_test < test_arc.polar_end_theta))
+        else if (!(test_arc.polar_start_theta < polar_test && polar_test < test_arc.polar_end_theta))
         {
           return false;
         }
@@ -635,6 +650,11 @@ bool arc::are_points_within_slice(const arc& test_arc, const array_list<printer_
       // Now make sure the angles are increasing
       if (previous_polar > polar_test)
       {
+        if (!will_cross_zero)
+        {
+          return false;
+        }
+
         // Allow the angle to cross zero once
         if (crossed_zero)
         {
@@ -643,23 +663,29 @@ bool arc::are_points_within_slice(const arc& test_arc, const array_list<printer_
         crossed_zero = true;
       }
     }
-    else 
+    else
     {
-      if (index < points.count() - 1)
+      if (index < point_count - 1)
       {
-        if (test_arc.polar_start_theta > test_arc.polar_end_theta && !(test_arc.polar_start_theta > polar_test && polar_test > test_arc.polar_end_theta))
+        if (will_cross_zero)
         {
-          return false;
+          if (!(polar_test < test_arc.polar_start_theta || polar_test > test_arc.polar_end_theta))
+          {
+            return false;
+          }
         }
-        else if (test_arc.polar_start_theta < test_arc.polar_end_theta && !(polar_test < test_arc.polar_start_theta || polar_test > test_arc.polar_end_theta))
+        else if (!(test_arc.polar_start_theta > polar_test && polar_test > test_arc.polar_end_theta))
         {
           return false;
         }
       }
-
       // Now make sure the angles are decreasing
       if (previous_polar < polar_test)
       {
+        if (!will_cross_zero)
+        {
+          return false;
+        }
         // Allow the angle to cross zero once
         if (crossed_zero)
         {
@@ -670,10 +696,16 @@ bool arc::are_points_within_slice(const arc& test_arc, const array_list<printer_
     }
 
     // Now see if the segment intersects either of the vector from the center of the circle to the endpoints of the arc
-    if ((index != 1 && ray_intersects_segment(test_arc.center, start_norm, points[index-1], points[index])) || (index != points.count()-1 && ray_intersects_segment(test_arc.center, end_norm, points[index-1], points[index])))
+    if ((index != 1 && ray_intersects_segment(test_arc.center, start_norm, points[index - 1], points[index])) || (index != point_count - 1 && ray_intersects_segment(test_arc.center, end_norm, points[index - 1], points[index])))
       return false;
     previous_polar = polar_test;
   }
+  // Ensure that all arcs that cross zero do, and that all arcs that should not did not.
+  if (will_cross_zero != crossed_zero)
+  {
+    return false;
+  }
+
   return true;
 }
 
@@ -689,7 +721,7 @@ bool arc::ray_intersects_segment(const point rayOrigin, const point rayDirection
     return false;
 
   double t1 = vector::cross_product_magnitude(v2, v1) / dot;
-  double t2 = dot(v1,v3) / dot;
+  double t2 = dot(v1, v3) / dot;
 
   if (t1 >= 0.0 && (t2 >= 0.0 && t2 <= 1.0))
     return true;
