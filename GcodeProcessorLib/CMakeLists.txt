@@ -1,11 +1,4 @@
-cmake_minimum_required (VERSION "3.13")
-
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release)
-endif()
-
 project(GcodeProcessorLib C CXX)
-
 
 # create a version information header - version.h
 # First get the current branch and store to GIT_BRANCH variable
@@ -59,20 +52,12 @@ include_directories("${CMAKE_BINARY_DIR}/GcodeProcessorLib/generated/")
 file(COPY "${CMAKE_BINARY_DIR}/GcodeProcessorLib/generated/version.generated.h" DESTINATION "${PROJECT_SOURCE_DIR}/deploy")
 file(RENAME "${PROJECT_SOURCE_DIR}/deploy/version.generated.h" "${PROJECT_SOURCE_DIR}/deploy/version.h")
 
-option(USE_CXX_EXCEPTIONS "Enable C++ exception support" ON)
-
 # include sourcelist.cmake, which contains our source list and exposes it as the
 # GcodeProcessorLibSources variable
 include(sourcelist.cmake)
 
-if(MSVC)
-    # link to the msvc runtime statically, keeping debug info if we are in debug config
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-endif()
-
 # Add a library using our GcodeProcessorLibSources variable from our sourcelist file
 add_library(${PROJECT_NAME} STATIC ${GcodeProcessorLibSources})
-
 
 install(
     TARGETS ${PROJECT_NAME}

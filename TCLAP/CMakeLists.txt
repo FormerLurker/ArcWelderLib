@@ -1,9 +1,3 @@
-cmake_minimum_required (VERSION "3.13")
-
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release)
-endif()
-
 project(TCLAP C CXX)
 
 # Add a library using our ArcWelderSources variable from our sourcelist file

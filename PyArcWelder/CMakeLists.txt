@@ -1,9 +1,3 @@
-cmake_minimum_required (VERSION "3.13")
-
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release)
-endif()
-
 project(PyArcWelder C CXX)
 
 # PythonLibs is required to build a python extension
@@ -18,12 +12,6 @@ include_directories(${PYTHON_INCLUDE_DIRS} ${ArcWelder_INCLUDE_DIRS} ${GcodeProc
 # include sourcelist.cmake, which contains our source list and exposes it as the
 # PyArcWelderSources variable
 include(sourcelist.cmake)
-
-
-if(MSVC)
-    # link to the msvc runtime statically, keeping debug info if we are in debug config
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-endif()
 
 # Create our library
 add_library(${PROJECT_NAME} SHARED ${PyArcWelderSources})
