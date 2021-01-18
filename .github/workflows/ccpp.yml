@@ -39,11 +39,11 @@ jobs:
             cc: "gcc", cxx: "g++"
           }
         - {
-            name: "macOS Latest clang", 
+            name: "macOS Latest GCC", 
             artifact_tar: "macOS.tar.xz",
             artifact_zip: "macOS.zip",
             os: macos-latest,
-            cc: "clang", cxx: "clang++"
+            cc: "gcc", cxx: "g++"
           }
 
     steps:
