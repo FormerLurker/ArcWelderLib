@@ -101,8 +101,8 @@ int main(int argc, char* argv[])
     // -s --mm-per-arc-segment
     arg_description_stream.clear();
     arg_description_stream.str("");
-    arg_description_stream << "The mm per arc segment as defined in your firmware.   Used to compensate for firmware without min-arc-segments setting.  Requires that min-arc-segments be set.  Default Value: " << DEFAULT_MAX_RADIUS_MM;
-    TCLAP::ValueArg<double> mm_per_arc_segment_arg("s", "mm-per-arc-segment", arg_description_stream.str(), false, DEFAULT_MAX_RADIUS_MM, "float");
+    arg_description_stream << "The mm per arc segment as defined in your firmware.   Used to compensate for firmware without min-arc-segments setting.  Requires that min-arc-segments be set.  Default Value: " << DEFAULT_MM_PER_ARC_SEGMENT;
+    TCLAP::ValueArg<double> mm_per_arc_segment_arg("s", "mm-per-arc-segment", arg_description_stream.str(), false, DEFAULT_MM_PER_ARC_SEGMENT, "float");
 
     // -a --min-arc-segments
     arg_description_stream.clear();
