@@ -274,7 +274,7 @@ static void TestAntiStutter(std::string filePath)
 	double mm_per_arc_segment = 0;
 
 	//double path_tolerance_percent = ARC_LENGTH_PERCENT_TOLERANCE_DEFAULT; // 1 percent
-	double path_tolerance_percent = 100000;					 
+	double path_tolerance_percent = 0.05;					 
 	//double path_tolerance_percent = 0.05;
 	std::vector<std::string> logger_names;
 	logger_names.push_back("arc_welder.gcode_conversion");
