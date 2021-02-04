@@ -93,6 +93,7 @@ static std::string FIRMWARE_COMPENSATION_TEST_1 = "C:\\Users\\Brad\\Documents\\3
 static std::string BENCHY_MIN_RADIUS_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\BenchyMinRadiusTest.gcode";
 static std::string ISSUE_93 = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\Issues\\93\\FailingGCode.gcode";
 static std::string ISSUE_99 = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\Issues\\99\\FailingGCode.gcode";
+static std::string ISSUE_134 = "C:\\Users\\Brad\\Documents\\AntiStutter\\Issues\\134\\BirdHouse [PETG] [brim]+Infill [20%,cubic]+Noz [0.6]+LH [0.2]+LW-[0.6]+Temps [240+70]+50.0mms+Support [normal (56)]+Coast-[False].gcode" ;
 
 static std::string CONE_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\ConeTest.gcode";
 static std::string CONE_TEST_VASE = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\ConeTestVase.gcode";
@@ -102,6 +103,8 @@ static std::string BAD_ARC_DIRECTIONS = "C:\\Users\\Brad\\Documents\\3DPrinter\\
 static std::string BAD_ARC_DIRECTIONS_2 = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\BadArcDirections2.gcode";
 static std::string WIPER_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\wiper_test.gcode";
 static std::string SLOW_COUPLER = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\Rob_Coupler.gcode";
+static std::string ISSUE_34 = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\spacer.gcode";
+static std::string DIFFICULT_ARCS_ISSUE_34 = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\DifficultArcs\\issue_34.gcode";
 
 
 
