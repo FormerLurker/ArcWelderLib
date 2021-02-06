@@ -64,7 +64,7 @@ public:
 
 	inline int get_index_position(int index) const
 	{
-		int index_position = index + front_index_;// + max_size_;
+		int index_position = index + front_index_ + max_size_;
 		while (index_position >= max_size_)
 		{
 			index_position = index_position - max_size_;

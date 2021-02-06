@@ -62,7 +62,6 @@ private:
 	bool try_add_point_internal_(printer_point p);
 	std::string get_shape_gcode_(bool has_e, double e, double f) const;
 	arc current_arc_;
-	int num_gcode;
 	double max_radius_mm_;
 	int min_arc_segments_;
 	double mm_per_arc_segment_;

@@ -250,20 +250,31 @@ arc_welder_results results;
 	p_logger_->log(logger_type_, DEBUG, "Target file opened successfully.");
 	std::string line;
 	int lines_with_no_commands = 0;
-	//gcodeFile.sync_with_stdio(false);
-	//output_file_.sync_with_stdio(false);
-	
-	add_arcwelder_comment_to_target();
-	
 	parsed_command cmd;
 	// Communicate every second
 	p_logger_->log(logger_type_, DEBUG, "Sending initial progress update.");
 	continue_processing = on_progress_(get_progress_(static_cast<long>(gcodeFile.tellg()), static_cast<double>(start_clock)));
 	p_logger_->log(logger_type_, DEBUG, "Processing source file.");
+	
 	while (std::getline(gcodeFile, line) && continue_processing)
 	{
 		lines_processed_++;
-
+		// Check the first line of gcode and see if it = ;FLAVOR:UltiGCode
+// This comment MUST be preserved as the first line for ultimakers, else things won't work
+		if (lines_processed_ == 1)
+		{
+			bool isUltiGCode = line == ";FLAVOR:UltiGCode";
+			if (isUltiGCode)
+			{
+				write_gcode_to_file(line);
+			}
+			add_arcwelder_comment_to_target();
+			if (isUltiGCode)
+			{
+				lines_with_no_commands++;
+				continue;
+			}
+		}
 		cmd.clear();
 		if (verbose_logging_enabled_)
 		{
@@ -306,7 +317,7 @@ arc_welder_results results;
 
 	if (current_arc_.is_shape() && waiting_for_arc_)
 	{
-		p_logger_->log(logger_type_, DEBUG, "The target file opened successfully.");
+		p_logger_->log(logger_type_, DEBUG, "Processing the final line.");
 		process_gcode(cmd, true, false);
 	}
 	p_logger_->log(logger_type_, DEBUG, "Writing all unwritten gcodes to the target file.");
@@ -580,7 +591,6 @@ int arc_welder::process_gcode(parsed_command cmd, bool is_end, bool is_reprocess
 		}
 	}
 	
-	bool arc_generated = false;
 	if (!arc_added && !(cmd.is_empty && cmd.comment.length() == 0))
 	{
 		if (current_arc_.get_num_segments() < current_arc_.get_min_segments()) {
@@ -606,7 +616,6 @@ int arc_welder::process_gcode(parsed_command cmd, bool is_end, bool is_reprocess
 				write_arc_gcodes(p_pre_pos->is_extruder_relative, p_pre_pos->f);
 				// Now clear the arc and flag the processor as not waiting for an arc
 				waiting_for_arc_ = false;
-				arc_generated = true;
 				current_arc_.clear();
 				p_cur_pos = NULL;
 				p_pre_pos = NULL;
