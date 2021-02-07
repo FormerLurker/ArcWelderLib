@@ -1,8 +1,8 @@
 # ArcWelderLib:  Anti Stutter Libraries and Binaries
 
-Converts G0/G1 GCode commands to G2/G3 (arc) commands, and back again.  This can greatly compress most GCode files, and potentially improve quality by preventing planner starvation.  It is especially useful when streaming over a serial connection (OctoPrint, Pronterface, Slicer Direct Printing), but has some potential advantages in other cases too depending on your firmware and board.
+Converts G0/G1 GCode commands to G2/G3 (arc) commands and back again.  This can greatly compress most GCode files and potentially improve quality by preventing planner starvation.  It is especially useful when streaming over a serial connection (OctoPrint, Pronterface, Slicer Direct Printing), but has some potential advantages in other cases too depending on your firmware and board.
 
-This software was designed for 3D printers, but should also be useful in other cases.  Please note that the current version does not convert travel moves to G2/G3, but this will be remedied soon.
+This software was designed for 3D printers but should also be useful in other cases.  Please note that the current version does not convert travel moves to G2/G3, but this will be remedied soon.
 
 # Installation
 
@@ -10,12 +10,12 @@ Installation is a simple matter of downloading and extracting the latest release
 
 The archive will contain two folders:
 
-* **bin** - Here you will find the two console applications:  ArcWelder and ArcStraightener.  Just copy these to your local machine and you can run them from the command line, from a script, or directly within most slicers.  See the sections below for instructions on how to use these applications
-* **lib** - This folder contains pre-compiled ArcWelder libraries that can be integrated into applications.  The GcodeProcessorLib library has functions for parsing gcode, tracking the printer's state and position, as well as several other goodies.  the ArcWelder library (requires GcodeProcessorLib) contains the core welding algorithm.
+* **bin** - Here you will find the two console applications:  ArcWelder and ArcStraightener.  Just copy these to your local machine and you can run them from the command line, from a script, or directly within most slicers.  See the sections below for instructions on how to use these applications.
+* **lib** - This folder contains pre-compiled ArcWelder libraries that can be integrated into applications.  The GcodeProcessorLib library has functions for parsing gcode, tracking the printer's state and position, as well as several other goodies.  The ArcWelder library (requires GcodeProcessorLib) contains the core welding algorithm.
 
 # Arc Welder Console Application
 
-This is a multiplatform console application that can be used to run the Arc Welder algorithm from a command prompt.  Binaries are available for Windows, Linux, Raspbian and MacOs.  See the [installation][#installation] section for information on how to download the console application.
+This is a multiplatform console application that can be used to run the Arc Welder algorithm from a command prompt.  Binaries are available for Windows, Linux, Raspbian, and MacOs.  See the [installation][#installation] section for information on how to download the console application.
 
 ## Running Arc Welder Console
 
@@ -27,7 +27,7 @@ Once ArcWelder (or ArcWelder.exe for Windows) is downloaded and copied to your m
 
 **Overwriting the source file**
 
-If you want to overwrite the source file, no target path is needed.  For example, if you are running the windows version from the root of your C drive, and want to weld a file called C:\thing.gcode, you could run the following command from the terminal:
+If you want to overwrite the source file, no target path is needed.  For example, if you are running the Windows version from the root of your C drive and want to weld a file called C:\thing.gcode, you could run the following command from the terminal:
 
 ```
 C:\ArcWelder.exe C:\thing.gcode
@@ -43,7 +43,7 @@ If you want your original file preserved, you can specify a target path like so:
 C:\ArcWelder.exe C:\thing.gcode c:\thing.aw.gcode
 ```
 
-That would create a new file called thing.aw.gcode, and would leave the thing.gcode file alone.
+That would create a new file called thing.aw.gcode and would leave the thing.gcode file alone.
 
 ## ArcWelder Console Help
 
@@ -67,7 +67,7 @@ ArcWelder has good defaults for most applications, but occationally you may want
 ArcWelder uses the [TCLAP Templatized C++ Command Line Parser](https://github.com/mirror/tclap) for implementing the arguments, and I've been most impressed with it.
 
 ### G90 Influences Extruder
-For some printers, sending a G90 or G91 command also changes the E axis mode.  This is required for any printer running Marlin 2+ or a fork of Marlin 2, for Smoothieware, and for Prusa Buddy Firmware (Prusa Mini).  Do NOT add this flag if you are running any other firmware.  If your firmware is not on this list, but requires this parameter, please create an issue and I will update the documentation.
+For some printers, sending a G90 or G91 command also changes the E axis mode.  This is required for any printer running Marlin 2+ or a fork of Marlin 2, for Smoothieware, and for Prusa Buddy Firmware (Prusa Mini).  Do NOT add this flag if you are running any other firmware.  If your firmware is not on this list but requires this parameter, please create an issue, and I will update the documentation.
 
 * Type: Flag
 * Default: Disabled
@@ -76,9 +76,9 @@ For some printers, sending a G90 or G91 command also changes the E axis mode.  T
 * Example: ```ArcWelder -g "C:\thing.gcode"```
 
 ### Resolution (Maximum Path Deviation)
-Arc welder is able to compress line segments into gcode by taking advantage of the fact that a bunch of tiny line segments can, when viewed from a distance, approximate a curve.  However, a true curved path will never match up exactly with a bunch of straight lines, so ArcWelder needs a bit of play in order to create arc commands.  The *resolution argument* tells ArcWelder how much leeway it has with the original toolpath to make an arc.  Increasing this value will result in more compression, and reducing it will improve accuracy.  It is a trade-off, but one that most slicers implement anyway in order to prevent too many tiny movements from overwhelming your firmware.  In fact, ArcWelder can produce toolpaths that are more accurate than simply merging short segments together, making it less 'lossy' than slicer resolution settings.
+ArcWelder is able to compress line segments into gcode by taking advantage of the fact that a bunch of tiny line segments can, when viewed from a distance, approximate a curve.  However, a true curved path will never match up exactly with a bunch of straight lines, so ArcWelder needs a bit of play in order to create arc commands.  The *resolution argument* tells ArcWelder how much leeway it has with the original toolpath to make an arc.  Increasing this value will result in more compression, and reducing it will improve accuracy.  It is a trade-off, but one that most slicers implement anyway in order to prevent too many tiny movements from overwhelming your firmware.  In fact, ArcWelder can produce toolpaths that are more accurate than simply merging short segments together, making it less 'lossy' than slicer resolution settings.
 
-The default resolution is 0.05mm, which means your toolpaths can deviate by plus or minus 0.025mm.  In general, this produces excellent results, and toolpaths that are indistinguishable from the originals with the neaked eye.  For extremely high precision parts, you may decrease this value, but this will reduce the amount of compression that can be achieved.
+The default resolution is 0.05mm, which means your toolpaths can deviate by plus or minus 0.025mm.  In general, this produces excellent results and toolpaths that are indistinguishable from the originals with the naked eye.  For extremely high precision parts, you may decrease this value, but this will reduce the amount of compression that can be achieved.
 
 Values above 0.1 are not recommended, as you may encounter overlapping toolpaths.  When using values above 0.1, I recommend you use a visualizer that supports arcs before running your print.
 
@@ -91,7 +91,7 @@ Values above 0.1 are not recommended, as you may encounter overlapping toolpaths
 ### Path Tolerance Percent (length)
 This parameter allows you control how much the length of the final arc can deviate from the original toolpath.  The default value of 5% is absolutely fine in most cases, even though that sounds like a lot.  The key thing to remember here is that your firmware will break the G2/G3 commands into many small segments, essentially reversing the process, so the path length in your firmware will match the original path much more closely.
 
-Originally this setting was added as a safety feature to prevent prevent bad arcs from being generated in some edge cases.  However, since then a new error detection algorithm was added that makes this unnecessary.  In some cases, especially if your resolution parameter is large (above 0.1), this setting can be used to fine tune the generated arcs, so I left this setting in as is.  99+% of the time, no adjustments will be necessary here.
+Originally, this setting was added as a safety feature to prevent prevent bad arcs from being generated in some edge cases.  However, since then a new error detection algorithm was added that makes this unnecessary.  In some cases, especially if your resolution parameter is large (above 0.1), this setting can be used to fine tune the generated arcs, so I left this setting in as is.  99+% of the time, no adjustments will be necessary here.
 
 * Type: Value (percent)
 * Default: 0.05 (5%)
@@ -129,9 +129,9 @@ Not all gcode has the same precision for X, Y, and Z parameters.  Enabling this 
 * Example: ```ArcWelder --allow-dynamic-precision```
 
 ### Default XYZ Precision
-Arc Welder outputs fixed precision for X, Y, Z, I and J parameters.  99% of the time the default of 3 decimal places is just fine.  If you need (want) more or less precision, you can alter this value.  In general, I do not recommend a value below 3 or above 5.
+ArcWelder outputs fixed precision for X, Y, Z, I, and J parameters.  99% of the time the default of 3 decimal places is just fine.  If you need (want) more or less precision, you can alter this value.  In general, I do not recommend a value below 3 or above 5.
 
-Note, that when combined with the --allow-dynamic-precision argument, this represents the minimum precision.  It will grow if Arc Welder encounters gcode commands with a higher precision.
+Note that when combined with the --allow-dynamic-precision argument, this represents the minimum precision.  It will grow if Arc Welder encounters gcode commands with a higher precision.
 
 * Type: Value (integer decimal places)
 * Default: 3 (3 decimals, example: 1.001)
@@ -153,7 +153,7 @@ Note, that when combined with the --allow-dynamic-precision argument, this repre
 ### Firmware Compensation
 **Important**: Do **NOT** enable firmware compensation unless you are sure you need it!  Print quality and compression will suffer if it is enabled needlessly.
 
-Some firmware does not handle arcs with a small radus (under approximately 5mm depending on your settings), which will appear flat instead of curved.  If larger arcs appear flat, it's likely that G2/G3 is disabled!.  See [this closed issue for more details](https://github.com/FormerLurker/ArcWelderLib/issues/18), including some illustrations showing what firmware compensation does to your gcode.
+Some firmware does not handle arcs with a small radius (under approximately 5mm depending on your settings), which will appear flat instead of curved.  If larger arcs appear flat, it's likely that G2/G3 is disabled.  See [this closed issue for more details](https://github.com/FormerLurker/ArcWelderLib/issues/18), including some illustrations showing what firmware compensation does to your gcode.
 
 This applies to Marlin 1.x (but NOT Marlin 2), Klipper (can be fixed by changing settings), and a few others.  If you notice small radius arcs that print with a flat edge, you may need to enable firmware compensation.  Note that compression may be reduced (perhaps drastically) when firmware compensation is enabled.
 
@@ -170,7 +170,7 @@ This is the default length of a segment in your firmware.  This setting MUST mat
 * Long Parameter: --mm-per-arc-segment=<decimal_value>
 * Example: ```ArcWelder --mm-per-arc-segment=1.0```
 #### Minimum Arc Segments
-This specifies the minimum number of segments that a circle of the same radius must have, and is the parameter that determines how much compensation will be applied.  This setting was inspired by the Marlin 2.0 arc interpolation algorithm, and attempts to follow it as closely as possible.  The higher the value, the more compensation will be applied, and the less compression you will get.  A minimum of 14 is recommended.  Values above 24 are NOT recommended.  In general, this should be set as low as possible.
+This specifies the minimum number of segments that a circle of the same radius must have and is the parameter that determines how much compensation will be applied.  This setting was inspired by the Marlin 2.0 arc interpolation algorithm and attempts to follow it as closely as possible.  The higher the value, the more compensation will be applied, and the less compression you will get.  A minimum of 14 is recommended.  Values above 24 are NOT recommended.  In general, this should be set as low as possible.
 
 If ArcWelder detects that a generated arc would have fewer segments than specified, it will reject the arc and output regular G0/G1 codes instead.  It's possible that a single arc will be broken into several G2/G3 commands as well, depending on the exact situation.  Note that ArcWelder will never increase the number of GCodes used, so it is limited by the resolution of the source gcode file.
 
@@ -186,7 +186,7 @@ If you need to enable firmware compensation because you notice that small arcs a
 ArcWelder --mm-per-arc-segment=1.0 --min-arc-segments=14
 ```
 
-This should produce much more rounded small arcs.  However, in some cases you will want more detail (again, at the cost of compression, which reduces the effectiveness of Arc Welder), increase --min-arc-segments up to around 24.  I don't recommend going higher than this since you will start to get lots of uncompressed gcode in areas that need it.
+This should produce much more rounded small arcs.  However, in some cases you will want more detail (again, at the cost of compression, which reduces the effectiveness of ArcWelder), increase --min-arc-segments up to around 24.  I don't recommend going higher than this since you will start to get lots of uncompressed gcode in areas that need it.
 
 ## Slicer Integrations
 
@@ -194,17 +194,17 @@ It's easy to integrate ArcWelder with most slicers.
 
 ### Running ArcWelder From Cura
 
-There is no way to plug the ArcWelder console application into cura.  Fortunately there is a [plugin](https://github.com/fieldOfView/Cura-ArcWelderPlugin) in the [marketplace](https://marketplace.ultimaker.com/app/cura/plugins/fieldofview/ArcWelderPlugin) that integrates ArcWelder into cura, developed by [FieldOfView](https://github.com/fieldOfView), so no worries there!
+There is no way to plug the ArcWelder console application into Cura.  Fortunately there is a [plugin](https://github.com/fieldOfView/Cura-ArcWelderPlugin) in the [marketplace](https://marketplace.ultimaker.com/app/cura/plugins/fieldofview/ArcWelderPlugin) that integrates ArcWelder into Cura, developed by [FieldOfView](https://github.com/fieldOfView), so no worries there!
 
 Note that if you are running Marlin 2, a fork of Marlin 2, Prusa Buddy (Prusa Mini), or Smoothieware, enable the 'G90 Influences Extruder' setting.  See the [G90 Influences Extruder](#g90-influences-extruder) section for more info.
 
-If you are running Marlin 1, or any fork of Marlin 1 (Prusa Firmware for Mk2/Mk3, for example), or Klipper you might consider enabling Firmware Compensation.  This is dependant on your firmware settings, but in general you will want to set *MM Per Arc Segment* to 1.0 and *Min Arc Segments* to 14 to enable firmware compensation.  Setting either to 0 will disable this.  See the [firmware compensation](#firmware-compensation) section for more info.
+If you are running Marlin 1 or any fork of Marlin 1 (Prusa Firmware for Mk2/Mk3, for example) or Klipper, you might consider enabling Firmware Compensation.  This is dependent on your firmware settings, but in general you will want to set *MM Per Arc Segment* to 1.0 and *Min Arc Segments* to 14 to enable firmware compensation.  Setting either to 0 will disable this.  See the [firmware compensation](#firmware-compensation) section for more info.
 
 ### Running ArcWelder from Slic3r, Slic3rPE, PrusaSlicer, and SuperSlicer
 
 There are slight differences between these different slicers, but fortunately the method for integrating ArcWelder is the same.
 
-1. Put the ArcWelder binary somewhere on your PC, and copy the full path (see the installation section above).  For example:  ```C:\ArcWelder```
+1. Put the ArcWelder binary somewhere on your PC and copy the full path (see the installation section above).  For example:  ```C:\ArcWelder```
 2. Select 'Print Settings'.
 3. Depending on which slicer your are using, you may have to enable 'Advanced' or 'Expert' mode (PrusaSlicer requires this at least).
 4. Select the 'Output options' sub menu.
@@ -229,7 +229,7 @@ There are some parameters you might want to add.  For example, if you are using 
 
 See the [firmware compensation](#firmware-compensation) section for more info.
 
-If you are running Marlin 2.0, or a fork of Marlin 2.0, Smoothieware, or Prusa Buddy (for the Prusa Mini), you will want to add the --g90-influences-extruder like so:
+If you are running Marlin 2.0, a fork of Marlin 2.0, Smoothieware, or Prusa Buddy (for the Prusa Mini), you will want to add the --g90-influences-extruder like so:
 ```
 {path_to_arc_welder_here}\ArcWelder.exe --g90-influences-extruder
 ```
@@ -240,11 +240,11 @@ See the [G90 Influences Extruder](#g90-influences-extruder) section for more inf
 
 1. Edit your current process settings.
 2. Click on the *Scripts* tab.
-3. Add the following command (your path to arcwelder may be different) like so:
+3. Add the following command (your path to ArcWelder may be different) like so:
 ```
 c:\ArcWelder.exe "[output_filepath]"
 ```
-**Important Note**: The quotes around the [output_filepath] tag are CRITICAL!  Omitting these will lead to intermittant issues depending on your gocde path and file name.  Also, **DO NOT** hard code an output path or file name.  Simplify3D will automatically replace the token **[output_filepath]** with the path and file name of our output file.
+**Important Note**: The quotes around the [output_filepath] tag are CRITICAL!  Omitting these will lead to intermittent issues depending on your gocde path and file name.  Also, **DO NOT** hard code an output path or file name.  Simplify3D will automatically replace the token **[output_filepath]** with the path and file name of our output file.
 
 4. Now click 'OK' to save your settings change, load and slice a file, and save it somewhere.  Open it up and verify that the ArcWelder header appears at the top of your file.  It should look like this:
 ```
@@ -261,7 +261,7 @@ c:\ArcWelder.exe --mm-per-arc-segment=1.0 --min-arc-segments=14 "[output_filepat
 
 See the [firmware compensation](#firmware-compensation) section for more info.
 
-If you are running Marlin 2.0, or a fork of Marlin 2.0, Smoothieware, or Prusa Buddy (for the Prusa Mini), you will want to add the --g90-influences-extruder like so:
+If you are running Marlin 2.0, a fork of Marlin 2.0, Smoothieware, or Prusa Buddy (for the Prusa Mini), you will want to add the --g90-influences-extruder like so:
 
 ```
 c:\ArcWelder.exe --g90-influences-extruder "[output_filepath]"
