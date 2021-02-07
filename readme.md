@@ -182,8 +182,9 @@ If ArcWelder detects that a generated arc would have fewer segments than specifi
 
 #### Firmware Compensation Example
 If you need to enable firmware compensation because you notice that small arcs appear flat, I recommend you start with the following settings:
-
-```ArcWelder --mm-per-arc-segment=1.0 --min-arc-segments=14```
+```
+ArcWelder --mm-per-arc-segment=1.0 --min-arc-segments=14
+```
 
 This should produce much more rounded small arcs.  However, in some cases you will want more detail (again, at the cost of compression, which reduces the effectiveness of Arc Welder), increase --min-arc-segments up to around 24.  I don't recommend going higher than this since you will start to get lots of uncompressed gcode in areas that need it.
 
@@ -193,7 +194,7 @@ It's easy to integrate ArcWelder with most slicers.
 
 ### Running ArcWelder From Cura
 
-There is no way to plug the ArcWelder console application into cura.  Fortunately there is a [plugin](https://github.com/fieldOfView/Cura-ArcWelderPlugin) in the [marketplace](https://marketplace.ultimaker.com/app/cura/plugins/fieldofview/ArcWelderPlugin) that integrates ArcWelder into cura, developed by [FieldOfView}(https://github.com/fieldOfView), so no worries there!
+There is no way to plug the ArcWelder console application into cura.  Fortunately there is a [plugin](https://github.com/fieldOfView/Cura-ArcWelderPlugin) in the [marketplace](https://marketplace.ultimaker.com/app/cura/plugins/fieldofview/ArcWelderPlugin) that integrates ArcWelder into cura, developed by [FieldOfView](https://github.com/fieldOfView), so no worries there!
 
 Note that if you are running Marlin 2, a fork of Marlin 2, Prusa Buddy (Prusa Mini), or Smoothieware, enable the 'G90 Influences Extruder' setting.  See the [G90 Influences Extruder](#g90-influences-extruder) section for more info.
 
@@ -208,23 +209,29 @@ There are slight differences between these different slicers, but fortunately th
 3. Depending on which slicer your are using, you may have to enable 'Advanced' or 'Expert' mode (PrusaSlicer requires this at least).
 4. Select the 'Output options' sub menu.
 5. In the 'Post-processing scripts', add the following command (your path to ArcWelder may be different):
-```c:\ArcWelder.exe```
+```
+c:\ArcWelder.exe
+```
 That will run ArcWelder on each sliced print with the default parameters.
 6. Save your settings changes.
 7. Slice a test file and open it, checking for the ArcWelder header at the top, which should look like this:
-```; Postprocessed by [ArcWelder](https://github.com/FormerLurker/ArcWelderLib)```
+```
+; Postprocessed by [ArcWelder](https://github.com/FormerLurker/ArcWelderLib)
+```
 
 Now you should be good to go!  
 
 There are some parameters you might want to add.  For example, if you are using a printer running Marlin 1.0 or a fork of Marlin 1, you may want to enable firmware compensation.  Here's an example of that:
-
-```{path_to_arc_welder_here}\ArcWelder.exe --mm-per-arc-segment=1.0 --min-arc-segments=14```
+```
+{path_to_arc_welder_here}\ArcWelder.exe --mm-per-arc-segment=1.0 --min-arc-segments=14
+```
 
 See the [firmware compensation](#firmware-compensation) section for more info.
 
 If you are running Marlin 2.0, or a fork of Marlin 2.0, Smoothieware, or Prusa Buddy (for the Prusa Mini), you will want to add the --g90-influences-extruder like so:
-
-```{path_to_arc_welder_here}\ArcWelder.exe --g90-influences-extruder```
+```
+{path_to_arc_welder_here}\ArcWelder.exe --g90-influences-extruder
+```
 
 See the [G90 Influences Extruder](#g90-influences-extruder) section for more info.
 
@@ -233,22 +240,30 @@ See the [G90 Influences Extruder](#g90-influences-extruder) section for more inf
 1. Edit your current process settings.
 2. Click on the *Scripts* tab.
 3. Add the following command (your path to arcwelder may be different) like so:
-```c:\ArcWelder.exe "[output_filepath]"```
+```
+c:\ArcWelder.exe "[output_filepath]"
+```
 **Important Note**: The quotes around the [output_filepath] tag are CRITICAL!  Omitting these will lead to intermittant issues depending on your gocde path and file name.  Also, **DO NOT** hard code an output path or file name.  Simplify3D will automatically replace the token **[output_filepath]** with the path and file name of our output file.
 4. Now click 'OK' to save your settings change, load and slice a file, and save it somewhere.  Open it up and verify that the ArcWelder header appears at the top of your file.  It should look like this:
-```; Postprocessed by [ArcWelder](https://github.com/FormerLurker/ArcWelderLib)```
+```
+; Postprocessed by [ArcWelder](https://github.com/FormerLurker/ArcWelderLib)
+```
 
 Now you should be producing welded files directly from Simplify3D!
 
 There are some parameters you might want to add.  For example, if you are using a printer running Marlin 1.0 or a fork of Marlin 1, you may want to enable firmware compensation.  Here's an example of that:
 
-```c:\ArcWelder.exe --mm-per-arc-segment=1.0 --min-arc-segments=14 "[output_filepath]"```
+```
+c:\ArcWelder.exe --mm-per-arc-segment=1.0 --min-arc-segments=14 "[output_filepath]"
+```
 
 See the [firmware compensation](#firmware-compensation) section for more info.
 
 If you are running Marlin 2.0, or a fork of Marlin 2.0, Smoothieware, or Prusa Buddy (for the Prusa Mini), you will want to add the --g90-influences-extruder like so:
 
-```c:\ArcWelder.exe --g90-influences-extruder "[output_filepath]"```
+```
+c:\ArcWelder.exe --g90-influences-extruder "[output_filepath]"
+```
 
 See the [G90 Influences Extruder](#g90-influences-extruder) section for more info.
 
