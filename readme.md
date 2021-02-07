@@ -213,6 +213,7 @@ There are slight differences between these different slicers, but fortunately th
 c:\ArcWelder.exe
 ```
 That will run ArcWelder on each sliced print with the default parameters.
+
 6. Save your settings changes.
 7. Slice a test file and open it, checking for the ArcWelder header at the top, which should look like this:
 ```
@@ -244,6 +245,7 @@ See the [G90 Influences Extruder](#g90-influences-extruder) section for more inf
 c:\ArcWelder.exe "[output_filepath]"
 ```
 **Important Note**: The quotes around the [output_filepath] tag are CRITICAL!  Omitting these will lead to intermittant issues depending on your gocde path and file name.  Also, **DO NOT** hard code an output path or file name.  Simplify3D will automatically replace the token **[output_filepath]** with the path and file name of our output file.
+
 4. Now click 'OK' to save your settings change, load and slice a file, and save it somewhere.  Open it up and verify that the ArcWelder header appears at the top of your file.  It should look like this:
 ```
 ; Postprocessed by [ArcWelder](https://github.com/FormerLurker/ArcWelderLib)
