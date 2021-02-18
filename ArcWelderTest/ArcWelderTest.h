@@ -67,7 +67,7 @@ static std::string DIFFICULT_CURVES = "C:\\Users\\Brad\\Documents\\3DPrinter\\An
 static std::string FACE_SHIELD = "C:\\Users\\Brad\\Documents\\3DPrinter\\corona_virus\\2X_Visor_Frame_0.35mm_PLA_1h25m.gcode";
 static std::string SMALL_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\small_test.gcode";
 static std::string SUPER_HUGE_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\super_huge_file.gcode";
-static std::string TORTURE_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\stereographic_projection_0.2mm_PLA_MK2.5MMU2_2h49m.gcode";
+//static std::string TORTURE_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\stereographic_projection_0.2mm_PLA_MK2.5MMU2_2h49m.gcode";
 static std::string ORCHID_POD = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\Pla_OrchidPot.gcode";
 static std::string BENCHY_DIFFICULT = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\BenchyArc_Difficult.gcode";
 static std::string BENCHY_L1_DIFFICULT = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\BenchyArc_L1_Difficult.gcode";
@@ -105,6 +105,8 @@ static std::string WIPER_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStut
 static std::string SLOW_COUPLER = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\Rob_Coupler.gcode";
 static std::string ISSUE_34 = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\spacer.gcode";
 static std::string DIFFICULT_ARCS_ISSUE_34 = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\DifficultArcs\\issue_34.gcode";
+
+static std::string TORTURE_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\performance\\torture_test.gcode";
 
 
 

@@ -413,15 +413,33 @@ void inverse_processor::plan_buffer_line(float x, float y, bool has_z, float z, 
     std::stringstream stream;
     stream << std::fixed;
     
-    //output_file_ <<
+    position * previous_pos = p_source_position_->get_previous_position_ptr();
+    position* current_pos = p_source_position_->get_current_position_ptr();
 
     stream << "G1 X" << std::setprecision(3) << x << " Y" << y;
     if (has_z)
     {
       stream << " Z" << z;
     }
-    stream << std::setprecision(5) << " E" << e;
+
+    double output_e = e;
+    if (previous_pos->is_extruder_relative)
+    {
+      output_e = e - previous_pos->get_current_extruder().get_offset_e();
+    }
     
-    stream << std::setprecision(0) << " F" << feed_rate << "\n";
+    stream << std::setprecision(5) << " E" << output_e;
+    
+    
+    if (feed_rate != previous_pos->f)
+    {
+      stream << std::setprecision(0) << " F" << feed_rate;
+    }
+
+    if (!current_pos->command.comment.empty())
+    {
+      stream << ";" << current_pos->command.comment;
+    }
+    stream << "\n";
     output_file_ << stream.str();
 }
