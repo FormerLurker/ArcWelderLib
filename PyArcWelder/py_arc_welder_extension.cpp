@@ -210,6 +210,7 @@ extern "C"
 			args.allow_dynamic_precision, 
 			args.default_xyz_precision, 
 			args.default_e_precision, 
+			args.extrusion_rate_variance_percent,
 			DEFAULT_GCODE_BUFFER_SIZE, 
 			py_progress_callback
 		);
@@ -342,11 +343,25 @@ static bool ParseArgs(PyObject* py_args, py_gcode_arc_args& args, PyObject** py_
 		args.default_e_precision = 6;
 	}
 
+	// Extract the extrusion_rate_variance
+	PyObject* py_extrusion_rate_variance_percent = PyDict_GetItemString(py_args, "extrusion_rate_variance_percent");
+	if (py_extrusion_rate_variance_percent == NULL)
+	{
+		std::string message = "ParseArgs - Unable to retrieve the extrusion_rate_variance_percent parameter from the args.";
+		p_py_logger->log_exception(GCODE_CONVERSION, message);
+		return false;
+	}
+	args.extrusion_rate_variance_percent = gcode_arc_converter::PyFloatOrInt_AsDouble(py_extrusion_rate_variance_percent);
+	if (args.extrusion_rate_variance_percent < 0)
+	{
+		args.extrusion_rate_variance_percent = DEFAULT_EXTRUSION_RATE_VARIANCE_PERCENT; // Set to the default if no resolution is provided, or if it is less than 0.
+	}
+
 	// Extract the path tolerance_percent
 	PyObject* py_path_tolerance_percent = PyDict_GetItemString(py_args, "path_tolerance_percent");
 	if (py_path_tolerance_percent == NULL)
 	{
-		std::string message = "ParseArgs - Unable to retrieve the py_path_tolerance_percent parameter from the args.";
+		std::string message = "ParseArgs - Unable to retrieve the path_tolerance_percent parameter from the args.";
 		p_py_logger->log_exception(GCODE_CONVERSION, message);
 		return false;
 	}

@@ -49,6 +49,7 @@ arc_welder::arc_welder(
 	bool allow_dynamic_precision,
 	unsigned char default_xyz_precision,
 	unsigned char default_e_precision,
+	double extrusion_rate_variance_percent,
 	int buffer_size, 
 	progress_callback callback) : current_arc_(
 			DEFAULT_MIN_SEGMENTS, 
@@ -83,6 +84,7 @@ arc_welder::arc_welder(
 	gcode_position_args_ = get_args_(g90_g91_influences_extruder, buffer_size);
 	allow_3d_arcs_ = allow_3d_arcs;
 	allow_dynamic_precision_ = allow_dynamic_precision;
+	extrusion_rate_variance_percent_ = extrusion_rate_variance_percent;
 	notification_period_seconds = 1;
 	lines_processed_ = 0;
 	gcodes_processed_ = 0;
@@ -93,6 +95,7 @@ arc_welder::arc_welder(
 	waiting_for_arc_ = false;
 	previous_feedrate_ = -1;
 	gcode_position_args_.set_num_extruders(8);
+	previous_extrusion_rate_ = 0;
 	for (int index = 0; index < 8; index++)
 	{
 		gcode_position_args_.retraction_lengths[0] = .0001;
@@ -399,6 +402,7 @@ int arc_welder::process_gcode(parsed_command cmd, bool is_end, bool is_reprocess
 	bool is_previous_extruder_relative = p_pre_pos->is_extruder_relative;
 	extruder extruder_current = p_cur_pos->get_current_extruder();
 	extruder previous_extruder = p_pre_pos->get_current_extruder();
+
 	//std::cout << lines_processed_ << " - " << cmd.gcode << ", CurrentEAbsolute: " << cur_extruder.e <<", ExtrusionLength: " << cur_extruder.extrusion_length << ", Retraction Length: " << cur_extruder.retraction_length << ", IsExtruding: " << cur_extruder.is_extruding << ", IsRetracting: " << cur_extruder.is_retracting << ".\n";
 
 	int lines_written = 0;
@@ -425,6 +429,22 @@ int arc_welder::process_gcode(parsed_command cmd, bool is_end, bool is_reprocess
 		}
 	}
 
+	// calculate the extrusion rate (mm/mm) and see how much it changes
+	double mm_extruded_per_mm_travel = 0;
+	double extrusion_rate_change_percent = 0;
+	if (movement_length_mm > 0)
+	{
+		mm_extruded_per_mm_travel = extruder_current.e_relative / movement_length_mm;
+		if (previous_extrusion_rate_ > 0)
+		{
+			extrusion_rate_change_percent = std::fabs(utilities::get_percent_change(previous_extrusion_rate_, mm_extruded_per_mm_travel));
+		}
+	}
+	if (extrusion_rate_change_percent > extrusion_rate_variance_percent_)
+	{
+		std::cout << "Extrusion Rate Change Percent: " << extrusion_rate_change_percent << "\n";
+	}
+	
 	// We need to make sure the printer is using absolute xyz, is extruding, and the extruder axis mode is the same as that of the previous position
 	// TODO: Handle relative XYZ axis.  This is possible, but maybe not so important.
 	bool is_g1_g2 = cmd.command == "G0" || cmd.command == "G1";
@@ -458,6 +478,7 @@ int arc_welder::process_gcode(parsed_command cmd, bool is_end, bool is_reprocess
 			utilities::is_equal(p_cur_pos->x_firmware_offset, p_pre_pos->x_firmware_offset) &&
 			utilities::is_equal(p_cur_pos->y_firmware_offset, p_pre_pos->y_firmware_offset) &&
 			utilities::is_equal(p_cur_pos->z_firmware_offset, p_pre_pos->z_firmware_offset) &&
+			(previous_extrusion_rate_ == 0 || utilities::less_than_or_equal(extrusion_rate_change_percent, extrusion_rate_variance_percent_)) &&
 			!p_cur_pos->is_relative &&
 			(
 				!waiting_for_arc_ ||
@@ -511,86 +532,95 @@ int arc_welder::process_gcode(parsed_command cmd, bool is_end, bool is_reprocess
 			}
 		}
 	}
-	else if (debug_logging_enabled_ ){
-		if (is_end)
-		{
-			p_logger_->log(logger_type_, DEBUG, "Procesing final shape, if one exists.");
-		}
-		else if (!cmd.is_empty)
-		{
-			if (!cmd.is_known_command)
+	else {
+		previous_extrusion_rate_ = 0;
+		if (debug_logging_enabled_) {
+			if (is_end)
 			{
-				p_logger_->log(logger_type_, DEBUG, "Command '" + cmd.command + "' is Unknown.  Gcode:" + cmd.gcode);
+				p_logger_->log(logger_type_, DEBUG, "Procesing final shape, if one exists.");
 			}
-			else if (cmd.command != "G0" && cmd.command != "G1")
+			else if (!cmd.is_empty)
 			{
-				p_logger_->log(logger_type_, DEBUG, "Command '"+ cmd.command + "' is not G0/G1, skipping.  Gcode:" + cmd.gcode);
-			}
-			else if (!allow_3d_arcs_ && !utilities::is_equal(p_cur_pos->z, p_pre_pos->z))
-			{
-				p_logger_->log(logger_type_, DEBUG, "Z axis position changed, cannot convert:" + cmd.gcode);
-			}
-			else if (p_cur_pos->is_relative)
-			{
-				p_logger_->log(logger_type_, DEBUG, "XYZ Axis is in relative mode, cannot convert:" + cmd.gcode);
-			}
-			else if (
-				waiting_for_arc_ && !( 
-					(previous_extruder.is_extruding && extruder_current.is_extruding) ||
-					(previous_extruder.is_retracting && extruder_current.is_retracting)
-				)
-			)
-			{
-				std::string message = "Extruding or retracting state changed, cannot add point to current arc: " + cmd.gcode;
-				if (verbose_logging_enabled_)
+				if (!cmd.is_known_command)
 				{
-					
-					message.append(
-						" - Verbose Info\n\tCurrent Position Info - Absolute E:" + utilities::to_string(extruder_current.e) +
-						", Offset E:" + utilities::to_string(extruder_current.get_offset_e()) +
-						", Mode:" + (p_cur_pos->is_extruder_relative_null ? "NULL" : p_cur_pos->is_extruder_relative ? "relative" : "absolute") +
-						", Retraction: " + utilities::to_string(extruder_current.retraction_length) +
-						", Extrusion: " + utilities::to_string(extruder_current.extrusion_length) +
-						", Retracting: " + (extruder_current.is_retracting ? "True" : "False") +
-						", Extruding: " + (extruder_current.is_extruding ? "True" : "False")
-					);
-					message.append(
-						"\n\tPrevious Position Info - Absolute E:" + utilities::to_string(previous_extruder.e) +
-						", Offset E:" + utilities::to_string(previous_extruder.get_offset_e()) +
-						", Mode:" + (p_pre_pos->is_extruder_relative_null ? "NULL" : p_pre_pos->is_extruder_relative ? "relative" : "absolute") +
-						", Retraction: " + utilities::to_string(previous_extruder.retraction_length) +
-						", Extrusion: " + utilities::to_string(previous_extruder.extrusion_length) +
-						", Retracting: " + (previous_extruder.is_retracting ? "True" : "False") +
-						", Extruding: " + (previous_extruder.is_extruding ? "True" : "False")
-					);
-					p_logger_->log(logger_type_, VERBOSE, message);
+					p_logger_->log(logger_type_, DEBUG, "Command '" + cmd.command + "' is Unknown.  Gcode:" + cmd.gcode);
+				}
+				else if (cmd.command != "G0" && cmd.command != "G1")
+				{
+					p_logger_->log(logger_type_, DEBUG, "Command '" + cmd.command + "' is not G0/G1, skipping.  Gcode:" + cmd.gcode);
+				}
+				else if (!allow_3d_arcs_ && !utilities::is_equal(p_cur_pos->z, p_pre_pos->z))
+				{
+					p_logger_->log(logger_type_, DEBUG, "Z axis position changed, cannot convert:" + cmd.gcode);
+				}
+				else if (p_cur_pos->is_relative)
+				{
+					p_logger_->log(logger_type_, DEBUG, "XYZ Axis is in relative mode, cannot convert:" + cmd.gcode);
+				}
+				else if (
+					waiting_for_arc_ && !(
+						(previous_extruder.is_extruding && extruder_current.is_extruding) ||
+						(previous_extruder.is_retracting && extruder_current.is_retracting)
+						)
+					)
+				{
+					std::string message = "Extruding or retracting state changed, cannot add point to current arc: " + cmd.gcode;
+					if (verbose_logging_enabled_)
+					{
+
+						message.append(
+							" - Verbose Info\n\tCurrent Position Info - Absolute E:" + utilities::to_string(extruder_current.e) +
+							", Offset E:" + utilities::to_string(extruder_current.get_offset_e()) +
+							", Mode:" + (p_cur_pos->is_extruder_relative_null ? "NULL" : p_cur_pos->is_extruder_relative ? "relative" : "absolute") +
+							", Retraction: " + utilities::to_string(extruder_current.retraction_length) +
+							", Extrusion: " + utilities::to_string(extruder_current.extrusion_length) +
+							", Retracting: " + (extruder_current.is_retracting ? "True" : "False") +
+							", Extruding: " + (extruder_current.is_extruding ? "True" : "False")
+						);
+						message.append(
+							"\n\tPrevious Position Info - Absolute E:" + utilities::to_string(previous_extruder.e) +
+							", Offset E:" + utilities::to_string(previous_extruder.get_offset_e()) +
+							", Mode:" + (p_pre_pos->is_extruder_relative_null ? "NULL" : p_pre_pos->is_extruder_relative ? "relative" : "absolute") +
+							", Retraction: " + utilities::to_string(previous_extruder.retraction_length) +
+							", Extrusion: " + utilities::to_string(previous_extruder.extrusion_length) +
+							", Retracting: " + (previous_extruder.is_retracting ? "True" : "False") +
+							", Extruding: " + (previous_extruder.is_extruding ? "True" : "False")
+						);
+						p_logger_->log(logger_type_, VERBOSE, message);
+					}
+					else
+					{
+						p_logger_->log(logger_type_, DEBUG, message);
+					}
+
+				}
+				else if (p_cur_pos->is_extruder_relative != p_pre_pos->is_extruder_relative)
+				{
+					p_logger_->log(logger_type_, DEBUG, "Extruder axis mode changed, cannot add point to current arc: " + cmd.gcode);
+				}
+				else if (waiting_for_arc_ && p_pre_pos->f != p_cur_pos->f)
+				{
+					p_logger_->log(logger_type_, DEBUG, "Feedrate changed, cannot add point to current arc: " + cmd.gcode);
+				}
+				else if (waiting_for_arc_ && p_pre_pos->feature_type_tag != p_cur_pos->feature_type_tag)
+				{
+					p_logger_->log(logger_type_, DEBUG, "Feature type changed, cannot add point to current arc: " + cmd.gcode);
+				}
+				else if (previous_extrusion_rate_ != 0 && !utilities::is_equal(previous_extrusion_rate_, mm_extruded_per_mm_travel))
+				{
+					p_logger_->log(logger_type_, DEBUG, "Previus extrusion rate changed: " + cmd.gcode);
 				}
 				else
 				{
-					p_logger_->log(logger_type_, DEBUG, message);
+					// Todo:  Add all the relevant values
+					p_logger_->log(logger_type_, DEBUG, "There was an unknown issue preventing the current point from being added to the arc: " + cmd.gcode);
 				}
-				
-			}
-			else if (p_cur_pos->is_extruder_relative != p_pre_pos->is_extruder_relative)
-			{
-				p_logger_->log(logger_type_, DEBUG, "Extruder axis mode changed, cannot add point to current arc: " + cmd.gcode);
-			}
-			else if (waiting_for_arc_ && p_pre_pos->f != p_cur_pos->f)
-			{
-				p_logger_->log(logger_type_, DEBUG, "Feedrate changed, cannot add point to current arc: " + cmd.gcode);
-			}
-			else if (waiting_for_arc_ && p_pre_pos->feature_type_tag != p_cur_pos->feature_type_tag)
-			{
-				p_logger_->log(logger_type_, DEBUG, "Feature type changed, cannot add point to current arc: " + cmd.gcode);
-			}
-			else
-			{
-				// Todo:  Add all the relevant values
-				p_logger_->log(logger_type_, DEBUG, "There was an unknown issue preventing the current point from being added to the arc: " + cmd.gcode);
 			}
 		}
 	}
 	
+	previous_extrusion_rate_ = mm_extruded_per_mm_travel;
+
 	if (!arc_added && !(cmd.is_empty && cmd.comment.length() == 0))
 	{
 		if (current_arc_.get_num_segments() < current_arc_.get_min_segments()) {
@@ -837,7 +867,8 @@ void arc_welder::add_arcwelder_comment_to_target()
 		stream << "; allow_dynamic_precision=True\n";
 	}
 	stream << "; default_xyz_precision=" << std::setprecision(0) << static_cast<int>(current_arc_.get_xyz_precision()) << "\n";
-	stream << "; default_e_precision=" << std::setprecision(0) << static_cast<int>(current_arc_.get_e_precision()) << "\n\n";
+	stream << "; default_e_precision=" << std::setprecision(0) << static_cast<int>(current_arc_.get_e_precision()) << "\n";
+	stream << "; extrusion_rate_variance_percent=" << std::setprecision(3) << static_cast<int>(extrusion_rate_variance_percent_) << "%\n\n";
 
 	
 	output_file_ << stream.str();

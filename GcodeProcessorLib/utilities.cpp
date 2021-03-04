@@ -171,6 +171,15 @@ double utilities::get_percent_change(int v1, int v2)
 	return 0;
 }
 
+double utilities::get_percent_change(double v1, double v2)
+{
+	if (v1 != 0)
+	{
+		return ((v2 - v1) / v1) * 100.0;
+	}
+	return 0;
+}
+
 std::string utilities::get_percent_change_string(int v1, int v2, int precision)
 {
 	std::stringstream format_stream;

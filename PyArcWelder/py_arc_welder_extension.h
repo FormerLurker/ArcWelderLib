@@ -69,6 +69,7 @@ struct py_gcode_arc_args {
 		bool allow_dynamic_precision_,
 		unsigned char default_xyz_precision_,
 		unsigned char default_e_precision_,
+		double extrusion_rate_variance_percent_,
 		int log_level_
 	) {
 		guid = guid_;
@@ -83,6 +84,7 @@ struct py_gcode_arc_args {
 		allow_dynamic_precision = allow_dynamic_precision_;
 		default_xyz_precision = default_xyz_precision_;
 		default_e_precision = default_e_precision_;
+		extrusion_rate_variance_percent = extrusion_rate_variance_percent_;
 		g90_g91_influences_extruder = g90_g91_influences_extruder_;
 		log_level = log_level_;
 	}
@@ -95,6 +97,7 @@ struct py_gcode_arc_args {
 	bool allow_dynamic_precision;
 	unsigned char default_xyz_precision;
 	unsigned char default_e_precision;
+	double extrusion_rate_variance_percent;
 	bool g90_g91_influences_extruder;
 	double max_radius_mm;
 	int min_arc_segments;

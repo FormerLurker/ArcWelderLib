@@ -49,6 +49,7 @@ public:
 		bool allow_dynamic_precision,
 		unsigned char default_xyz_precision,
 		unsigned char default_e_precision,
+		double extrusion_rate_variance_percent,
 		int buffer_size, 
 		PyObject* py_progress_callback
 		): arc_welder(
@@ -65,6 +66,7 @@ public:
 			allow_dynamic_precision,
 			default_xyz_precision,
 			default_e_precision,
+			extrusion_rate_variance_percent,
 			buffer_size
   ){
 		guid_ = guid;

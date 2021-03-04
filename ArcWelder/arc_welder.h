@@ -415,6 +415,8 @@ struct arc_welder_results {
 #define DEFAULT_GCODE_BUFFER_SIZE 1000
 #define DEFAULT_G90_G91_INFLUENCES_EXTRUDER false
 #define DEFAULT_ALLOW_DYNAMIC_PRECISION false
+#define DEFAULT_EXTRUSION_RATE_VARIANCE_PERCENT 1
+//#define DEFAULT_EXTRUSION_RATE_VARIANCE 0.0001
 class arc_welder
 {
 public:
@@ -432,6 +434,7 @@ public:
 		bool allow_dynamic_precision = DEFAULT_ALLOW_DYNAMIC_PRECISION,
 		unsigned char default_xyz_precision = DEFAULT_XYZ_PRECISION,
 		unsigned char default_e_precision = DEFAULT_E_PRECISION,
+		double extrusion_rate_variance_percent = DEFAULT_EXTRUSION_RATE_VARIANCE_PERCENT,
 		int buffer_size = DEFAULT_GCODE_BUFFER_SIZE,
 		progress_callback callback = NULL);
 	void set_logger_type(int logger_type);
@@ -478,6 +481,8 @@ private:
 	// We don't care about the printer settings, except for g91 influences extruder.
 	gcode_position* p_source_position_;
 	double previous_feedrate_;
+	double previous_extrusion_rate_;
+	double extrusion_rate_variance_percent_;
 	gcode_parser parser_;
 	bool verbose_output_;
 	int logger_type_;
