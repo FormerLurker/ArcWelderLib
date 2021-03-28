@@ -60,6 +60,7 @@ inverse_processor::inverse_processor(std::string source_path, std::string target
     target_path_ = target_path;
     p_source_position_ = new gcode_position(get_args_(g90_g91_influences_extruder, buffer_size));
     cs_ = cs;
+    offset_absolute_e_ = 0;
     // ** Gloabal Variable Definition **
     // 20200417 - FormerLurker - Declare two globals and pre-calculate some values that will reduce the
     // amount of trig funcitons we need to call while printing.  For the price of having two globals we
@@ -200,6 +201,7 @@ void inverse_processor::process()
                     float radius = hypot(offset[X_AXIS], offset[Y_AXIS]); // Compute arc radius for mc_arc
                     uint8_t isclockwise = cmd.command == "G2" ? 1 : 0;
                     output_relative_ = p_cur_pos->is_extruder_relative;
+                    offset_absolute_e_ = p_pre_pos->get_current_extruder().get_offset_e();
                     mc_arc(position, target, offset, static_cast<float>(p_cur_pos->f), radius, isclockwise, 0);
                 }
                 else
@@ -425,7 +427,8 @@ void inverse_processor::plan_buffer_line(float x, float y, bool has_z, float z, 
     double output_e = e;
     if (previous_pos->is_extruder_relative)
     {
-      output_e = e - previous_pos->get_current_extruder().get_offset_e();
+      output_e = e - offset_absolute_e_;
+      offset_absolute_e_ = e;
     }
     
     stream << std::setprecision(5) << " E" << output_e;

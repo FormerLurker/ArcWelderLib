@@ -77,6 +77,7 @@ private:
 	gcode_position* p_source_position_;
 	std::ofstream output_file_;
 	bool output_relative_;
+	double offset_absolute_e_;
 	float arc_max_radius_threshold;
 	//float arc_min_radius_threshold;
 	float total_e_adjustment;
