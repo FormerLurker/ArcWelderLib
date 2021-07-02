@@ -94,6 +94,8 @@ static std::string BENCHY_MIN_RADIUS_TEST = "C:\\Users\\Brad\\Documents\\3DPrint
 static std::string ISSUE_93 = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\Issues\\93\\FailingGCode.gcode";
 static std::string ISSUE_99 = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\Issues\\99\\FailingGCode.gcode";
 static std::string ISSUE_134 = "C:\\Users\\Brad\\Documents\\AntiStutter\\Issues\\134\\BirdHouse [PETG] [brim]+Infill [20%,cubic]+Noz [0.6]+LH [0.2]+LW-[0.6]+Temps [240+70]+50.0mms+Support [normal (56)]+Coast-[False].gcode" ;
+static std::string ISSUE_170 = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\Issues\\170\\lampenring.gcode";
+static std::string ISSUE_184 = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\Issues\\184\\Dome_60_1.2mm_max_test15_0.2mm_PETG_MK3S_2h1m.gcode";
 
 static std::string CONE_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\ConeTest.gcode";
 static std::string CONE_TEST_VASE = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\ConeTestVase.gcode";
@@ -107,7 +109,8 @@ static std::string ISSUE_34 = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutte
 static std::string DIFFICULT_ARCS_ISSUE_34 = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\DifficultArcs\\issue_34.gcode";
 
 static std::string TORTURE_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\performance\\torture_test.gcode";
-
+static std::string CURA_PLUGIN_ISSUE_18 = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\Issues\\CuraPlugin\\18\\Unwelded.gcode";
+static std::string METALTEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\MetalAltered.gcode";
 
 
 

@@ -26,7 +26,7 @@
 #define _CRT_SECURE_NO_DEPRECATE
 #endif
 
-#include "inverse_processor.h"
+#include "marlin_2_arc.h"
 #include "ArcWelderInverseProcessor.h"
 #include <cstring>
 #include <iostream>
@@ -233,7 +233,7 @@ int main(int argc, char* argv[])
     target_file_path = temp_file_path;
   }
   
-  inverse_processor processor(source_file_path, target_file_path, g90_g91_influences_extruder, 50, cs);
+  marlin_2_arc processor(source_file_path, target_file_path, g90_g91_influences_extruder, 50, cs);
   processor.process();
   // Todo:  get some results!
   if (true)

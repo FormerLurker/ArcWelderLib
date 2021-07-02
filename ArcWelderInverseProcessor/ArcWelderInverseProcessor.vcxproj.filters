@@ -18,7 +18,13 @@
     <ClInclude Include="ArcWelderInverseProcessor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inverse_processor.h">
+    <ClInclude Include="repiter_arc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="marlin_2_arc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="firmware_types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -26,7 +32,13 @@
     <ClCompile Include="ArcWelderInverseProcessor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="inverse_processor.cpp">
+    <ClCompile Include="repiter_arc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="marlin_2_arc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="firmware_types.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

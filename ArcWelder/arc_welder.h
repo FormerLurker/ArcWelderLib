@@ -354,6 +354,7 @@ struct arc_welder_progress {
 		lines_processed = 0;
 		points_compressed = 0;
 		arcs_created = 0;
+		arcs_aborted_by_flow_rate = 0;
 		num_firmware_compensations = 0;
 		source_file_size = 0;
 		source_file_position = 0;
@@ -368,6 +369,7 @@ struct arc_welder_progress {
 	int lines_processed;
 	int points_compressed;
 	int arcs_created;
+	int arcs_aborted_by_flow_rate;
 	int num_firmware_compensations;
 	double compression_ratio;
 	double compression_percent;
@@ -385,6 +387,7 @@ struct arc_welder_progress {
 		stream << ", current_file_line: " << lines_processed;
 		stream << ", points_compressed: " << points_compressed;
 		stream << ", arcs_created: " << arcs_created;
+		stream << ", arcs_aborted_by_flowrate: " << arcs_aborted_by_flow_rate;
 		stream << ", num_firmware_compensations: " << num_firmware_compensations;
 		stream << ", compression_ratio: " << compression_ratio;
 		stream << ", size_reduction: " << compression_percent << "% ";
@@ -412,11 +415,10 @@ struct arc_welder_results {
 	std::string message;
 	arc_welder_progress progress;
 };
-#define DEFAULT_GCODE_BUFFER_SIZE 1000
+#define DEFAULT_GCODE_BUFFER_SIZE 10
 #define DEFAULT_G90_G91_INFLUENCES_EXTRUDER false
 #define DEFAULT_ALLOW_DYNAMIC_PRECISION false
-#define DEFAULT_EXTRUSION_RATE_VARIANCE_PERCENT 1
-//#define DEFAULT_EXTRUSION_RATE_VARIANCE 0.0001
+#define DEFAULT_EXTRUSION_RATE_VARIANCE_PERCENT 5
 class arc_welder
 {
 public:
@@ -469,6 +471,7 @@ private:
 	int last_gcode_line_written_;
 	int points_compressed_;
 	int arcs_created_;
+	int arcs_aborted_by_flow_rate_;
 	source_target_segment_statistics segment_statistics_;
 	long get_file_size(const std::string& file_path);
 	double get_time_elapsed(double start_clock, double end_clock);

@@ -210,8 +210,6 @@
     <ClInclude Include="version.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="array_list.cpp" />
-    <ClCompile Include="circular_buffer.cpp" />
     <ClCompile Include="extruder.cpp" />
     <ClCompile Include="fpconv.cpp" />
     <ClCompile Include="gcode_comment_processor.cpp" />

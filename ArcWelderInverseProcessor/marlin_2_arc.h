@@ -62,10 +62,10 @@ struct ConfigurationStore {
 	int n_arc_correction;
 	
 };
-class inverse_processor {
+class marlin_2_arc {
 public:
-	inverse_processor(std::string source_path, std::string target_path, bool g90_g91_influences_extruder, int buffer_size, ConfigurationStore cs = ConfigurationStore());
-	virtual ~inverse_processor();
+	marlin_2_arc(std::string source_path, std::string target_path, bool g90_g91_influences_extruder, int buffer_size, ConfigurationStore cs = ConfigurationStore());
+	virtual ~marlin_2_arc();
 	void process();
 	void mc_arc(float* position, float* target, float* offset, float feed_rate, float radius, uint8_t isclockwise, uint8_t extruder);
 	

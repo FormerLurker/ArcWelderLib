@@ -269,6 +269,7 @@ static void TestAntiStutter(std::string filePath)
 	//double max_resolution = DEFAULT_RESOLUTION_MM;
 	double max_resolution = 0.05;
 	double max_radius_mm = 100000;
+	//double max_radius_mm = 10000;
 	//int min_arc_segments = DEFAULT_MIN_ARC_SEGMENTS;
 	int min_arc_segments = 0;
 	double mm_per_arc_segment = 0;
@@ -288,19 +289,20 @@ static void TestAntiStutter(std::string filePath)
 	logger_levels.push_back(log_levels::CRITICAL);
 	logger* p_logger = new logger(logger_names, logger_levels);
 	p_logger->set_log_level(INFO);
+	//p_logger->set_log_level(DEBUG);
 	//p_logger->set_log_level_by_value(5);
 	//arc_welder arc_welder_obj(BENCHY_0_5_MM_NO_WIPE, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50, static_cast<progress_callback>(on_progress));
 	//arc_welder arc_welder_obj(SIX_SPEED_TEST, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50, on_progress);
 	arc_welder arc_welder_obj(
-		BENCHY_L1_DIFFICULT,
+		METALTEST,
 		"C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", 
 		p_logger, 
 		max_resolution, 
 		path_tolerance_percent, 
-		max_radius_mm,
+		DEFAULT_MAX_RADIUS_MM,
 		min_arc_segments,
 		mm_per_arc_segment,
-		false,
+		true,
 		true,
 		DEFAULT_ALLOW_DYNAMIC_PRECISION,
 		DEFAULT_XYZ_PRECISION,

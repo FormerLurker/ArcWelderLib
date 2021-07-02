@@ -24,6 +24,7 @@
 #include <sstream>
 #include <iostream>
 #include <iomanip>
+#include <algorithm>
 #include "fpconv.h"
 
 const std::string utilities::WHITESPACE_ = " \n\r\t\f\v";
@@ -320,4 +321,20 @@ std::string utilities::dtos(double x, unsigned char precision)
 	}
 	*/
 	return buffer;
+}
+
+bool utilities::case_insensitive_compare_char(char& c1, char& c2)
+{
+	if (c1 == c2)
+		return true;
+	else if (std::toupper(c1) == std::toupper(c2))
+		return true;
+	return false;
+}
+/*
+ * Case Insensitive String Comparision
+ */
+bool utilities::case_insensitive_compare(std::string& str1, std::string& str2)
+{
+	return ((str1.size() == str2.size()) &&	std::equal(str1.begin(), str1.end(), str2.begin(), &utilities::case_insensitive_compare_char));
 }

@@ -202,11 +202,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="ArcWelderInverseProcessor.h" />
-    <ClInclude Include="inverse_processor.h" />
+    <ClInclude Include="firmware_types.h" />
+    <ClInclude Include="marlin_2_arc.h" />
+    <ClInclude Include="repiter_arc.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ArcWelderInverseProcessor.cpp" />
-    <ClCompile Include="inverse_processor.cpp" />
+    <ClCompile Include="firmware_types.cpp" />
+    <ClCompile Include="marlin_2_arc.cpp" />
+    <ClCompile Include="repiter_arc.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ArcWelder\ArcWelder.vcxproj">

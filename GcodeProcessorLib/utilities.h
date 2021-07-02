@@ -41,6 +41,9 @@ public:
 	
 	static double get_cartesian_distance(double x1, double y1, double x2, double y2);
 	static double get_cartesian_distance(double x1, double y1, double z1, double x2, double y2, double z2);
+
+	static bool case_insensitive_compare_char(char& c1, char& c2);
+	static bool case_insensitive_compare(std::string& str1, std::string& str2);
 	static std::string to_string(double value);
 	static std::string to_string(int value);
 	static std::string ltrim(const std::string& s);

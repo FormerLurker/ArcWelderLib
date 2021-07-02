@@ -47,14 +47,14 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "inverse_processor.h"
+#include "marlin_2_arc.h"
 #include <cmath>
 
 //#include "Marlin.h"
 //#include "stepper.h"
 //#include "planner.h"
 
-inverse_processor::inverse_processor(std::string source_path, std::string target_path, bool g90_g91_influences_extruder, int buffer_size, ConfigurationStore cs)
+marlin_2_arc::marlin_2_arc(std::string source_path, std::string target_path, bool g90_g91_influences_extruder, int buffer_size, ConfigurationStore cs)
 {
     source_path_ = source_path;
     target_path_ = target_path;
@@ -79,7 +79,7 @@ inverse_processor::inverse_processor(std::string source_path, std::string target
 */
 }
 
-gcode_position_args inverse_processor::get_args_(bool g90_g91_influences_extruder, int buffer_size)
+gcode_position_args marlin_2_arc::get_args_(bool g90_g91_influences_extruder, int buffer_size)
 {
     gcode_position_args args;
     // Configure gcode_position_args
@@ -112,12 +112,12 @@ gcode_position_args inverse_processor::get_args_(bool g90_g91_influences_extrude
     return args;
 }
 
-inverse_processor::~inverse_processor()
+marlin_2_arc::~marlin_2_arc()
 {
     delete p_source_position_;
 }
 
-void inverse_processor::process()
+void marlin_2_arc::process()
 {
     // Create a stringstream we can use for messaging.
     std::stringstream stream;
@@ -239,7 +239,7 @@ void inverse_processor::process()
 
 // The arc is approximated by generating a huge number of tiny, linear segments. The length of each 
 // segment is configured in settings.mm_per_arc_segment.  
-void inverse_processor::mc_arc(float* position, float* target, float* offset, float feed_rate, float radius, uint8_t isclockwise, uint8_t extruder)
+void marlin_2_arc::mc_arc(float* position, float* target, float* offset, float feed_rate, float radius, uint8_t isclockwise, uint8_t extruder)
 {
     // Extract the position to reduce indexing at the cost of a few bytes of mem
     float p_x = position[X_AXIS];
@@ -363,7 +363,7 @@ void inverse_processor::mc_arc(float* position, float* target, float* offset, fl
         int8_t count = 0;
         for (i = 1; i < segments; i++) { // Increment (segments-1)
 
-          if (count < cs_.n_arc_correction) {
+          if (count < cs_.n_arc_correction /*&& theta_per_segment > 0.001 */) {
             // Apply vector rotation matrix 
             r_axisi = r_axis_x * sin_T + r_axis_y * cos_T;
             r_axis_x = r_axis_x * cos_T - r_axis_y * sin_T;
@@ -404,13 +404,13 @@ void inverse_processor::mc_arc(float* position, float* target, float* offset, fl
     position[E_AXIS] = t_e;
 }
 
-void inverse_processor::clamp_to_software_endstops(float* target)
+void marlin_2_arc::clamp_to_software_endstops(float* target)
 {
     // Do nothing, just added to keep mc_arc identical to the firmware version
     return;
 }
 
-void inverse_processor::plan_buffer_line(float x, float y, bool has_z, float z, const float& e, float feed_rate, uint8_t extruder, const float* gcode_target)
+void marlin_2_arc::plan_buffer_line(float x, float y, bool has_z, float z, const float& e, float feed_rate, uint8_t extruder, const float* gcode_target)
 {
     std::stringstream stream;
     stream << std::fixed;
