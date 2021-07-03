@@ -1,4 +1,10 @@
 set(ArcWelderInverseProcessorSources ${ArcWelderInverseProcessorSources}
+    ArcWelderInverseProcessor.h
     ArcWelderInverseProcessor.cpp
-    inverse_processor.cpp
+    firmware_types.h
+    firmware_types.cpp
+    marlin_2_arc.h
+    marlin_2_arc.cpp
+    repiter_arc.h
+    repiter_arc.cpp
 )
