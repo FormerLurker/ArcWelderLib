@@ -206,7 +206,8 @@ extern "C"
 			args.min_arc_segments, 
 			args.mm_per_arc_segment, 
 			args.g90_g91_influences_extruder, 
-			args.allow_3d_arcs, 
+			args.allow_3d_arcs,
+			args.allow_travel_arcs,
 			args.allow_dynamic_precision, 
 			args.default_xyz_precision, 
 			args.default_e_precision, 
@@ -422,6 +423,16 @@ static bool ParseArgs(PyObject* py_args, py_gcode_arc_args& args, PyObject** py_
 		return false;
 	}
 	args.allow_3d_arcs = PyLong_AsLong(py_allow_3d_arcs) > 0;
+
+	// extract allow_travel_arcs
+	PyObject* py_allow_travel_arcs = PyDict_GetItemString(py_args, "allow_travel_arcs");
+	if (py_allow_travel_arcs == NULL)
+	{
+		std::string message = "ParseArgs - Unable to retrieve allow_travel_arcs from the args.";
+		p_py_logger->log_exception(GCODE_CONVERSION, message);
+		return false;
+	}
+	args.allow_travel_arcs = PyLong_AsLong(py_allow_travel_arcs) > 0;
 
 	// Extract G90/G91 influences extruder
 	// g90_influences_extruder

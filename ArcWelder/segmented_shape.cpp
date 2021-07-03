@@ -447,8 +447,8 @@ bool arc::try_create_arc(
     }
   }
   // Calculate the percent difference of the original path
-  double difference = (arc_length - approximate_length) / approximate_length;
-  if (!utilities::is_zero(difference, path_tolerance_percent))
+  double path_difference_percent = utilities::get_percent_change(arc_length, approximate_length);
+  if (!utilities::is_zero(path_difference_percent, path_tolerance_percent))
   {
     // So it's possible our vector calculation above got the direction wrong.
     // This can happen if there is a crazy arrangement of points
@@ -468,8 +468,8 @@ bool arc::try_create_arc(
         test_arc_length = utilities::hypot(test_arc_length, end_point.z - start_point.z);
       }
     }
-    difference = (test_arc_length - approximate_length) / approximate_length;
-    if (!utilities::is_zero(difference, path_tolerance_percent))
+    path_difference_percent = utilities::get_percent_change(test_arc_length,approximate_length);
+    if (!utilities::is_zero(path_difference_percent, path_tolerance_percent))
     {
       return false;
     }

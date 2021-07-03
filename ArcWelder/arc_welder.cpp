@@ -47,6 +47,7 @@ arc_welder::arc_welder(
 	double mm_per_arc_segment,
 	bool g90_g91_influences_extruder, 
 	bool allow_3d_arcs,
+	bool allow_travel_arcs,
 	bool allow_dynamic_precision,
 	unsigned char default_xyz_precision,
 	unsigned char default_e_precision,
@@ -84,6 +85,7 @@ arc_welder::arc_welder(
 	target_path_ = target_path;
 	gcode_position_args_ = get_args_(g90_g91_influences_extruder, buffer_size);
 	allow_3d_arcs_ = allow_3d_arcs;
+	allow_travel_arcs_ = allow_travel_arcs;
 	allow_dynamic_precision_ = allow_dynamic_precision;
 	extrusion_rate_variance_percent_ = extrusion_rate_variance_percent;
 	notification_period_seconds = 1;
@@ -204,12 +206,15 @@ arc_welder_results results;
 	stream << std::fixed << std::setprecision(2);
 	stream << "arc_welder::process - Parameters received: source_file_path: '" <<
 		source_path_ << "', target_file_path:'" << target_path_ << "', resolution_mm:" <<
-		resolution_mm_ << "mm (+-" << current_arc_.get_resolution_mm() << "mm), path_tolerance_percent: " << current_arc_.get_path_tolerance_percent()  
-		<< ", max_radius_mm:" << current_arc_.get_max_radius()
+		resolution_mm_ << "mm (+-" << current_arc_.get_resolution_mm() 
+		<< "mm), path_tolerance_percent: " << current_arc_.get_path_tolerance_percent()  
+		<< "%, extrusion_rate_variance_percent: " << extrusion_rate_variance_percent_
+		<< "%, max_radius_mm:" << current_arc_.get_max_radius()
 		<< ", min_arc_segments:" << std::setprecision(0) <<current_arc_.get_min_arc_segments() 
 		<< ", mm_per_arc_segment:" << std::setprecision(0) << current_arc_.get_mm_per_arc_segment()
 		<< ", g90_91_influences_extruder: " << (p_source_position_->get_g90_91_influences_extruder() ? "True" : "False")
 		<< ", allow_3d_arcs: " << (allow_3d_arcs_ ? "True" : "False")
+		<< ", allow_travel_arcs: " << (allow_travel_arcs_ ? "True" : "False")
 		<< ", allow_dynamic_precision: " << (allow_dynamic_precision_ ? "True" : "False")
 		<< ", default_xyz_precision: " << std::setprecision(0) << static_cast<double>(current_arc_.get_xyz_precision())
 		<< ", default_e_precision: " << std::setprecision(0) << static_cast<double>(current_arc_.get_e_precision());
@@ -424,7 +429,7 @@ int arc_welder::process_gcode(parsed_command cmd, bool is_end, bool is_reprocess
 	double movement_length_mm = 0;
 	bool has_e_changed = extruder_current.is_extruding || extruder_current.is_retracting;
 	// Update the source file statistics
-	if (p_cur_pos->has_xy_position_changed && (has_e_changed))
+	if (p_cur_pos->has_xy_position_changed)
 	{
 		if (allow_3d_arcs_) {
 			movement_length_mm = utilities::get_cartesian_distance(p_pre_pos->x, p_pre_pos->y, p_pre_pos->z, p_cur_pos->x, p_cur_pos->y, p_cur_pos->z);
@@ -444,7 +449,8 @@ int arc_welder::process_gcode(parsed_command cmd, bool is_end, bool is_reprocess
 	double mm_extruded_per_mm_travel = 0;
 	double extrusion_rate_change_percent = 0;
 	bool aborted_by_flow_rate = false;
-	if (movement_length_mm > 0)
+	// TODO:  MAKE SURE THIS WORKS FOR TRANSITIONS FROM TRAVEL TO NON TRAVEL MOVES
+	if (movement_length_mm > 0 && has_e_changed)
 	{
 		mm_extruded_per_mm_travel = extruder_current.e_relative / movement_length_mm;
 		if (previous_extrusion_rate_ > 0)
@@ -497,7 +503,7 @@ int arc_welder::process_gcode(parsed_command cmd, bool is_end, bool is_reprocess
 				!waiting_for_arc_ ||
 				extruder_current.is_extruding ||
 				// Test for travel conversion
-				
+				(allow_travel_arcs_ && p_cur_pos->is_travel()) ||
 				//(previous_extruder.is_extruding && extruder_current.is_extruding) || // Test to see if 
 				// we can get more arcs.
 				(previous_extruder.is_retracting && extruder_current.is_retracting)
@@ -874,7 +880,7 @@ void arc_welder::add_arcwelder_comment_to_target()
 	stream << "; Copyright(C) 2020 - Brad Hochgesang\n";
 	stream << "; Version: " << GIT_TAGGED_VERSION << ", Branch: " << GIT_BRANCH << ", BuildDate: " << BUILD_DATE << "\n";
 	stream << "; resolution=" << std::setprecision(2) << resolution_mm_ << "mm\n";
-	stream << "; path_tolerance=" << std::setprecision(0) << (current_arc_.get_path_tolerance_percent() * 100.0) << "%\n";
+	stream << "; path_tolerance=" << std::setprecision(1) << (current_arc_.get_path_tolerance_percent() * 100.0) << "%\n";
 	stream << "; max_radius=" << std::setprecision(2) << (current_arc_.get_max_radius()) << "mm\n";
 	if (gcode_position_args_.g90_influences_extruder)
 	{
@@ -897,7 +903,7 @@ void arc_welder::add_arcwelder_comment_to_target()
 	}
 	stream << "; default_xyz_precision=" << std::setprecision(0) << static_cast<int>(current_arc_.get_xyz_precision()) << "\n";
 	stream << "; default_e_precision=" << std::setprecision(0) << static_cast<int>(current_arc_.get_e_precision()) << "\n";
-	stream << "; extrusion_rate_variance_percent=" << std::setprecision(3) << static_cast<int>(extrusion_rate_variance_percent_) << "%\n\n";
+	stream << "; extrusion_rate_variance_percent=" << std::setprecision(1) << (extrusion_rate_variance_percent_ * 100.0) << "%\n\n";
 
 	
 	output_file_ << stream.str();

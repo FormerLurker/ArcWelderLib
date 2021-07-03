@@ -32,7 +32,7 @@ PyObject* py_arc_welder::build_py_progress(const arc_welder_progress& progress, 
 	if (pyMessage == NULL)
 		return NULL;
 	double total_count_reduction_percent = progress.segment_statistics.get_total_count_reduction_percent();
-	PyObject* py_progress = Py_BuildValue("{s:d,s:d,s:d,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:f,s:f,s:f,s:f,s:i,s:i,s:f}",
+	PyObject* py_progress = Py_BuildValue("{s:d,s:d,s:d,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:f,s:f,s:f,s:f,s:i,s:i,s:f}",
 		"percent_complete",
 		progress.percent_complete,												//1
 		"seconds_elapsed",

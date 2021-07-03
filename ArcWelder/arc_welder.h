@@ -418,7 +418,9 @@ struct arc_welder_results {
 #define DEFAULT_GCODE_BUFFER_SIZE 10
 #define DEFAULT_G90_G91_INFLUENCES_EXTRUDER false
 #define DEFAULT_ALLOW_DYNAMIC_PRECISION false
-#define DEFAULT_EXTRUSION_RATE_VARIANCE_PERCENT 5
+#define DEFAULT_ALLOW_TRAVEL_ARCS false
+#define DEFAULT_EXTRUSION_RATE_VARIANCE_PERCENT 0.05
+#define DEFAULT_CONVERT_TRAVEL_MOVES false
 class arc_welder
 {
 public:
@@ -431,14 +433,15 @@ public:
 		double max_radius,
 		int min_arc_segments,
 		double mm_per_arc_segment,
-		bool g90_g91_influences_extruder = DEFAULT_G90_G91_INFLUENCES_EXTRUDER,
-		bool allow_3d_arcs = DEFAULT_ALLOW_3D_ARCS,
-		bool allow_dynamic_precision = DEFAULT_ALLOW_DYNAMIC_PRECISION,
-		unsigned char default_xyz_precision = DEFAULT_XYZ_PRECISION,
-		unsigned char default_e_precision = DEFAULT_E_PRECISION,
-		double extrusion_rate_variance_percent = DEFAULT_EXTRUSION_RATE_VARIANCE_PERCENT,
-		int buffer_size = DEFAULT_GCODE_BUFFER_SIZE,
-		progress_callback callback = NULL);
+		bool g90_g91_influences_extruder,
+		bool allow_3d_arcs,
+		bool allow_travel_arcs,
+		bool allow_dynamic_precision,
+		unsigned char default_xyz_precision,
+		unsigned char default_e_precision,
+		double extrusion_rate_variance_percent,
+		int buffer_size,
+		progress_callback callback);
 	void set_logger_type(int logger_type);
 	virtual ~arc_welder();
 	arc_welder_results process();
@@ -465,6 +468,7 @@ private:
 	gcode_position_args gcode_position_args_;
 	bool allow_dynamic_precision_;
 	bool allow_3d_arcs_;
+	bool allow_travel_arcs_;
 	long file_size_;
 	int lines_processed_;
 	int gcodes_processed_;

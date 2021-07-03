@@ -142,6 +142,21 @@ bool segmented_arc::try_add_point(printer_point p)
       return false;
     }
 
+    // Need to separate travel moves from moves with extrusion
+    if (points_.count() > 2)
+    {
+      // We already have at least an initial point and a second point.  Make cure the current point and the previous are either both
+      // travel moves, or both extrusion
+      if (!(
+        (p1.e_relative != 0 && p.e_relative != 0) // Extrusions 
+        || (p1.e_relative == 0 && p.e_relative == 0) // Travel
+        )
+        )
+      {
+        return false;
+      }
+    }
+
     if (utilities::is_zero(p.distance))
     {
       // there must be some distance between the points

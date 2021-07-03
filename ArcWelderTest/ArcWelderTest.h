@@ -82,6 +82,7 @@ static std::string ISSUE_PRICKLYPEAR_LAYER_0_114 = "C:\\Users\\Brad\\Documents\\
 // Sanity tests
 static std::string COLINEAR_TEST_1 = "C:\\Users\\Brad\\Documents\\AntiStutter\\Sanity Checks\\G2_colinear_test.gcode";
 static std::string SPIRAL_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\smoothietest\\SPIRAL_TEST.gcode";
+static std::string SPIRAL_TRAVEL_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\smoothietest\\SPIRAL_TRAVEL_TEST.gcode";
 
 static std::string SPIRAL_TEST_PRECISION = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\smoothietest\\SPIRAL_TEST_precision.gcode";
 static std::string SPIRAL_VASE_TEST_DOUBLE_SPIRAL = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\SpiralVaseTest\\SpiralVaseTest_DOUBLE_SPIRAL.gcode"; 
