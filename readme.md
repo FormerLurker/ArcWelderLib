@@ -13,6 +13,19 @@ The archive will contain two folders:
 * **bin** - Here you will find the two console applications:  ArcWelder and ArcStraightener.  Just copy these to your local machine and you can run them from the command line, from a script, or directly within most slicers.  See the sections below for instructions on how to use these applications.
 * **lib** - This folder contains pre-compiled ArcWelder libraries that can be integrated into applications.  The GcodeProcessorLib library has functions for parsing gcode, tracking the printer's state and position, as well as several other goodies.  The ArcWelder library (requires GcodeProcessorLib) contains the core welding algorithm.
 
+# Building from source
+
+From the repository root, create a build directory, generate makefile, and build:
+
+```
+mkdir build
+cd build
+cmake ..
+make
+```
+
+The resulting console application is located in `build/ArcWelderConsole/`. You might want to create the build directory out of the repository, or make `git` ignore it, to avoid a dirty tree.
+
 # Arc Welder Console Application
 
 This is a multiplatform console application that can be used to run the Arc Welder algorithm from a command prompt.  Binaries are available for Windows, Linux, Raspbian, and MacOs.  See the [installation][#installation] section for information on how to download the console application.
