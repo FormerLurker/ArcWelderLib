@@ -266,17 +266,6 @@ static gcode_position_args get_5_extruder_position_args()
 
 static void TestAntiStutter(std::string filePath)
 {
-	//double max_resolution = DEFAULT_RESOLUTION_MM;
-	double max_resolution = 0.05;
-	double max_radius_mm = 100000;
-	//double max_radius_mm = 10000;
-	//int min_arc_segments = DEFAULT_MIN_ARC_SEGMENTS;
-	int min_arc_segments = 0;
-	double mm_per_arc_segment = 0;
-
-	//double path_tolerance_percent = ARC_LENGTH_PERCENT_TOLERANCE_DEFAULT; // 1 percent
-	double path_tolerance_percent = 0.05;					 
-	//double path_tolerance_percent = 0.05;
 	std::vector<std::string> logger_names;
 	logger_names.push_back("arc_welder.gcode_conversion");
 	std::vector<int> logger_levels;
@@ -289,29 +278,7 @@ static void TestAntiStutter(std::string filePath)
 	logger_levels.push_back(log_levels::CRITICAL);
 	logger* p_logger = new logger(logger_names, logger_levels);
 	p_logger->set_log_level(INFO);
-	//p_logger->set_log_level(DEBUG);
-	//p_logger->set_log_level_by_value(5);
-	//arc_welder arc_welder_obj(BENCHY_0_5_MM_NO_WIPE, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50, static_cast<progress_callback>(on_progress));
-	//arc_welder arc_welder_obj(SIX_SPEED_TEST, "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", p_logger, max_resolution, false, 50, on_progress);
-	arc_welder arc_welder_obj(
-		BENCHY_DIFFICULT,
-		"C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode", 
-		p_logger, 
-		max_resolution, 
-		path_tolerance_percent, 
-		DEFAULT_MAX_RADIUS_MM,
-		min_arc_segments,
-		mm_per_arc_segment,
-		true,
-		true,
-		true, //DEFAULT_ALLOW_TRAVEL_ARCS,
-		DEFAULT_ALLOW_DYNAMIC_PRECISION,
-		DEFAULT_XYZ_PRECISION,
-		DEFAULT_E_PRECISION,
-		//DEFAULT_EXTRUSION_RATE_VARIANCE_PERCENT,
-		1000000,
-		DEFAULT_GCODE_BUFFER_SIZE, 
-		on_progress);
+	
 	//FIRMWARE_COMPENSATION_TEST_1
 	//BENCHY_MIN_RADIUS_TEST
 	//BENCHY_DIFFICULT
@@ -335,6 +302,17 @@ static void TestAntiStutter(std::string filePath)
 	// BENCHY_L1_DIFFICULT
 	// SPIRAL_TEST
 	// SPIRAL_VASE_TEST_FUNNEL
+	std::string source_path = TravelWipeTest;
+	std::string target_path = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode";
+	arc_welder_args args(source_path, target_path, p_logger);
+	args.callback = on_progress;
+  // override any arguments here;
+	args.allow_travel_arcs = true;
+	args.allow_3d_arcs = true;
+	args.max_radius_mm = 9999;
+	args.resolution_mm = 0.05;
+	arc_welder arc_welder_obj(args);
+		
 	arc_welder_results results = arc_welder_obj.process();
 	p_logger->log(0, INFO, results.progress.detail_str());
 	p_logger->log(0, INFO, "Processing Complete.");

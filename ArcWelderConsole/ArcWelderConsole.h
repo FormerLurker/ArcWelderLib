@@ -25,6 +25,8 @@
 #pragma once
 #include "arc_welder.h"
 #include "version.h"
-static bool on_progress(arc_welder_progress progress, logger* p_logger, int logger_type);
-static bool suppress_progress(arc_welder_progress progress, logger* p_logger, int logger_type);
+static bool on_progress_full(arc_welder_progress progress, logger* p_logger, int logger_type);
+static bool on_progress_simple(arc_welder_progress progress, logger* p_logger, int logger_type);
+static bool on_progress_suppress(arc_welder_progress progress, logger* p_logger, int logger_type);
+
 
