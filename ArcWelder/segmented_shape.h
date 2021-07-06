@@ -104,7 +104,7 @@ struct vector : point
 	
 };
 
-#define DEFAULT_MAX_RADIUS_MM 10000.0 // 10m
+#define DEFAULT_MAX_RADIUS_MM 9999.0 // 9.999m
 struct circle {
 	circle() {
 		center.x = 0;
