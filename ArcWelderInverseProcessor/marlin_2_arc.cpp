@@ -184,18 +184,18 @@ void marlin_2_arc::process()
                     target[Z_AXIS] = static_cast<float>(p_cur_pos->get_gcode_z());
                     target[E_AXIS] = static_cast<float>(p_cur_pos->get_current_extruder().get_offset_e());
                     float offset[2];
-                    offset[0] = 0.0;
-                    offset[1] = 0.0;
+                    offset[X_AXIS] = 0.0;
+                    offset[Y_AXIS] = 0.0;
                     for (unsigned int index = 0; index < cmd.parameters.size(); index++)
                     {
                         parsed_command_parameter p = cmd.parameters[index];
                         if (p.name == "I")
                         {
-                            offset[0] = static_cast<float>(p.double_value);
+                            offset[X_AXIS] = static_cast<float>(p.double_value);
                         }
                         else if (p.name == "J")
                         {
-                            offset[1] = static_cast<float>(p.double_value);
+                            offset[Y_AXIS] = static_cast<float>(p.double_value);
                         }
                     }
                     float radius = hypot(offset[X_AXIS], offset[Y_AXIS]); // Compute arc radius for mc_arc

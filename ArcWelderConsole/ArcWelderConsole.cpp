@@ -91,7 +91,6 @@ int main(int argc, char* argv[])
     arg_description_stream << "The maximum radius of any arc in mm. Default Value: " << DEFAULT_MAX_RADIUS_MM;
     TCLAP::ValueArg<double> max_radius_arg("m", "max-radius-mm", arg_description_stream.str(), false, DEFAULT_MAX_RADIUS_MM, "float");
 
-
     // -s --mm-per-arc-segment
     arg_description_stream.clear();
     arg_description_stream.str("");
@@ -132,13 +131,13 @@ int main(int argc, char* argv[])
     arg_description_stream.clear();
     arg_description_stream.str("");
     arg_description_stream << "The default precision of X, Y, Z, I and J output gcode parameters.  The precision may be larger than this value if allow-dynamic-precision is set to true.  Default Value: " << DEFAULT_XYZ_PRECISION;
-    TCLAP::ValueArg<unsigned char> default_xyz_precision_arg("x", "default-xyz-precision", arg_description_stream.str(), false, DEFAULT_XYZ_PRECISION, "unsigned char");
+    TCLAP::ValueArg<unsigned int> default_xyz_precision_arg("x", "default-xyz-precision", arg_description_stream.str(), false, DEFAULT_XYZ_PRECISION, "unsigned int");
 
     // -e --default-e-precision
     arg_description_stream.clear();
     arg_description_stream.str("");
     arg_description_stream << "The default precision of E output gcode parameters.  The precision may be larger than this value if allow-dynamic-precision is set to true.  Default Value: " << DEFAULT_E_PRECISION;
-    TCLAP::ValueArg<unsigned char> default_e_precision_arg("e", "default-e-precision", arg_description_stream.str(), false, DEFAULT_E_PRECISION, "unsigned char");
+    TCLAP::ValueArg<unsigned int> default_e_precision_arg("e", "default-e-precision", arg_description_stream.str(), false, DEFAULT_E_PRECISION, "unsigned int");
 
     // -v --extrusion-rate-variance
     arg_description_stream.clear();
@@ -146,14 +145,13 @@ int main(int argc, char* argv[])
     arg_description_stream << "(experimental) - The allowed variance in extrusion rate by percent.  Default Value: " << DEFAULT_EXTRUSION_RATE_VARIANCE_PERCENT;
     TCLAP::ValueArg<double> extrusion_rate_variance_percent_arg("v", "extrusion-rate-variance-percent", arg_description_stream.str(), false, DEFAULT_EXTRUSION_RATE_VARIANCE_PERCENT, "double");
 
-    // -l --max-gcode-length
+    // -c --max-gcode-length
     arg_description_stream.clear();
     arg_description_stream.str("");
     arg_description_stream << "The maximum length allowed for a generated G2/G3 command, not including any comments.  0 = no limit.  Default Value: " << DEFAULT_MAX_GCODE_LENGTH;
-    TCLAP::ValueArg<int> max_gcode_length_arg("l", "max-gcode-length", arg_description_stream.str(), false, DEFAULT_MAX_GCODE_LENGTH, "int");
+    TCLAP::ValueArg<int> max_gcode_length_arg("c", "max-gcode-length", arg_description_stream.str(), false, DEFAULT_MAX_GCODE_LENGTH, "int");
 
     // -p --progress-type
-    // -l --log-level
     std::vector<std::string> progress_type_vector;
     std::string progress_type_default_string = PROGRESS_TYPE_SIMPLE;
     progress_type_vector.push_back(PROGRESS_TYPE_NONE);
@@ -181,6 +179,7 @@ int main(int argc, char* argv[])
     arg_description_stream << "Sets console log level. Default Value: " << log_level_string_default; 
     TCLAP::ValueArg<std::string> log_level_arg("l", "log-level", arg_description_stream.str(), false, log_level_string_default, &log_levels_constraint);
 
+    
     // Add all arguments
     cmd.add(source_arg);
     cmd.add(target_arg);
@@ -221,8 +220,8 @@ int main(int argc, char* argv[])
     args.allow_travel_arcs = allow_travel_arcs_arg.getValue();
     args.g90_g91_influences_extruder = g90_arg.getValue();
     args.allow_dynamic_precision = allow_dynamic_precision_arg.getValue();
-    args.default_xyz_precision = default_xyz_precision_arg.getValue();
-    args.default_e_precision = default_e_precision_arg.getValue();
+    unsigned int xyz_precision = default_xyz_precision_arg.getValue();
+    unsigned int e_precision = default_e_precision_arg.getValue();
     args.extrusion_rate_variance_percent = extrusion_rate_variance_percent_arg.getValue();
     args.max_gcode_length = max_gcode_length_arg.getValue();
     progress_type = progress_type_arg.getValue();
@@ -274,33 +273,37 @@ int main(int argc, char* argv[])
       std::cout << "warning: The provided path tolerance percent of " << args.path_tolerance_percent << " is less than greater than 0.001 (0.1%), which is not recommended." << std::endl;
     }
 
-    if (args.default_xyz_precision < 3)
+    if (xyz_precision < 3)
     {
       // warning
-      std::cout << "warning: The provided default_xyz_precision " << args.default_xyz_precision << "mm is less than 3, with will cause issues printing arcs.  A value of 3 will be used instead." << std::endl;
-      args.default_xyz_precision = 3;
+      std::cout << "warning: The provided default_xyz_precision " << xyz_precision << "mm is less than 3, with will cause issues printing arcs.  A value of 3 will be used instead." << std::endl;
+      xyz_precision = 3;
     }
 
-    if (args.default_e_precision < DEFAULT_E_PRECISION)
+    if (e_precision < DEFAULT_E_PRECISION)
     {
       // warning
-      std::cout << "warning: The provided default_e_precision " << args.default_e_precision << "mm is less than 3, with will cause extrusion issues.  A value of 3 will be used instead." << std::endl;
-      args.default_e_precision = 3;
+      std::cout << "warning: The provided default_e_precision " << e_precision << "mm is less than 3, with will cause extrusion issues.  A value of 3 will be used instead." << std::endl;
+      e_precision = 3;
     }
 
-    if (args.default_xyz_precision > 6)
+    if (xyz_precision > 6)
     {
       // warning
-      std::cout << "warning: The provided default_xyz_precision " << args.default_xyz_precision << "mm is greater than 6, which may cause gcode checksum errors while printing depending on your firmeware, so a value of 6 will be used instead." << std::endl;
-      args.default_xyz_precision = 6;
+      std::cout << "warning: The provided default_xyz_precision " << xyz_precision << "mm is greater than 6, which may cause gcode checksum errors while printing depending on your firmeware, so a value of 6 will be used instead." << std::endl;
+      xyz_precision = 6;
     }
 
-    if (args.default_e_precision > 6)
+    if (e_precision > 6)
     {
       // warning
-      std::cout << "warning: The provided default_e_precision " << args.default_e_precision << "mm is greater than 6, which may cause gcode checksum errors while printing depending on your firmeware, so value of 6 will be used instead." << std::endl;
-      args.default_e_precision = 6;
+      std::cout << "warning: The provided default_e_precision " << e_precision << "mm is greater than 6, which may cause gcode checksum errors while printing depending on your firmeware, so value of 6 will be used instead." << std::endl;
+      e_precision = 6;
     }
+
+    // Fill in the adjusted precisions
+    args.default_e_precision = (unsigned char)e_precision;
+    args.default_xyz_precision = (unsigned char)xyz_precision;
 
     if (args.extrusion_rate_variance_percent < 0)
     {
@@ -312,7 +315,7 @@ int main(int argc, char* argv[])
     if (args.max_gcode_length < 0)
     {
       // warning
-      std::cout << "warning: The provided max_gcode_length " << args.max_gcode_length << " is less than 0.  Setting to the default." << std::endl;
+      std::cout << "warning: The provided max_gcode_length " << args.max_gcode_length << " is less than 0.  Setting to the default (no limit)." << std::endl;
       args.max_gcode_length = DEFAULT_MAX_GCODE_LENGTH;
     }
 
@@ -386,7 +389,15 @@ int main(int argc, char* argv[])
     {
       log_messages.clear();
       log_messages.str("");
-      log_messages << "Target File Travel Statistics:" << std::endl << results.progress.travel_statistics.str();
+      if (results.progress.travel_statistics.total_count_source == results.progress.travel_statistics.total_count_source)
+      {
+        log_messages << "Target File Travel Statistics: No travel arcs converted." ;
+      }
+      else
+      {
+        log_messages << "Target File Travel Statistics:" << std::endl << results.progress.travel_statistics.str();
+      }
+      
       p_logger->log(0, INFO, log_messages.str());
     }
 
