@@ -389,7 +389,7 @@ int main(int argc, char* argv[])
     {
       log_messages.clear();
       log_messages.str("");
-      if (results.progress.travel_statistics.total_count_source == results.progress.travel_statistics.total_count_source)
+      if (results.progress.travel_statistics.total_count_source == results.progress.travel_statistics.total_count_target)
       {
         log_messages << "Target File Travel Statistics: No travel arcs converted." ;
       }

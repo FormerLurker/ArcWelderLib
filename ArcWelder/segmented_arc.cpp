@@ -394,11 +394,15 @@ int segmented_arc::get_shape_gcode_length()
   int num_parameters = 4 + (has_e ? 1 : 0) + (has_z ? 1: 0) + (has_f ? 1: 0);
   // Return the length of the gcode.
   int gcode_length = 2 + num_spaces + num_decimal_points + num_digits + num_minus_signs + num_decimals + num_parameters;
+  
+  // Keep this around in case we have any future issues with the gcode length calculation
+  #ifdef Debug
   std::string gcode = get_shape_gcode();
   if (gcode.length() != gcode_length)
   {
-    return 10000; 
+    return 9999999; 
   }
+  #endif
   return gcode_length;
   
 
