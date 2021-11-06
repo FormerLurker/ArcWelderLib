@@ -24,8 +24,9 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma once
 #include <string>
-#define DEFAULT_G90_G91_INFLUENCES_EXTRUDER false
-
+#include <vector>
+int run_arc_straightener(int argc, char* argv[]);
+static std::string get_available_arguments_string(std::vector<std::string> firmware_arguments);
 /*
 static void TestInverseProcessor(std::string source_path, std::string target_path);
 static std::string ANTI_STUTTER_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\5x5_cylinder_2000Fn_0.2mm_PLA_MK2.5MMU2_4m.gcode";

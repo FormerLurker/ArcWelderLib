@@ -105,11 +105,11 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)\GcodeProcessorLib\;$(SolutionDir)\ArcWelder\;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)\TCLAP\</IncludePath>
+    <IncludePath>$(SolutionDir)\GcodeProcessorLib\;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)\TCLAP\</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Remote_Pi|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)\GcodeProcessorLib\;$(SolutionDir)\ArcWelder\;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <IncludePath>$(SolutionDir)\GcodeProcessorLib\;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)\TCLAP\</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -117,7 +117,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)\GcodeProcessorLib\;$(SolutionDir)\ArcWelder\;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)\TCLAP\</IncludePath>
+    <IncludePath>$(SolutionDir)\GcodeProcessorLib\;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)\TCLAP\</IncludePath>
+    <ExecutablePath>$(VC_ExecutablePath_x64);$(CommonExecutablePath)</ExecutablePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -202,15 +203,25 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="ArcWelderInverseProcessor.h" />
+    <ClInclude Include="arc_interpolation.h" />
+    <ClInclude Include="arc_interpolation_structs.h" />
+    <ClInclude Include="firmware.h" />
     <ClInclude Include="firmware_types.h" />
-    <ClInclude Include="marlin_2_arc.h" />
-    <ClInclude Include="repiter_arc.h" />
+    <ClInclude Include="marlin_1.h" />
+    <ClInclude Include="marlin_2.h" />
+    <ClInclude Include="prusa.h" />
+    <ClInclude Include="repetier.h" />
+    <ClInclude Include="smoothieware.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ArcWelderInverseProcessor.cpp" />
-    <ClCompile Include="firmware_types.cpp" />
-    <ClCompile Include="marlin_2_arc.cpp" />
-    <ClCompile Include="repiter_arc.cpp" />
+    <ClCompile Include="arc_interpolation.cpp" />
+    <ClCompile Include="firmware.cpp" />
+    <ClCompile Include="marlin_1.cpp" />
+    <ClCompile Include="marlin_2.cpp" />
+    <ClCompile Include="prusa.cpp" />
+    <ClCompile Include="repetier.cpp" />
+    <ClCompile Include="smoothieware.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ArcWelder\ArcWelder.vcxproj">

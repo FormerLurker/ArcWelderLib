@@ -24,7 +24,7 @@
 #include "ArcWelderTest.h"
 #include "logger.h"
 #include <iostream>
-#include "utilities.h"
+
 
 int main(int argc, char* argv[])
 {
