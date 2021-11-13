@@ -582,11 +582,13 @@ int arc_welder::process_gcode(parsed_command cmd, bool is_end, bool is_reprocess
       (
         !waiting_for_arc_ ||
         extruder_current.is_extruding ||
+        extruder_current.is_retracting ||
         // Test for travel conversion
-        (allow_travel_arcs_ && p_cur_pos->is_travel()) ||
-        //(previous_extruder.is_extruding && extruder_current.is_extruding) || // Test to see if 
+        (allow_travel_arcs_ && p_cur_pos->is_travel())
+        //|| (previous_extruder.is_extruding && extruder_current.is_extruding) // Test to see if 
         // we can get more arcs.
-        (previous_extruder.is_retracting && extruder_current.is_retracting)
+        // || (previous_extruder.is_retracting && extruder_current.is_retracting) // Test to see if 
+        // we can get more arcs.
         ) &&
       p_cur_pos->is_extruder_relative == is_previous_extruder_relative &&
       (!waiting_for_arc_ || p_pre_pos->f == p_cur_pos->f) && // might need to skip the waiting for arc check...

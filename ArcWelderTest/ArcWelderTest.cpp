@@ -306,7 +306,7 @@ static void TestAntiStutter(std::string filePath)
 	// BENCHY_L1_DIFFICULT
 	// SPIRAL_TEST
 	// SPIRAL_VASE_TEST_FUNNEL
-	std::string source_path = TravelWipeTest;
+	std::string source_path = BENCHY_DIFFICULT;
 	std::string target_path = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode";
 	arc_welder_args args(source_path, target_path, p_logger);
 	args.callback = on_progress;
@@ -315,6 +315,7 @@ static void TestAntiStutter(std::string filePath)
 	args.allow_3d_arcs = true;
 	args.max_radius_mm = 9999;
 	args.resolution_mm = 0.05;
+	args.extrusion_rate_variance_percent = 1000;
 	arc_welder arc_welder_obj(args);
 		
 	arc_welder_results results = arc_welder_obj.process();
