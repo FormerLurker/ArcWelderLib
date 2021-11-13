@@ -18,30 +18,23 @@ jobs:
         config:
         - {
             name: "Windows Latest MSVC", 
-            artifact_tar: "Windows-MSVC.tar.xz",
-            artifact_zip: "Windows-MSVC.zip",
+            tar_artifact: "Windows-MSVC.tar.xz",
+            zip_artifact: "Windows-MSVC.zip",
             os: windows-latest,
             cc: "cl", cxx: "cl",
             environment_script: "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build/vcvars64.bat"
           }
-        #- {
-        #    name: "Windows Latest MinGW", 
-        #    artifact_tar: "Windows-MinGW.tar.xz",
-        #    artifact_zip: "Windows-MinGW.zip",
-        #    os: windows-latest,
-        #    cc: "gcc", cxx: "g++"
-        #  }
         - {
             name: "Ubuntu Latest GCC", 
-            artifact_tar: "Linux.tar.xz",
-            artifact_zip: "Linux.zip",
+            tar_artifact: "Linux.tar.xz",
+            zip_artifact: "Linux.zip",
             os: ubuntu-latest,
             cc: "gcc", cxx: "g++"
           }
         - {
             name: "macOS Latest GCC", 
-            artifact_tar: "macOS.tar.xz",
-            artifact_zip: "macOS.zip",
+            tar_artifact: "macOS.tar.xz",
+            zip_artifact: "macOS.zip",
             os: macos-latest,
             cc: "gcc", cxx: "g++"
           }
@@ -222,21 +215,21 @@ jobs:
 
     - name: Pack tar
       working-directory: instdir
-      run: ${{ steps.cmake_and_ninja.outputs.cmake_dir }}/cmake -E tar cJfv ../${{ matrix.config.artifact_tar }} .
+      run: ${{ steps.cmake_and_ninja.outputs.cmake_dir }}/cmake -E tar cJfv "./${{ matrix.config.tar_artifact }}" .
 
     - name: Pack zip
       working-directory: instdir
-      run: ${{ steps.cmake_and_ninja.outputs.cmake_dir }}/cmake -E tar "cvf" "../${{ matrix.config.artifact_zip }}" --format=zip .
+      run: ${{ steps.cmake_and_ninja.outputs.cmake_dir }}/cmake -E tar "cvf" "./${{ matrix.config.zip_artifact }}" --format=zip .
 
 
     - name: Upload tar
       uses: actions/upload-artifact@v1
       with:
-        path: ./${{ matrix.config.artifact_tar }}
-        name: ${{ matrix.config.artifact_tar }}
+        path: ./${{ matrix.config.tar_artifact }}
+        name: ${{ matrix.config.tar_artifact }}
 
     - name: Upload zip
       uses: actions/upload-artifact@v1
       with:
-        path: ./${{ matrix.config.artifact_zip }}
-        name: ${{ matrix.config.artifact_zip }}
+        path: ./${{ matrix.config.zip_artifact }}
+        name: ${{ matrix.config.zip_artifact }}
