@@ -117,7 +117,7 @@ std::string prusa::interpolate_arc(firmware_position& target, double i, double j
   float prusa_radius = static_cast<float>(r);
   if (prusa_radius != 0)
   {
-    prusa_radius = (float)utilities::hypot(prusa_offset[X_AXIS], prusa_offset[Y_AXIS]); // Compute arc radius for mc_arc
+    prusa_radius = utilities::hypotf(prusa_offset[X_AXIS], prusa_offset[Y_AXIS]); // Compute arc radius for mc_arc
   }
   float prusa_f = static_cast<float>(target.f);
   
@@ -175,21 +175,21 @@ void prusa::mc_arc_3_10_0(float* position, float* target, float* offset, float f
   float rt_axis1 = target[axis_1] - center_axis1;
 
   // CCW angle between position and target from circle center. Only one atan2() trig computation required.
-  float angular_travel = atan2(r_axis0 * rt_axis1 - r_axis1 * rt_axis0, r_axis0 * rt_axis0 + r_axis1 * rt_axis1);
-  if (angular_travel < 0) { angular_travel += 2 * (float)M_PI; }
-  if (isclockwise) { angular_travel -= 2 * (float)M_PI; }
+  float angular_travel = (float)utilities::atan2((double)r_axis0 * rt_axis1 - (double)r_axis1 * rt_axis0, (double)r_axis0 * rt_axis0 + (double)r_axis1 * rt_axis1);
+  if (angular_travel < 0) { angular_travel += 2.0f * PI_FLOAT; }
+  if (isclockwise) { angular_travel -= 2.0f * PI_FLOAT; }
 
   //20141002:full circle for G03 did not work, e.g. G03 X80 Y80 I20 J0 F2000 is giving an Angle of zero so head is not moving
   //to compensate when start pos = target pos && angle is zero -> angle = 2Pi
   if (position[axis_0] == target[axis_0] && position[axis_1] == target[axis_1] && angular_travel == 0)
   {
-    angular_travel += 2 * (float)M_PI;
+    angular_travel += 2.0f * PI_FLOAT;
   }
   //end fix G03
 
-  float millimeters_of_travel = (float)utilities::hypot(angular_travel * radius, fabs(linear_travel));
+  float millimeters_of_travel = (float)utilities::hypot((double)angular_travel * radius, utilities::absf(linear_travel));
   if (millimeters_of_travel < 0.001) { return; }
-  uint16_t segments = (uint16_t)floor(millimeters_of_travel / cs.mm_per_arc_segment);
+  uint16_t segments = (uint16_t)utilities::floorf(millimeters_of_travel / cs.mm_per_arc_segment);
   if (segments == 0) segments = 1;
 
   /*
@@ -255,8 +255,8 @@ void prusa::mc_arc_3_10_0(float* position, float* target, float* offset, float f
     else {
       // Arc correction to radius vector. Computed only every N_ARC_CORRECTION increments.
       // Compute exact location by applying transformation matrix from initial radius vector(=-offset).
-      cos_Ti = cos(i * theta_per_segment);
-      sin_Ti = sin(i * theta_per_segment);
+      cos_Ti = (float)utilities::cos(i * (double)theta_per_segment);
+      sin_Ti = (float)utilities::sin(i * (double)theta_per_segment);
       r_axis0 = -offset[axis_0] * cos_Ti + offset[axis_1] * sin_Ti;
       r_axis1 = -offset[axis_0] * sin_Ti - offset[axis_1] * cos_Ti;
       count = 0;
@@ -325,14 +325,14 @@ void prusa::mc_arc_3_11_0(float* position, float* target, float* offset, float f
   uint8_t n_arc_correction = cs.n_arc_correction;
 
   // CCW angle between position and target from circle center. Only one atan2() trig computation required.
-  float angular_travel_total = atan2(r_axis_x * rt_y - r_axis_y * rt_x, r_axis_x * rt_x + r_axis_y * rt_y);
-  if (angular_travel_total < 0) { angular_travel_total += 2 * (float)M_PI; }
+  float angular_travel_total = (float)utilities::atan2((double)r_axis_x * rt_y - (double)r_axis_y * rt_x, (double)r_axis_x * rt_x + (double)r_axis_y * rt_y);
+  if (angular_travel_total < 0) { angular_travel_total += 2.0f * PI_FLOAT; }
 
   if (cs.min_arc_segments > 0)
   {
     // 20200417 - FormerLurker - Implement MIN_ARC_SEGMENTS if it is defined - from Marlin 2.0 implementation
     // Do this before converting the angular travel for clockwise rotation
-    mm_per_arc_segment = radius * ((2.0f * (float)M_PI) / cs.min_arc_segments);
+    mm_per_arc_segment = radius * ((2.0f * PI_FLOAT) / cs.min_arc_segments);
   }
   if (cs.arc_segments_per_sec > 0)
   {
@@ -356,23 +356,23 @@ void prusa::mc_arc_3_11_0(float* position, float* target, float* offset, float f
   }
 
   // Adjust the angular travel if the direction is clockwise
-  if (isclockwise) { angular_travel_total -= 2 * (float)M_PI; }
+  if (isclockwise) { angular_travel_total -= 2.0f * PI_FLOAT; }
 
   //20141002:full circle for G03 did not work, e.g. G03 X80 Y80 I20 J0 F2000 is giving an Angle of zero so head is not moving
   //to compensate when start pos = target pos && angle is zero -> angle = 2Pi
   if (position[X_AXIS] == target[X_AXIS] && position[Y_AXIS] == target[Y_AXIS] && angular_travel_total == 0)
   {
-    angular_travel_total += 2 * (float)M_PI;
+    angular_travel_total += 2.0f * PI_FLOAT;
   }
   //end fix G03
 
   // 20200417 - FormerLurker - rename millimeters_of_travel to millimeters_of_travel_arc to better describe what we are
   // calculating here
-  const float millimeters_of_travel_arc = hypot(angular_travel_total * radius, fabs(travel_z));
+  const float millimeters_of_travel_arc = (float)utilities::hypot(angular_travel_total * (double)radius, utilities::fabs(travel_z));
   if (millimeters_of_travel_arc < 0.001) { return; }
 
   // Calculate the number of arc segments
-  uint16_t segments = static_cast<uint16_t>(ceil(millimeters_of_travel_arc / mm_per_arc_segment));
+  uint16_t segments = static_cast<uint16_t>(utilities::ceilf(millimeters_of_travel_arc / mm_per_arc_segment));
 
   /* Vector rotation by transformation matrix: r is the original vector, r_T is the rotated vector,
      and phi is the angle of rotation. Based on the solution approach by Jens Geisler.
@@ -409,7 +409,7 @@ void prusa::mc_arc_3_11_0(float* position, float* target, float* offset, float f
     for (uint16_t i = 1; i < segments; i++) {
       if (n_arc_correction-- == 0) {
         // Calculate the actual position for r_axis_x and r_axis_y
-        const float cos_Ti = cos(i * theta_per_segment), sin_Ti = sin(i * theta_per_segment);
+        const float cos_Ti = (float)utilities::cos(i * (double)theta_per_segment), sin_Ti = (float)utilities::sin(i * (double)theta_per_segment);
         r_axis_x = -offset[X_AXIS] * cos_Ti + offset[Y_AXIS] * sin_Ti;
         r_axis_y = -offset[X_AXIS] * sin_Ti - offset[Y_AXIS] * cos_Ti;
         // reset n_arc_correction

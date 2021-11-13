@@ -168,7 +168,7 @@ void marlin_2::plan_arc_2_0_9_1(
   rvec[0] = - offset[X_AXIS];
   rvec[1] = - offset[Y_AXIS];
 
-  const float radius = HYPOT(rvec[0], rvec[1]),
+  const float radius = utilities::hypotf(rvec[0], rvec[1]),
     center_P = current_position[p_axis] - rvec[0],
     center_Q = current_position[q_axis] - rvec[1],
     rt_X = cart[p_axis] - center_P,
@@ -183,25 +183,25 @@ void marlin_2::plan_arc_2_0_9_1(
   // Do a full circle if starting and ending positions are "identical"
   if (NEAR(current_position[p_axis], cart[p_axis]) && NEAR(current_position[q_axis], cart[q_axis])) {
     // Preserve direction for circles
-    angular_travel = clockwise ? -RADIANS(360) : RADIANS(360);
+    angular_travel = clockwise ? -utilities::radiansf(360.0f) : utilities::radiansf(360.0f);
   }
   else {
     // Calculate the angle
-    angular_travel = ATAN2(rvec[0] * rt_Y - rvec[1] * rt_X, rvec[0] * rt_X + rvec[1] * rt_Y);
+    angular_travel = utilities::atan2f(rvec[0] * rt_Y - rvec[1] * rt_X, rvec[0] * rt_X + rvec[1] * rt_Y);
 
     // Angular travel too small to detect? Just return.
     if (!angular_travel) return;
 
     // Make sure angular travel over 180 degrees goes the other way around.
     switch (((angular_travel < 0) << 1) | (int)clockwise) {
-    case 1: angular_travel -= RADIANS(360); break; // Positive but CW? Reverse direction.
-    case 2: angular_travel += RADIANS(360); break; // Negative but CCW? Reverse direction.
+    case 1: angular_travel -= utilities::radiansf(360.0f); break; // Positive but CW? Reverse direction.
+    case 2: angular_travel += utilities::radiansf(360.0f); break; // Negative but CCW? Reverse direction.
     }
 
     if (args_.min_arc_segments > 1)
     {
-      min_segments = (uint16_t)CEIL(min_segments * ABS(angular_travel) / RADIANS(360));
-      min_segments = (uint16_t)NOLESS(min_segments, 1U);
+      min_segments = (uint16_t)utilities::ceilf(min_segments * utilities::absf(angular_travel) / utilities::radiansf(360.0f));
+      NOLESS(min_segments, 1U);
     }
   }
 
@@ -210,7 +210,7 @@ void marlin_2::plan_arc_2_0_9_1(
   float extruder_travel = cart[E_AXIS] - current_position[E_AXIS];
 
   const float flat_mm = radius * angular_travel,
-    mm_of_travel = linear_travel ? HYPOT(flat_mm, linear_travel) : ABS(flat_mm);
+    mm_of_travel = linear_travel ? utilities::hypotf(flat_mm, linear_travel) : utilities::absf(flat_mm);
   if (mm_of_travel < 0.001f) return;
 
   const float scaled_fr_mm_s = MMS_SCALED(feedrate_mm_s);
@@ -219,17 +219,17 @@ void marlin_2::plan_arc_2_0_9_1(
   float seg_length = (float)args_.mm_per_arc_segment;
   if (args_.arc_segments_per_r > 0)
   {
-    seg_length = constrain((float)args_.mm_per_arc_segment * radius, (float)args_.mm_per_arc_segment, (float)args_.arc_segments_per_r);
+    seg_length = utilities::constrainf((float)args_.mm_per_arc_segment * radius, (float)args_.mm_per_arc_segment, (float)args_.arc_segments_per_r);
   }
   else if (args_.arc_segments_per_sec > 0)
   {
-    seg_length = _MAX(scaled_fr_mm_s * RECIPROCAL((float)args_.arc_segments_per_sec), (float)args_.mm_per_arc_segment);
+    seg_length = utilities::maxf(scaled_fr_mm_s * utilities::reciprocalf((float)args_.arc_segments_per_sec), (float)args_.mm_per_arc_segment);
   }
 
   // Divide total travel by nominal segment length
-  uint16_t segments = (uint16_t)FLOOR(mm_of_travel / seg_length);
-  //uint16_t segments = FLOOR(mm_of_travel / seg_length);
-  segments = (uint16_t)NOLESS(segments, min_segments);         // At least some segments
+  uint16_t segments = (uint16_t)utilities::floorf(mm_of_travel / seg_length);
+  //uint16_t segments = utilities::floorf(mm_of_travel / seg_length);
+  NOLESS(segments, min_segments);         // At least some segments
   seg_length = mm_of_travel / segments;
 
   /**
@@ -261,7 +261,7 @@ void marlin_2::plan_arc_2_0_9_1(
    // Vector rotation matrix values
   float raw[MARLIN_2_XYZE];
   const float theta_per_segment = angular_travel / segments,
-    sq_theta_per_segment = sq(theta_per_segment),
+    sq_theta_per_segment = utilities::sqf(theta_per_segment),
     sin_T = theta_per_segment - sq_theta_per_segment * theta_per_segment / 6,
     cos_T = 1 - 0.5f * sq_theta_per_segment; // Small angle approximation
 
@@ -296,8 +296,8 @@ void marlin_2::plan_arc_2_0_9_1(
       // Compute exact location by applying transformation matrix from initial radius vector(=-offset).
       // To reduce stuttering, the sin and cos could be computed at different times.
       // For now, compute both at the same time.
-      const float cos_Ti = COS(i * theta_per_segment);
-      const float sin_Ti = SIN(i * theta_per_segment);
+      const float cos_Ti = (float)utilities::cos((i * (double)theta_per_segment));
+      const float sin_Ti = (float)utilities::sin((i * (double)theta_per_segment));
       rvec[0] = -offset[0] * cos_Ti + offset[1] * sin_Ti;
       rvec[1] = -offset[0] * sin_Ti - offset[1] * cos_Ti;
     }
@@ -375,7 +375,7 @@ void marlin_2::plan_arc_2_0_9_2(
   rvec[0] = -offset[X_AXIS];
   rvec[1] = -offset[Y_AXIS];
 
-  const float radius = HYPOT(rvec[0], rvec[1]),
+  const float radius = utilities::hypotf(rvec[0], rvec[1]),
     center_P = current_position[p_axis] - rvec[0],
     center_Q = current_position[q_axis] - rvec[1],
     rt_X = cart[p_axis] - center_P,
@@ -390,28 +390,28 @@ void marlin_2::plan_arc_2_0_9_2(
   // Do a full circle if starting and ending positions are "identical"
   if (NEAR(current_position[p_axis], cart[p_axis]) && NEAR(current_position[q_axis], cart[q_axis])) {
     // Preserve direction for circles
-    angular_travel = clockwise ? -RADIANS(360) : RADIANS(360);
-    abs_angular_travel = RADIANS(360);
+    angular_travel = clockwise ? -utilities::radiansf(360.0f) : utilities::radiansf(360.0f);
+    abs_angular_travel = utilities::radiansf(360.0f);
     min_segments = min_circle_segments;
   }
   else {
     // Calculate the angle
-    angular_travel = ATAN2(rvec[0] * rt_Y - rvec[1] * rt_X, rvec[0] * rt_X + rvec[1] * rt_Y);
+    angular_travel = utilities::atan2f(rvec[0] * rt_Y - rvec[1] * rt_X, rvec[0] * rt_X + rvec[1] * rt_Y);
 
     // Angular travel too small to detect? Just return.
     if (!angular_travel) return;
 
     // Make sure angular travel over 180 degrees goes the other way around.
     switch (((angular_travel < 0) << 1) | (int)clockwise) {
-    case 1: angular_travel -= RADIANS(360); break; // Positive but CW? Reverse direction.
-    case 2: angular_travel += RADIANS(360); break; // Negative but CCW? Reverse direction.
+    case 1: angular_travel -= utilities::radiansf(360.0f); break; // Positive but CW? Reverse direction.
+    case 2: angular_travel += utilities::radiansf(360.0f); break; // Negative but CCW? Reverse direction.
     }
 
-    abs_angular_travel = ABS(angular_travel);
+    abs_angular_travel = utilities::absf(angular_travel);
 
     // Apply minimum segments to the arc
-    const float portion_of_circle = abs_angular_travel / RADIANS(360);  // Portion of a complete circle (0 < N < 1)
-    min_segments = (uint16_t)CEIL((min_circle_segments)*portion_of_circle);     // Minimum segments for the arc
+    const float portion_of_circle = abs_angular_travel / utilities::radiansf(360.0f);  // Portion of a complete circle (0 < N < 1)
+    min_segments = (uint16_t)utilities::ceilf((min_circle_segments)*portion_of_circle);     // Minimum segments for the arc
   }
 
   float travel_L = cart[Z_AXIS] - start_L;
@@ -429,19 +429,19 @@ void marlin_2::plan_arc_2_0_9_2(
   // Get the nominal segment length based on settings
   float nominal_segment_mm;
   if (args_.arc_segments_per_sec > 0) {
-    nominal_segment_mm = constrain(scaled_fr_mm_s * RECIPROCAL((float)args_.arc_segments_per_sec), (float)args_.get_min_arc_segment_mm(), (float)args_.get_max_arc_segment_mm());
+    nominal_segment_mm = utilities::constrainf(scaled_fr_mm_s * utilities::reciprocalf((float)args_.arc_segments_per_sec), (float)args_.get_min_arc_segment_mm(), (float)args_.get_max_arc_segment_mm());
   }
   else {
     nominal_segment_mm = (float)args_.get_max_arc_segment_mm();
   }
   // Number of whole segments based on the nominal segment length
-  const float nominal_segments = _MAX(FLOOR(flat_mm / nominal_segment_mm), min_segments);
+  const float nominal_segments = utilities::maxf(utilities::floorf(flat_mm / nominal_segment_mm), min_segments);
 
   // A new segment length based on the required minimum
-  const float segment_mm = constrain(flat_mm / nominal_segments, (float)args_.get_min_arc_segment_mm(), (float)args_.get_max_arc_segment_mm());
+  const float segment_mm = utilities::constrainf(flat_mm / nominal_segments, (float)args_.get_min_arc_segment_mm(), (float)args_.get_max_arc_segment_mm());
 
   // The number of whole segments in the arc, ignoring the remainder
-  uint16_t segments = (uint16_t)FLOOR(flat_mm / segment_mm);
+  uint16_t segments = (uint16_t)utilities::floorf(flat_mm / segment_mm);
 
   // Are the segments now too few to reach the destination?
   const float segmented_length = segment_mm * segments;
@@ -478,7 +478,7 @@ void marlin_2::plan_arc_2_0_9_2(
    // Vector rotation matrix values
   float raw[MARLIN_2_XYZE];
   const float theta_per_segment = proportion * angular_travel / segments,
-    sq_theta_per_segment = sq(theta_per_segment),
+    sq_theta_per_segment = utilities::sqf(theta_per_segment),
     sin_T = theta_per_segment - sq_theta_per_segment * theta_per_segment / 6,
     cos_T = 1 - 0.5f * sq_theta_per_segment; // Small angle approximation
 
@@ -516,8 +516,8 @@ void marlin_2::plan_arc_2_0_9_2(
       // Compute exact location by applying transformation matrix from initial radius vector(=-offset).
       // To reduce stuttering, the sin and cos could be computed at different times.
       // For now, compute both at the same time.
-      const float cos_Ti = COS(i * theta_per_segment);
-      const float sin_Ti = SIN(i * theta_per_segment);
+      const float cos_Ti = (float)utilities::cos(i * (double)theta_per_segment);
+      const float sin_Ti = (float)utilities::sin(i * (double)theta_per_segment);
       rvec[0] = -offset[0] * cos_Ti + offset[1] * sin_Ti;
       rvec[1] = -offset[0] * sin_Ti - offset[1] * cos_Ti;
     }
@@ -549,97 +549,26 @@ void marlin_2::plan_arc_2_0_9_2(
   COPY(current_position, raw);
 }
 // Marlin Function Defs
-float marlin_2::HYPOT(float x, float y)
+void marlin_2::NOLESS(uint16_t& x, uint16_t y)
 {
-  return (float)utilities::hypot(x, y);
+    if (x < y)
+        x = y;
 }
-
-float marlin_2::ATAN2(float x, float y)
-{
-  return (float)utilities::atan2(x, y);
-}
-
-float marlin_2::RADIANS(float x)
-{
-  return (x * (float)M_PI) / 180;
-}
-
-float marlin_2::ABS(float x)
-{
-  return (float)utilities::abs(x);
-}
-
-float marlin_2::FLOOR(float x)
-{
-  return (float)utilities::floor(x);
-}
-
-float marlin_2::COS(float x)
-{
-    return (float)utilities::cos(x);
-}
-
-float marlin_2::SIN(float x)
-{
-    return (float)utilities::sin(x);
-}
-
-float marlin_2::NOLESS(uint16_t x, uint16_t y)
-{
-  if (x < y)
-    return y;
-  return x;
-}
-
-float marlin_2::sq(float x)
-{
-  return x * x;
-}
-
 float marlin_2::MMS_SCALED(float x)
 {
   // No scaling
   return x;
 }
 
-bool marlin_2::WITHIN(float N, float L, float H)
-{
-  return ((N) >= (L) && (N) <= (H));
-}
 bool marlin_2::NEAR_ZERO(float x)
 {
-  return WITHIN(x, -0.000001f, 0.000001f);
+  return utilities::withinf(x, -0.000001f, 0.000001f);
 }
 bool marlin_2::NEAR(float x, float y)
 {
   return NEAR_ZERO((x)-(y));
 }
 
-float marlin_2::CEIL(float x)
-{
-  return (float)utilities::ceil(x);
-}
-
-float marlin_2::constrain(float value, float arg_min, float arg_max)
-{
-  return ((value) < (arg_min) ? (arg_min) : ((value) > (arg_max) ? (arg_max) : (value)));
-}
-
-float marlin_2::_MAX(float x, float y)
-{
-  if (x>y) return x;
-  return y;
-}
-float marlin_2::_MIN(float x, float y)
-{
-  if (x < y) return x;
-  return y;
-}
-
-float marlin_2::RECIPROCAL(float x)
-{
-  return (float)1.0/x;
-}
 void marlin_2::COPY(float target[MARLIN_2_XYZE], const float(&source)[MARLIN_2_XYZE])
 {
   // This is a slow copy, but speed isn't much of an issue here.

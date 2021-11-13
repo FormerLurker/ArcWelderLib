@@ -86,13 +86,7 @@ private:
   
   plan_arc_func plan_arc_;
   // Marlin Function Defs
-  float HYPOT(float x, float y);
-  float ATAN2(float x, float y);
-  float RADIANS(float x);
-  float ABS(float x);
-  float FLOOR(float x);
-  float NOLESS(uint16_t x, uint16_t y);
-  float sq(float x);
+  void NOLESS(uint16_t& x, uint16_t y);
   float MMS_SCALED(float x);
   void COPY(float target[MARLIN_XYZE], const float (&source)[MARLIN_XYZE]);
   bool buffer_line_kinematic(const float (&cart)[MARLIN_XYZE], double fr_mm_s, int active_extruder);

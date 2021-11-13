@@ -156,7 +156,7 @@ void marlin_1::plan_arc_1_1_9_1(const float(&cart)[MARLIN_XYZE], // Destination 
 	// Radius vector from center to current location
 	float r_P = -offset[0], r_Q = -offset[1];
 
-	const float radius = HYPOT(r_P, r_Q),
+	const float radius = utilities::hypotf(r_P, r_Q),
 		center_P = current_position[p_axis] - r_P,
 		center_Q = current_position[q_axis] - r_Q,
 		rt_X = cart[p_axis] - center_P,
@@ -165,19 +165,19 @@ void marlin_1::plan_arc_1_1_9_1(const float(&cart)[MARLIN_XYZE], // Destination 
 		extruder_travel = cart[E_CART] - current_position[E_CART];
 
 	// CCW angle of rotation between position and target from the circle center. Only one atan2() trig computation required.
-	float angular_travel = ATAN2(r_P * rt_Y - r_Q * rt_X, r_P * rt_X + r_Q * rt_Y);
-	if (angular_travel < 0) angular_travel += RADIANS(360);
-	if (clockwise) angular_travel -= RADIANS(360);
+	float angular_travel = (float)utilities::atan2((double)r_P * rt_Y - (double)r_Q * rt_X, (double)r_P * rt_X + (double)r_Q * rt_Y);
+	if (angular_travel < 0) angular_travel += utilities::radiansf(360.0f);
+	if (clockwise) angular_travel -= utilities::radiansf(360.0f);
 
 	// Make a circle if the angular rotation is 0 and the target is current position
 	if (angular_travel == 0 && current_position[p_axis] == cart[p_axis] && current_position[q_axis] == cart[q_axis])
-		angular_travel = RADIANS(360);
+		angular_travel = utilities::radiansf(360.0f);
 
 	const float flat_mm = radius * angular_travel,
-		mm_of_travel = linear_travel ? HYPOT(flat_mm, linear_travel) : ABS(flat_mm);
+		mm_of_travel = linear_travel ? utilities::hypotf(flat_mm, linear_travel) : utilities::absf(flat_mm);
 	if (mm_of_travel < 0.001f) return;
 
-	uint16_t segments = (uint16_t)FLOOR(mm_of_travel / (float)(args_.mm_per_arc_segment));
+	uint16_t segments = (uint16_t)utilities::floorf(mm_of_travel / (float)(args_.mm_per_arc_segment));
 	NOLESS(segments, 1);
 
 	/**
@@ -212,7 +212,7 @@ void marlin_1::plan_arc_1_1_9_1(const float(&cart)[MARLIN_XYZE], // Destination 
 		linear_per_segment = linear_travel / segments,
 		extruder_per_segment = extruder_travel / segments,
 		sin_T = theta_per_segment,
-		cos_T = 1 - 0.5f * sq(theta_per_segment); // Small angle approximation
+		cos_T = 1 - 0.5f * utilities::sqf(theta_per_segment); // Small angle approximation
 
 	// Initialize the linear axis
 	raw[l_axis] = current_position[l_axis];
@@ -273,42 +273,10 @@ void marlin_1::plan_arc_1_1_9_1(const float(&cart)[MARLIN_XYZE], // Destination 
 	COPY(current_position, cart);
 }
 
-// Marlin Function Defs
-float marlin_1::HYPOT(float x, float y)
-{
-	return (float)utilities::hypot(x, y);
-}
-
-float marlin_1::ATAN2(float x, float y)
-{
-	return (float)utilities::atan2(x, y);
-}
-
-float marlin_1::RADIANS(float x)
-{
-	return (x * (float)M_PI) / 180;
-}
-
-float marlin_1::ABS(float x)
-{
-	return (float)utilities::abs((double)x);
-}
-
-float marlin_1::FLOOR(float x)
-{
-	return (float)utilities::floor((double)x);
-}
-
-float marlin_1::NOLESS(uint16_t x, uint16_t y)
+void marlin_1::NOLESS(uint16_t &x, uint16_t y)
 {
 	if (x < y)
-		return y;
-	return x;
-}
-
-float marlin_1::sq(float x)
-{
-	return x * x;
+		x = y;
 }
 
 float marlin_1::MMS_SCALED(float x)

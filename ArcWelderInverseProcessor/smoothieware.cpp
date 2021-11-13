@@ -105,23 +105,23 @@ bool smoothieware::append_arc_2021_06_19(SmoothiewareGcode* gcode, const float t
   //check for condition where atan2 formula will fail due to everything canceling out exactly
   if ((this->machine_position[this->plane_axis_0] == target[this->plane_axis_0]) && (this->machine_position[this->plane_axis_1] == target[this->plane_axis_1])) {
     if (is_clockwise) { // set angular_travel to -2pi for a clockwise full circle
-      angular_travel = (-2 * (float)PI);
+      angular_travel = (-2 * PI_FLOAT);
     }
     else { // set angular_travel to 2pi for a counterclockwise full circle
-      angular_travel = (2 * (float)PI);
+      angular_travel = (2 * PI_FLOAT);
     }
   }
   else {
     // Patch from GRBL Firmware - Christoph Baumann 04072015
     // CCW angle between position and target from circle center. Only one atan2() trig computation required.
     // Only run if not a full circle or angular travel will incorrectly result in 0.0f
-    angular_travel = atan2f(r_axis0 * rt_axis1 - r_axis1 * rt_axis0, r_axis0 * rt_axis0 + r_axis1 * rt_axis1);
+    angular_travel = (float)utilities::atan2((double)r_axis0 * rt_axis1 - (double)r_axis1 * rt_axis0, (double)r_axis0 * rt_axis0 + (double)r_axis1 * rt_axis1);
     if (plane_axis_2 == Y_AXIS) { is_clockwise = !is_clockwise; }  //Math for XZ plane is reverse of other 2 planes
     if (is_clockwise) { // adjust angular_travel to be in the range of -2pi to 0 for clockwise arcs
-      if (angular_travel > 0) { angular_travel -= (2 * (float)PI); }
+      if (angular_travel > 0) { angular_travel -= (2 * PI_FLOAT); }
     }
     else {  // adjust angular_travel to be in the range of 0 to 2pi for counterclockwise arcs
-      if (angular_travel < 0) { angular_travel += (2 * (float)PI); }
+      if (angular_travel < 0) { angular_travel += (2 * PI_FLOAT); }
     }
   }
 
@@ -135,7 +135,7 @@ bool smoothieware::append_arc_2021_06_19(SmoothiewareGcode* gcode, const float t
 
 
   // Find the distance for this gcode
-  float millimeters_of_travel = (float)utilities::hypot(angular_travel * radius, utilities::fabsf(linear_travel));
+  float millimeters_of_travel = (float)utilities::hypot((double)angular_travel * radius, utilities::fabsf(linear_travel));
 
   // We don't care about non-XYZ moves ( for example the extruder produces some of those )
   if (millimeters_of_travel < 0.000001F) {
@@ -144,8 +144,8 @@ bool smoothieware::append_arc_2021_06_19(SmoothiewareGcode* gcode, const float t
 
   // limit segments by maximum arc error
   float arc_segment = (float)args_.mm_per_arc_segment;
-  if ((args_.mm_max_arc_error > 0) && (2 * radius > args_.mm_max_arc_error)) {
-    float min_err_segment = 2 * (float)utilities::sqrtf((args_.mm_max_arc_error * (2 * radius - args_.mm_max_arc_error)));
+  if ((args_.mm_max_arc_error > 0) && (2.0 * (double)radius > args_.mm_max_arc_error)) {
+    float min_err_segment = 2 * (float)utilities::sqrt((args_.mm_max_arc_error * (2.0 * (double)radius - args_.mm_max_arc_error)));
     if (args_.mm_per_arc_segment < min_err_segment) {
       arc_segment = min_err_segment;
     }
@@ -158,7 +158,7 @@ bool smoothieware::append_arc_2021_06_19(SmoothiewareGcode* gcode, const float t
 
   // Figure out how many segments for this gcode
   // TODO for deltas we need to make sure we are at least as many segments as requested, also if mm_per_line_segment is set we need to use the
-  uint16_t segments = (uint16_t)floorf(millimeters_of_travel / arc_segment);
+  uint16_t segments = (uint16_t)utilities::floorf(millimeters_of_travel / arc_segment);
   bool moved = false;
 
   if (segments > 1) {
@@ -223,8 +223,8 @@ bool smoothieware::append_arc_2021_06_19(SmoothiewareGcode* gcode, const float t
       else {
         // Arc correction to radius vector. Computed only every N_ARC_CORRECTION increments.
         // Compute exact location by applying transformation matrix from initial radius vector(=-offset).
-        cos_Ti = (float)utilities::cosf(i * theta_per_segment);
-        sin_Ti = (float)utilities::sinf(i * theta_per_segment);
+        cos_Ti = (float)utilities::cos(i * (double)theta_per_segment);
+        sin_Ti = (float)utilities::sin(i * (double)theta_per_segment);
         r_axis0 = -offset[this->plane_axis_0] * cos_Ti + offset[this->plane_axis_1] * sin_Ti;
         r_axis1 = -offset[this->plane_axis_0] * sin_Ti - offset[this->plane_axis_1] * cos_Ti;
         count = 0;

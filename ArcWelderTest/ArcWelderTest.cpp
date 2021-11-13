@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
 int run_tests(int argc, char* argv[])
 {
 
-	_CrtMemState state;
+	_CrtMemState state1, state2, state3;
 	// This line will take a snapshot
 	// of the memory allocated at this point.
 	_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
@@ -46,7 +46,7 @@ int run_tests(int argc, char* argv[])
 
 	//std::string filename = argv[1];
 	unsigned int num_runs = 1;
-	_CrtMemCheckpoint(&state);
+	_CrtMemCheckpoint(&state1);
 
 	auto start = std::chrono::high_resolution_clock::now();
 	for (unsigned int index = 0; index < num_runs; index++)
@@ -94,7 +94,11 @@ int run_tests(int argc, char* argv[])
 
 	}
 	auto end = std::chrono::high_resolution_clock::now();
-	_CrtMemDumpAllObjectsSince(&state);
+	_CrtMemCheckpoint(&state2);
+	if (_CrtMemDifference(&state3, &state1, &state2)) {
+		_CrtMemDumpStatistics(&state3);
+	}
+	//_CrtMemDumpAllObjectsSince(&state);
 	std::chrono::duration<double> diff = end - start;
 	std::cout << "Tests completed in " << diff.count() << " seconds";
 	//std::cout << "Has Memory Leak = " << has_leak << ".\r\n";

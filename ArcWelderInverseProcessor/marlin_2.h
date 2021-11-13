@@ -84,24 +84,10 @@ private:
   plan_arc_func plan_arc_;
 
   // Marlin Function Defs
-  float HYPOT(float x, float y);
-  float ATAN2(float x, float y);
-  float RADIANS(float x);
-  float COS(float x);
-  float SIN(float s);
-  float ABS(float x);
-  float FLOOR(float x);
-  float NOLESS(uint16_t x, uint16_t y);
-  float sq(float x);
+  void NOLESS(uint16_t& x, uint16_t y);
   float MMS_SCALED(float x);
   bool NEAR_ZERO(float x);
   bool NEAR(float x, float y);
-  bool WITHIN(float N, float L, float H);
-  float CEIL(float x);
-  float constrain(float value, float arg_min, float arg_max);
-  float _MAX(float x, float y);
-  float _MIN(float x, float y);
-  float RECIPROCAL(float x);
   void COPY(float target[MARLIN_2_XYZE], const float(&source)[MARLIN_2_XYZE]);
 };
 

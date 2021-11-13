@@ -57,7 +57,6 @@ private:
   static const int plane_axis_1 = AxisEnum::Y_AXIS;
   static const int plane_axis_2 = AxisEnum::Z_AXIS;
   static const int plane_axis_3 = AxisEnum::E_AXIS;
-  const double PI = M_PI;
   SmoothiewareGcode gcode_;
   SmoothiewareKernel *THEKERNEL;
   float feed_rate;

@@ -119,7 +119,7 @@ std::string repetier::interpolate_arc(firmware_position& target, double i, doubl
   float repetier_radius = static_cast<float>(r);
   if (repetier_radius != 0)
   {
-    repetier_radius = (float)utilities::hypot(repetier_offset[X_AXIS], repetier_offset[Y_AXIS]); // Compute arc radius for mc_arc
+    repetier_radius = utilities::hypotf(repetier_offset[X_AXIS], repetier_offset[Y_AXIS]); // Compute arc radius for mc_arc
   }
   float repetier_f = static_cast<float>(target.f);
 
@@ -175,12 +175,12 @@ void repetier::arc_1_0_5(float* position, float* target, float* offset, float ra
   if (repetier_is_close(position[X_AXIS], target[X_AXIS]) && repetier_is_close(position[Y_AXIS], target[Y_AXIS]))
   {
     // Preserve direction for circles
-    angular_travel = isclockwise ? -2.0f * (float)M_PI : 2.0f * (float)M_PI;
+    angular_travel = isclockwise ? -2.0f * PI_FLOAT : 2.0f * PI_FLOAT;
   }
   else 
   {
     // CCW angle between position and target from circle center. Only one atan2() trig computation required.
-    angular_travel = (float)utilities::atan2((double)(r_axis0 * rt_axis1) - (double)(r_axis1 * rt_axis0), (double)(r_axis0 * rt_axis0) + (double)(r_axis1 * rt_axis1));
+    angular_travel = (float)utilities::atan2((double)r_axis0 * rt_axis1 - (double)r_axis1 * rt_axis0, (double)r_axis0 * rt_axis0 + (double)r_axis1 * rt_axis1);
     
     // No need to draw an arc if there is no angular travel
     if (!angular_travel) return;
@@ -190,12 +190,12 @@ void repetier::arc_1_0_5(float* position, float* target, float* offset, float ra
     {
       if (isclockwise)
       {
-        angular_travel -= 2.0f * (float)M_PI;
+        angular_travel -= 2.0f * PI_FLOAT;
       }
     }
     else if (!isclockwise)
     {
-      angular_travel += 2.0f * (float)M_PI;
+      angular_travel += 2.0f * PI_FLOAT;
     }
   }
 
@@ -204,7 +204,7 @@ void repetier::arc_1_0_5(float* position, float* target, float* offset, float ra
   if (linear_travel)
   {
     // If we have any Z motion, add this to the total mm of travel.
-    millimeters_of_travel = (float)utilities::hypot(millimeters_of_travel, linear_travel);
+    millimeters_of_travel = utilities::hypotf(millimeters_of_travel, linear_travel);
   }
 
   if (millimeters_of_travel < 0.001f) {
@@ -287,8 +287,8 @@ void repetier::arc_1_0_5(float* position, float* target, float* offset, float ra
     else {
       // Arc correction to radius vector. Computed only every N_ARC_CORRECTION increments.
       // Compute exact location by applying transformation matrix from initial radius vector(=-offset).
-      cos_Ti = (float)utilities::cos(i * theta_per_segment);
-      sin_Ti = (float)utilities::sin(i * theta_per_segment);
+      cos_Ti = (float)utilities::cos(i * (double)theta_per_segment);
+      sin_Ti = (float)utilities::sin(i * (double)theta_per_segment);
       r_axis0 = -offset[0] * cos_Ti + offset[1] * sin_Ti;
       r_axis1 = -offset[0] * sin_Ti - offset[1] * cos_Ti;
       count = 0;
@@ -347,21 +347,21 @@ void repetier::arc_1_0_4(float* position, float* target, float* offset, float ra
   long etarget = Printer::destinationSteps[E_AXIS];
   */
   // CCW angle between position and target from circle center. Only one atan2() trig computation required.
-  float angular_travel = (float)utilities::atan2((double)(r_axis0 * rt_axis1) - (double)(r_axis1 * rt_axis0), (double)(r_axis0 * rt_axis0) + (double)(r_axis1 * rt_axis1));
+  float angular_travel = (float)utilities::atan2((double)r_axis0 * rt_axis1 - (double)r_axis1 * rt_axis0, (double)r_axis0 * rt_axis0 + (double)r_axis1 * rt_axis1);
   if ((!isclockwise && angular_travel <= 0.00001) || (isclockwise && angular_travel < -0.000001)) {
-    angular_travel += 2.0f * (float)M_PI;
+    angular_travel += 2.0f * PI_FLOAT;
   }
   if (isclockwise) {
-    angular_travel -= 2.0f * (float)M_PI;
+    angular_travel -= 2.0f * PI_FLOAT;
   }
 
-  float millimeters_of_travel = (float)utilities::fabs(angular_travel) * radius; //hypot(angular_travel*radius, fabs(linear_travel));
+  float millimeters_of_travel = (float)utilities::fabs(angular_travel) * radius;
   if (millimeters_of_travel < 0.001f) {
     return; // treat as succes because there is nothing to do;
   }
   //uint16_t segments = (radius>=BIG_ARC_RADIUS ? floor(millimeters_of_travel/MM_PER_ARC_SEGMENT_BIG) : floor(millimeters_of_travel/MM_PER_ARC_SEGMENT));
   // Increase segment size if printing faster then computation speed allows
-  uint16_t segments = (uint16_t)(feedrate > 60.0f ? utilities::floor(millimeters_of_travel / utilities::min(static_cast<float>(args_.mm_per_arc_segment), feedrate * 0.01666f * static_cast<float>(args_.mm_per_arc_segment))) : utilities::floor(millimeters_of_travel / static_cast<float>(args_.mm_per_arc_segment)));
+  uint16_t segments = (uint16_t)(feedrate > 60.0f ? utilities::floorf(millimeters_of_travel / utilities::minf(static_cast<float>(args_.mm_per_arc_segment), feedrate * 0.01666f * static_cast<float>(args_.mm_per_arc_segment))) : utilities::floorf(millimeters_of_travel / static_cast<float>(args_.mm_per_arc_segment)));
   if (segments == 0)
     segments = 1;
   /*
@@ -426,8 +426,8 @@ void repetier::arc_1_0_4(float* position, float* target, float* offset, float ra
     else {
       // Arc correction to radius vector. Computed only every N_ARC_CORRECTION increments.
       // Compute exact location by applying transformation matrix from initial radius vector(=-offset).
-      cos_Ti = (float)utilities::cos(i * theta_per_segment);
-      sin_Ti = (float)utilities::sin(i * theta_per_segment);
+      cos_Ti = (float)utilities::cos(i * (double)theta_per_segment);
+      sin_Ti = (float)utilities::sin(i * (double)theta_per_segment);
       r_axis0 = -offset[0] * cos_Ti + offset[1] * sin_Ti;
       r_axis1 = -offset[0] * sin_Ti - offset[1] * cos_Ti;
       count = 0;
@@ -444,14 +444,6 @@ void repetier::arc_1_0_4(float* position, float* target, float* offset, float ra
   moveToReal(target[X_AXIS], target[Y_AXIS], position[Z_AXIS], target[E_AXIS]);
 }
 
-float repetier::min(float x, float y)
-{
-  if (x < y)
-  {
-    return x;
-  }
-  return y;
-}
 
 //void repetier::buffer_line_kinematic(float x, float y, float z, const float& e, float feed_rate, uint8_t extruder, const float* gcode_target)
 void repetier::moveToReal(float x, float y, float z, float e)

@@ -5,7 +5,6 @@
 #include <iomanip>
 #include <algorithm>
 
-#define M_PI       3.14159265358979323846   // pi
 #define DEFAULT_FIRMWARE_TYPE firmware_types::MARLIN_2
 #define LATEST_FIRMWARE_VERSION_NAME "LATEST_RELEASE"
 #define DEFAULT_FIRMWARE_VERSION_NAME LATEST_FIRMWARE_VERSION_NAME

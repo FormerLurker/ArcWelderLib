@@ -33,7 +33,6 @@ private:
   // Note that trailing underscore are sometimes dropped to keep the ported function as close as possible to the original
   float feedrate;
   // Repetier Function Defs
-  float min(float x, float y);
   void moveToReal(float x, float y, float z, float e);
 };
 
