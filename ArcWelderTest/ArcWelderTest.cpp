@@ -25,7 +25,6 @@
 #include "logger.h"
 #include <iostream>
 
-
 int main(int argc, char* argv[])
 {
 	run_tests(argc, argv);
@@ -273,15 +272,15 @@ static void TestAntiStutter(std::string filePath)
 	std::vector<std::string> logger_names;
 	logger_names.push_back("arc_welder.gcode_conversion");
 	std::vector<int> logger_levels;
-	logger_levels.push_back(log_levels::NOSET);
-	logger_levels.push_back(log_levels::VERBOSE);
-	logger_levels.push_back(log_levels::DEBUG);
-	logger_levels.push_back(log_levels::INFO);
-	logger_levels.push_back(log_levels::WARNING);
-	logger_levels.push_back(log_levels::ERROR);
-	logger_levels.push_back(log_levels::CRITICAL);
+	logger_levels.push_back((int)log_levels::NOSET);
+	logger_levels.push_back((int)log_levels::VERBOSE);
+	logger_levels.push_back((int)log_levels::DEBUG);
+	logger_levels.push_back((int)log_levels::INFO);
+	logger_levels.push_back((int)log_levels::WARNING);
+	//logger_levels.push_back((int)(log_levels::ERROR));
+	logger_levels.push_back((int)log_levels::CRITICAL);
 	logger* p_logger = new logger(logger_names, logger_levels);
-	p_logger->set_log_level(INFO);
+	p_logger->set_log_level(log_levels::INFO);
 	
 	//FIRMWARE_COMPENSATION_TEST_1
 	//BENCHY_MIN_RADIUS_TEST
@@ -306,9 +305,10 @@ static void TestAntiStutter(std::string filePath)
 	// BENCHY_L1_DIFFICULT
 	// SPIRAL_TEST
 	// SPIRAL_VASE_TEST_FUNNEL
-	std::string source_path = BENCHY_DIFFICULT;
+	std::string source_path = SPIRAL_VASE_TEST_SINGLE_LAYER_CYLINDER;
 	std::string target_path = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode";
 	arc_welder_args args(source_path, target_path, p_logger);
+	args.box_encoding = args.box_encoding = utilities::box_drawing::HTML;
 	args.callback = on_progress;
   // override any arguments here;
 	args.allow_travel_arcs = true;
@@ -319,14 +319,14 @@ static void TestAntiStutter(std::string filePath)
 	arc_welder arc_welder_obj(args);
 		
 	arc_welder_results results = arc_welder_obj.process();
-	p_logger->log(0, INFO, results.progress.detail_str());
-	p_logger->log(0, INFO, "Processing Complete.");
+	p_logger->log(0, log_levels::INFO, results.progress.detail_str());
+	p_logger->log(0, log_levels::INFO, "Processing Complete.");
 	delete p_logger;
 }
 
 bool on_progress(arc_welder_progress progress, logger * p_logger, int logger_type)
 {
-	p_logger->log(logger_type, INFO, progress.str());
+	p_logger->log(logger_type, log_levels::INFO, progress.str());
 	return true;
 }
 

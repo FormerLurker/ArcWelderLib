@@ -81,8 +81,8 @@ int main(int argc, char* argv[])
     // -t --path-tolerance-percent
     arg_description_stream.clear();
     arg_description_stream.str("");
-    arg_description_stream << "This is the maximum allowable difference between the arc path and the original toolpath.  Since most slicers use interpolation when generating arc moves, this value can be relatively high without impacting print quality.";
-    arg_description_stream << "  Expressed as a decimal percent, where 0.05 = 5.0%. Default Value: " << ARC_LENGTH_PERCENT_TOLERANCE_DEFAULT;
+    arg_description_stream << "This is the maximum allowable difference between the arc path and the original toolpath.";
+    arg_description_stream << "  Expressed as a decimal percent, where 0.05 = 5.0%.  The lower this value is, the more arcs will be aborted, but values over 0.25 (25%) are not recommended, as they could negatively impact print quality.  Default Value: " << ARC_LENGTH_PERCENT_TOLERANCE_DEFAULT << " (" << ARC_LENGTH_PERCENT_TOLERANCE_DEFAULT * 100 << "%)";
     TCLAP::ValueArg<double> path_tolerance_percent_arg("t", "path-tolerance-percent", arg_description_stream.str(), false, DEFAULT_RESOLUTION_MM, "float");
 
     // -m --max-radius-mm
@@ -142,7 +142,7 @@ int main(int argc, char* argv[])
     // -v --extrusion-rate-variance
     arg_description_stream.clear();
     arg_description_stream.str("");
-    arg_description_stream << "(experimental) - The allowed variance in extrusion rate by percent.  Default Value: " << DEFAULT_EXTRUSION_RATE_VARIANCE_PERCENT;
+    arg_description_stream << "(experimental) - The allowed variance in extrusion rate by percent, where 0.05 = 5.0%.  A value of 0 will disable this feature.  Default Value: " << DEFAULT_EXTRUSION_RATE_VARIANCE_PERCENT << " (" << DEFAULT_EXTRUSION_RATE_VARIANCE_PERCENT * 100 << "%)";
     TCLAP::ValueArg<double> extrusion_rate_variance_percent_arg("v", "extrusion-rate-variance-percent", arg_description_stream.str(), false, DEFAULT_EXTRUSION_RATE_VARIANCE_PERCENT, "double");
 
     // -c --max-gcode-length
@@ -236,7 +236,7 @@ int main(int argc, char* argv[])
       has_error = true;
     }
     
-    if (args.path_tolerance_percent <= 0)
+    if (args.path_tolerance_percent < 0)
     {
       std::cerr << "error: The provided path tolerance percentage of " << args.path_tolerance_percent << " is negative, which is not allowed." << std::endl;
       has_error = true;
@@ -262,15 +262,15 @@ int main(int argc, char* argv[])
       args.mm_per_arc_segment = 0;
     }
 
-    if (args.path_tolerance_percent > 0.05)
+    if (args.path_tolerance_percent > 0.25)
     {
       // warning
-      std::cout << "warning: The provided path tolerance percent of " << args.path_tolerance_percent << " is greater than 0.05 (5%), which is not recommended." << std::endl;
+      std::cout << "warning: The provided path tolerance percent of " << args.path_tolerance_percent << " is greater than 0.25 (25%), which is not recommended." << std::endl;
     }
-    else if (args.path_tolerance_percent < 0.0001 && args.path_tolerance_percent > 0)
+    else if (args.path_tolerance_percent < 0.001 && args.path_tolerance_percent > 0)
     {
       // warning
-      std::cout << "warning: The provided path tolerance percent of " << args.path_tolerance_percent << " is less than greater than 0.001 (0.1%), which is not recommended." << std::endl;
+      std::cout << "warning: The provided path tolerance percent of " << args.path_tolerance_percent << " is less than 0.001 (0.1%), which is not recommended, and will result in very few arcs being generated." << std::endl;
     }
 
     if (xyz_precision < 3)
@@ -308,7 +308,7 @@ int main(int argc, char* argv[])
     if (args.extrusion_rate_variance_percent < 0)
     {
       // warning
-      std::cout << "warning: The provided extrusion_rate_variance_percent " << args.extrusion_rate_variance_percent << " is less than 0.  Setting to the default." << std::endl;
+      std::cout << "warning: The provided extrusion_rate_variance_percent " << args.extrusion_rate_variance_percent << " is less than 0.  Applying the default setting of " << DEFAULT_EXTRUSION_RATE_VARIANCE_PERCENT*100 << "%." << std::endl;
       args.extrusion_rate_variance_percent = DEFAULT_EXTRUSION_RATE_VARIANCE_PERCENT;
     }
 
@@ -351,7 +351,7 @@ int main(int argc, char* argv[])
   std::vector<std::string> log_names;
   log_names.push_back(ARC_WELDER_LOGGER_NAME);
   std::vector<int> log_levels;
-  log_levels.push_back(log_levels::DEBUG);
+  log_levels.push_back((int)log_levels::DEBUG);
   logger* p_logger = new logger(log_names, log_levels);
   p_logger->set_log_level_by_value(log_level_value);
   args.log = p_logger;
@@ -360,12 +360,12 @@ int main(int argc, char* argv[])
   
   if (progress_type == PROGRESS_TYPE_NONE)
   {
-    p_logger->log(0, INFO, "Suppressing progress messages.");
+    p_logger->log(0, log_levels::INFO, "Suppressing progress messages.");
     args.callback = on_progress_suppress;
   }
   else if (progress_type == PROGRESS_TYPE_FULL)
   {
-    p_logger->log(0, INFO, "Displaying full progress messages.");
+    p_logger->log(0, log_levels::INFO, "Displaying full progress messages.");
     args.callback = on_progress_full;
   }
   else {
@@ -374,11 +374,14 @@ int main(int argc, char* argv[])
   // Log the arguments
   std::stringstream log_messages;
   log_messages << "Processing GCode.";
-  p_logger->log(0, INFO, log_messages.str());
+  p_logger->log(0, log_levels::INFO, log_messages.str());
   log_messages.clear();
   log_messages.str("");
   log_messages << args.str();
-  p_logger->log(0, INFO, log_messages.str());
+  p_logger->log(0, log_levels::INFO, log_messages.str());
+
+  // Set the box encoding
+  args.box_encoding = args.box_encoding = utilities::box_drawing::ASCII;
 
   p_arc_welder = new arc_welder(args);
   
@@ -395,15 +398,17 @@ int main(int argc, char* argv[])
       }
       else
       {
-        log_messages << "Target File Travel Statistics:" << std::endl << results.progress.travel_statistics.str();
+        log_messages << "\n" << results.progress.travel_statistics.str("Target File Travel Statistics", utilities::box_drawing::ASCII);
       }
       
-      p_logger->log(0, INFO, log_messages.str());
+      p_logger->log(0, log_levels::INFO, log_messages.str());
     }
 
     log_messages.clear();
     log_messages.str("");
-    log_messages << "Target File Extrusion Statistics:" << std::endl << results.progress.segment_statistics.str();
+    // Extrusion Statistics
+    source_target_segment_statistics combined_stats = source_target_segment_statistics::add(results.progress.segment_statistics, results.progress.segment_retraction_statistics);
+    log_messages << "\n" << combined_stats.str("Target File Extrusion Statistics", utilities::box_drawing::ASCII);
     p_logger->log(0, INFO, log_messages.str() );
   
     
@@ -411,14 +416,14 @@ int main(int argc, char* argv[])
     log_messages.clear();
     log_messages.str("");
     log_messages << "Arc Welder process completed successfully.";
-    p_logger->log(0, INFO, log_messages.str());
+    p_logger->log(0, log_levels::INFO, log_messages.str());
   }
   else
   {
     log_messages.clear();
     log_messages.str("");
     log_messages << "File processing failed.";
-    p_logger->log(0, INFO, log_messages.str());
+    p_logger->log(0, log_levels::INFO, log_messages.str());
   }
 
   delete p_arc_welder;

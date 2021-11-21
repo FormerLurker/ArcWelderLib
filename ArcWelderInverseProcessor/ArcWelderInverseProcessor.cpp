@@ -436,7 +436,7 @@ int run_arc_straightener(int argc, char* argv[])
   std::vector<std::string> log_names;
   log_names.push_back("arc_welder.gcode_conversion");
   std::vector<int> log_levels;
-  log_levels.push_back(log_levels::DEBUG);
+  log_levels.push_back((int)log_levels::DEBUG);
   logger* p_logger = new logger(log_names, log_levels);
   p_logger->set_log_level_by_value(log_level_value);
 
@@ -449,7 +449,7 @@ int run_arc_straightener(int argc, char* argv[])
     if (!utilities::get_temp_file_path_for_file(args.source_path, temp_file_path))
     {
       log_messages << "The source and target path are the same, but a temporary file path could not be created.  Is the path empty?";
-      p_logger->log(0, INFO, log_messages.str());
+      p_logger->log(0, log_levels::INFO, log_messages.str());
       log_messages.clear();
       log_messages.str("");
     }
@@ -457,7 +457,7 @@ int run_arc_straightener(int argc, char* argv[])
     // create a uuid with a tmp extension for the temporary file
 
     log_messages << "Source and target path are the same.  The source file will be overwritten.  Temporary file path: " << temp_file_path;
-    p_logger->log(0, INFO, log_messages.str());
+    p_logger->log(0, log_levels::INFO, log_messages.str());
     log_messages.clear();
     log_messages.str("");
   }
@@ -483,11 +483,11 @@ int run_arc_straightener(int argc, char* argv[])
 
   arc_interpolation interpolator(args);
   log_messages << interpolator.get_firmware_argument_description();
-  p_logger->log(0, INFO, log_messages.str());
+  p_logger->log(0, log_levels::INFO, log_messages.str());
 
-  p_logger->log(0, INFO, "Running interpolation...");
+  p_logger->log(0, log_levels::INFO, "Running interpolation...");
   interpolator.process();
-  p_logger->log(0, INFO, "Interpolation Complete.");
+  p_logger->log(0, log_levels::INFO, "Interpolation Complete.");
 
   log_messages.clear();
   log_messages.str("");
@@ -498,19 +498,19 @@ int run_arc_straightener(int argc, char* argv[])
     log_messages.clear();
     log_messages.str("");
     log_messages << "Deleting the original source file at '" << args.source_path << "'.";
-    p_logger->log(0, INFO, log_messages.str());
+    p_logger->log(0, log_levels::INFO, log_messages.str());
     log_messages.clear();
     log_messages.str("");
     std::remove(args.source_path.c_str());
     log_messages << "Renaming temporary file at '" << args.target_path << "' to '" << args.source_path << "'.";
-    p_logger->log(0, INFO, log_messages.str());
+    p_logger->log(0, log_levels::INFO, log_messages.str());
     std::rename(args.target_path.c_str(), args.source_path.c_str());
   }
 
   log_messages.clear();
   log_messages.str("");
   log_messages << "Process completed successfully.";
-  p_logger->log(0, INFO, log_messages.str());
+  p_logger->log(0, log_levels::INFO, log_messages.str());
 
   return 0;
 

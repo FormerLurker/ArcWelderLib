@@ -112,6 +112,7 @@ static std::string DIFFICULT_ARCS_ISSUE_34 = "C:\\Users\\Brad\\Documents\\3DPrin
 static std::string TORTURE_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\performance\\torture_test.gcode";
 static std::string CURA_PLUGIN_ISSUE_18 = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\Issues\\CuraPlugin\\18\\Unwelded.gcode";
 static std::string METALTEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\MetalAltered.gcode";
+static std::string TEMP_TEST = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\temp.gcode";
 
 
 
