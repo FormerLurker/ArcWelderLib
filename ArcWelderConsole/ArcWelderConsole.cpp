@@ -34,25 +34,19 @@
 #include <tclap/CmdLine.h>
 #define DEFAULT_ARG_DOUBLE_PRECISION 4
 
+#define PROGRESS_TYPE_NONE "NONE"
+#define PROGRESS_TYPE_SIMPLE "SIMPLE"
+#define PROGRESS_TYPE_FULL "FULL"
 int main(int argc, char* argv[])
 {
-  std::string source_file_path;
-  std::string target_file_path;
-  double resolution_mm;
-  double max_radius_mm;
-  int min_arc_segments;
-  double mm_per_arc_segment;
-  double path_tolerance_percent;
-  bool g90_g91_influences_extruder;
-  bool hide_progress;
-  bool overwrite_source_file = false;
-  bool allow_3d_arcs = false;
-  bool allow_dynamic_precision = DEFAULT_ALLOW_DYNAMIC_PRECISION;
-  unsigned char default_xyz_precision = DEFAULT_XYZ_PRECISION;
-  unsigned char default_e_precision = DEFAULT_E_PRECISION;
+  
+  arc_welder_args args;
   std::string log_level_string;
   std::string log_level_string_default = "INFO";
+  std::string progress_type;
+  std::string progress_type_default_string = PROGRESS_TYPE_SIMPLE;
   int log_level_value;
+  bool hide_progress = false;
 
   // Add info about the application   
   std::string info = "Arc Welder: Anti-Stutter - Reduces the number of gcodes per second sent to a 3D printer that supports arc commands (G2 G3).";
@@ -87,8 +81,8 @@ int main(int argc, char* argv[])
     // -t --path-tolerance-percent
     arg_description_stream.clear();
     arg_description_stream.str("");
-    arg_description_stream << "This is the maximum allowable difference between the arc path and the original toolpath.  Since most slicers use interpolation when generating arc moves, this value can be relatively high without impacting print quality.";
-    arg_description_stream << "  Expressed as a decimal percent, where 0.05 = 5.0%. Default Value: " << ARC_LENGTH_PERCENT_TOLERANCE_DEFAULT;
+    arg_description_stream << "This is the maximum allowable difference between the arc path and the original toolpath.";
+    arg_description_stream << "  Expressed as a decimal percent, where 0.05 = 5.0%.  The lower this value is, the more arcs will be aborted, but values over 0.25 (25%) are not recommended, as they could negatively impact print quality.  Default Value: " << ARC_LENGTH_PERCENT_TOLERANCE_DEFAULT << " (" << ARC_LENGTH_PERCENT_TOLERANCE_DEFAULT * 100 << "%)";
     TCLAP::ValueArg<double> path_tolerance_percent_arg("t", "path-tolerance-percent", arg_description_stream.str(), false, DEFAULT_RESOLUTION_MM, "float");
 
     // -m --max-radius-mm
@@ -96,7 +90,6 @@ int main(int argc, char* argv[])
     arg_description_stream.str("");
     arg_description_stream << "The maximum radius of any arc in mm. Default Value: " << DEFAULT_MAX_RADIUS_MM;
     TCLAP::ValueArg<double> max_radius_arg("m", "max-radius-mm", arg_description_stream.str(), false, DEFAULT_MAX_RADIUS_MM, "float");
-
 
     // -s --mm-per-arc-segment
     arg_description_stream.clear();
@@ -122,6 +115,12 @@ int main(int argc, char* argv[])
     arg_description_stream << "(experimental) - If supplied, 3D arcs will be allowed (supports spiral vase mode).  Not all firmware supports this.  Default Value: " << DEFAULT_ALLOW_3D_ARCS;
     TCLAP::SwitchArg allow_3d_arcs_arg("z", "allow-3d-arcs", arg_description_stream.str(), DEFAULT_ALLOW_3D_ARCS);
 
+    // -y --allow-travel-arcs
+    arg_description_stream.clear();
+    arg_description_stream.str("");
+    arg_description_stream << "(experimental) - If supplied, travel arcs will be allowed.  Default Value: " << DEFAULT_ALLOW_TRAVEL_ARCS;
+    TCLAP::SwitchArg allow_travel_arcs_arg("y", "allow-travel-arcs", arg_description_stream.str(), DEFAULT_ALLOW_TRAVEL_ARCS);
+
     // -d --allow-dynamic-precision
     arg_description_stream.clear();
     arg_description_stream.str("");
@@ -132,16 +131,37 @@ int main(int argc, char* argv[])
     arg_description_stream.clear();
     arg_description_stream.str("");
     arg_description_stream << "The default precision of X, Y, Z, I and J output gcode parameters.  The precision may be larger than this value if allow-dynamic-precision is set to true.  Default Value: " << DEFAULT_XYZ_PRECISION;
-    TCLAP::ValueArg<unsigned char> default_xyz_precision_arg("x", "default-xyz-precision", arg_description_stream.str(), false, DEFAULT_XYZ_PRECISION, "unsigned char");
+    TCLAP::ValueArg<unsigned int> default_xyz_precision_arg("x", "default-xyz-precision", arg_description_stream.str(), false, DEFAULT_XYZ_PRECISION, "unsigned int");
 
     // -e --default-e-precision
     arg_description_stream.clear();
     arg_description_stream.str("");
     arg_description_stream << "The default precision of E output gcode parameters.  The precision may be larger than this value if allow-dynamic-precision is set to true.  Default Value: " << DEFAULT_E_PRECISION;
-    TCLAP::ValueArg<unsigned char> default_e_precision_arg("e", "default-e-precision", arg_description_stream.str(), false, DEFAULT_E_PRECISION, "unsigned char");
+    TCLAP::ValueArg<unsigned int> default_e_precision_arg("e", "default-e-precision", arg_description_stream.str(), false, DEFAULT_E_PRECISION, "unsigned int");
 
-    // -g --hide-progress
-    TCLAP::SwitchArg hide_progress_arg("p", "hide-progress", "If supplied, prevents progress updates from being displayed.", false);
+    // -v --extrusion-rate-variance
+    arg_description_stream.clear();
+    arg_description_stream.str("");
+    arg_description_stream << "(experimental) - The allowed variance in extrusion rate by percent, where 0.05 = 5.0%.  A value of 0 will disable this feature.  Default Value: " << DEFAULT_EXTRUSION_RATE_VARIANCE_PERCENT << " (" << DEFAULT_EXTRUSION_RATE_VARIANCE_PERCENT * 100 << "%)";
+    TCLAP::ValueArg<double> extrusion_rate_variance_percent_arg("v", "extrusion-rate-variance-percent", arg_description_stream.str(), false, DEFAULT_EXTRUSION_RATE_VARIANCE_PERCENT, "double");
+
+    // -c --max-gcode-length
+    arg_description_stream.clear();
+    arg_description_stream.str("");
+    arg_description_stream << "The maximum length allowed for a generated G2/G3 command, not including any comments.  0 = no limit.  Default Value: " << DEFAULT_MAX_GCODE_LENGTH;
+    TCLAP::ValueArg<int> max_gcode_length_arg("c", "max-gcode-length", arg_description_stream.str(), false, DEFAULT_MAX_GCODE_LENGTH, "int");
+
+    // -p --progress-type
+    std::vector<std::string> progress_type_vector;
+    std::string progress_type_default_string = PROGRESS_TYPE_SIMPLE;
+    progress_type_vector.push_back(PROGRESS_TYPE_NONE);
+    progress_type_vector.push_back(PROGRESS_TYPE_SIMPLE);
+    progress_type_vector.push_back(PROGRESS_TYPE_FULL);
+    TCLAP::ValuesConstraint<std::string> progress_type_constraint(progress_type_vector);
+    arg_description_stream.clear();
+    arg_description_stream.str("");
+    arg_description_stream << "Sets the progress type display.  Default Value " << progress_type_default_string;
+    TCLAP::ValueArg<std::string> progress_type_arg("p", "progress-type", arg_description_stream.str(), false, progress_type_default_string, &progress_type_constraint);
 
     // -l --log-level
     std::vector<std::string> log_levels_vector;
@@ -159,6 +179,7 @@ int main(int argc, char* argv[])
     arg_description_stream << "Sets console log level. Default Value: " << log_level_string_default; 
     TCLAP::ValueArg<std::string> log_level_arg("l", "log-level", arg_description_stream.str(), false, log_level_string_default, &log_levels_constraint);
 
+    
     // Add all arguments
     cmd.add(source_arg);
     cmd.add(target_arg);
@@ -168,111 +189,134 @@ int main(int argc, char* argv[])
     cmd.add(min_arc_segments_arg);
     cmd.add(mm_per_arc_segment_arg);
     cmd.add(allow_3d_arcs_arg);
+    cmd.add(allow_travel_arcs_arg);
     cmd.add(allow_dynamic_precision_arg);
     cmd.add(default_xyz_precision_arg);
     cmd.add(default_e_precision_arg);
+    cmd.add(extrusion_rate_variance_percent_arg);
+    cmd.add(max_gcode_length_arg);
     cmd.add(g90_arg);
-    cmd.add(hide_progress_arg);
+    cmd.add(progress_type_arg);
     cmd.add(log_level_arg);
 
     // Parse the argv array.
     cmd.parse(argc, argv);
 
     // Get the value parsed by each arg. 
-    source_file_path = source_arg.getValue();
-    target_file_path = target_arg.getValue();
+    args.source_path = source_arg.getValue();
+    args.target_path = target_arg.getValue();
 
-    if (target_file_path.size() == 0)
+    if (args.target_path.size() == 0)
     {
-      target_file_path = source_file_path;
+      args.target_path = args.source_path;
     }
 
-    resolution_mm = resolution_arg.getValue();
-    max_radius_mm = max_radius_arg.getValue();
-    min_arc_segments = min_arc_segments_arg.getValue();
-    mm_per_arc_segment = mm_per_arc_segment_arg.getValue();
-    path_tolerance_percent = path_tolerance_percent_arg.getValue();
-    allow_3d_arcs = allow_3d_arcs_arg.getValue();
-    g90_g91_influences_extruder = g90_arg.getValue();
-    allow_dynamic_precision = allow_dynamic_precision_arg.getValue();
-    default_xyz_precision = default_xyz_precision_arg.getValue();
-    default_e_precision = default_e_precision_arg.getValue();
-
-    hide_progress = hide_progress_arg.getValue();
+    args.resolution_mm = resolution_arg.getValue();
+    args.max_radius_mm = max_radius_arg.getValue();
+    args.min_arc_segments = min_arc_segments_arg.getValue();
+    args.mm_per_arc_segment = mm_per_arc_segment_arg.getValue();
+    args.path_tolerance_percent = path_tolerance_percent_arg.getValue();
+    args.allow_3d_arcs = allow_3d_arcs_arg.getValue();
+    args.allow_travel_arcs = allow_travel_arcs_arg.getValue();
+    args.g90_g91_influences_extruder = g90_arg.getValue();
+    args.allow_dynamic_precision = allow_dynamic_precision_arg.getValue();
+    unsigned int xyz_precision = default_xyz_precision_arg.getValue();
+    unsigned int e_precision = default_e_precision_arg.getValue();
+    args.extrusion_rate_variance_percent = extrusion_rate_variance_percent_arg.getValue();
+    args.max_gcode_length = max_gcode_length_arg.getValue();
+    progress_type = progress_type_arg.getValue();
     log_level_string = log_level_arg.getValue();
     log_level_value = -1;
 
     // Check the entered values
     bool has_error = false;
-    if (resolution_mm <= 0)
+    if (args.resolution_mm <= 0)
     {
-      std::cerr << "error: The provided resolution of " << resolution_mm << " is negative, which is not allowed." <<std::endl;
+      std::cerr << "error: The provided resolution of " << args.resolution_mm << " is negative, which is not allowed." <<std::endl;
       has_error = true;
     }
     
-    if (path_tolerance_percent <= 0)
+    if (args.path_tolerance_percent < 0)
     {
-      std::cerr << "error: The provided path tolerance percentage of " << path_tolerance_percent << " is negative, which is not allowed." << std::endl;
+      std::cerr << "error: The provided path tolerance percentage of " << args.path_tolerance_percent << " is negative, which is not allowed." << std::endl;
       has_error = true;
     }
 
-    if (max_radius_mm > 1000000)
+    if (args.max_radius_mm > 1000000)
     {
       // warning
-      std::cout << "warning: The provided path max radius of " << max_radius_mm << "mm is greater than 1000000 (1km), which is not recommended." << std::endl;
+      std::cout << "warning: The provided path max radius of " << args.max_radius_mm << "mm is greater than 1000000 (1km), which is not recommended." << std::endl;
     }
 
-    if (min_arc_segments < 0)
+    if (args.min_arc_segments < 0)
     {
       // warning
-      std::cout << "warning: The provided min_arc_segments " << min_arc_segments << " is less than zero.  Setting to 0." << std::endl;
-      min_arc_segments = 0;
+      std::cout << "warning: The provided min_arc_segments " << args.min_arc_segments << " is less than zero.  Setting to 0." << std::endl;
+      args.min_arc_segments = 0;
     }
 
-    if (mm_per_arc_segment < 0)
+    if (args.mm_per_arc_segment < 0)
     {
       // warning
-      std::cout << "warning: The provided mm_per_arc_segment " << mm_per_arc_segment << "mm is less than zero.  Setting to 0." << std::endl;
-      mm_per_arc_segment = 0;
+      std::cout << "warning: The provided mm_per_arc_segment " << args.mm_per_arc_segment << "mm is less than zero.  Setting to 0." << std::endl;
+      args.mm_per_arc_segment = 0;
     }
 
-    if (path_tolerance_percent > 0.05)
+    if (args.path_tolerance_percent > 0.25)
     {
       // warning
-      std::cout << "warning: The provided path tolerance percent of " << path_tolerance_percent << " is greater than 0.05 (5%), which is not recommended." << std::endl;
+      std::cout << "warning: The provided path tolerance percent of " << args.path_tolerance_percent << " is greater than 0.25 (25%), which is not recommended." << std::endl;
     }
-    else if (path_tolerance_percent < 0.0001 && path_tolerance_percent > 0)
+    else if (args.path_tolerance_percent < 0.001 && args.path_tolerance_percent > 0)
     {
       // warning
-      std::cout << "warning: The provided path tolerance percent of " << path_tolerance_percent << " is less than greater than 0.001 (0.1%), which is not recommended." << std::endl;
-    }
-
-    if (default_xyz_precision < 3)
-    {
-      // warning
-      std::cout << "warning: The provided default_xyz_precision " << default_xyz_precision << "mm is less than 3, with will cause issues printing arcs.  A value of 3 will be used instead." << std::endl;
-      default_xyz_precision = 3;
+      std::cout << "warning: The provided path tolerance percent of " << args.path_tolerance_percent << " is less than 0.001 (0.1%), which is not recommended, and will result in very few arcs being generated." << std::endl;
     }
 
-    if (default_e_precision < DEFAULT_E_PRECISION)
+    if (xyz_precision < 3)
     {
       // warning
-      std::cout << "warning: The provided default_e_precision " << default_e_precision << "mm is less than 3, with will cause extrusion issues.  A value of 3 will be used instead." << std::endl;
-      default_e_precision = 3;
+      std::cout << "warning: The provided default_xyz_precision " << xyz_precision << "mm is less than 3, with will cause issues printing arcs.  A value of 3 will be used instead." << std::endl;
+      xyz_precision = 3;
     }
 
-    if (default_xyz_precision > 6)
+    if (e_precision < DEFAULT_E_PRECISION)
     {
       // warning
-      std::cout << "warning: The provided default_xyz_precision " << default_xyz_precision << "mm is greater than 6, which may cause gcode checksum errors while printing depending on your firmeware, so a value of 6 will be used instead." << std::endl;
-      default_xyz_precision = 6;
+      std::cout << "warning: The provided default_e_precision " << e_precision << "mm is less than 3, with will cause extrusion issues.  A value of 3 will be used instead." << std::endl;
+      e_precision = 3;
     }
 
-    if (default_e_precision > 6)
+    if (xyz_precision > 6)
     {
       // warning
-      std::cout << "warning: The provided default_e_precision " << default_e_precision << "mm is greater than 6, which may cause gcode checksum errors while printing depending on your firmeware, so value of 6 will be used instead." << std::endl;
-      default_e_precision = 6;
+      std::cout << "warning: The provided default_xyz_precision " << xyz_precision << "mm is greater than 6, which may cause gcode checksum errors while printing depending on your firmeware, so a value of 6 will be used instead." << std::endl;
+      xyz_precision = 6;
+    }
+
+    if (e_precision > 6)
+    {
+      // warning
+      std::cout << "warning: The provided default_e_precision " << e_precision << "mm is greater than 6, which may cause gcode checksum errors while printing depending on your firmeware, so value of 6 will be used instead." << std::endl;
+      e_precision = 6;
+    }
+
+    // Fill in the adjusted precisions
+    args.default_e_precision = (unsigned char)e_precision;
+    args.default_xyz_precision = (unsigned char)xyz_precision;
+
+    if (args.extrusion_rate_variance_percent < 0)
+    {
+      // warning
+      std::cout << "warning: The provided extrusion_rate_variance_percent " << args.extrusion_rate_variance_percent << " is less than 0.  Applying the default setting of " << DEFAULT_EXTRUSION_RATE_VARIANCE_PERCENT*100 << "%." << std::endl;
+      args.extrusion_rate_variance_percent = DEFAULT_EXTRUSION_RATE_VARIANCE_PERCENT;
+    }
+
+    if (args.max_gcode_length < 0)
+    {
+      // warning
+      std::cout << "warning: The provided max_gcode_length " << args.max_gcode_length << " is less than 0.  Setting to the default (no limit)." << std::endl;
+      args.max_gcode_length = DEFAULT_MAX_GCODE_LENGTH;
     }
 
     if (has_error)
@@ -305,118 +349,102 @@ int main(int argc, char* argv[])
   // Ensure the log level name is valid
   
   std::vector<std::string> log_names;
-  log_names.push_back("arc_welder.gcode_conversion");
+  log_names.push_back(ARC_WELDER_LOGGER_NAME);
   std::vector<int> log_levels;
-  log_levels.push_back(log_levels::DEBUG);
+  log_levels.push_back((int)log_levels::DEBUG);
   logger* p_logger = new logger(log_names, log_levels);
   p_logger->set_log_level_by_value(log_level_value);
-
-  std::stringstream log_messages;
-  std::string temp_file_path = "";
-  log_messages << std::fixed << std::setprecision(DEFAULT_ARG_DOUBLE_PRECISION);
-  if (source_file_path == target_file_path)
-  {
-    overwrite_source_file = true;
-    if (!utilities::get_temp_file_path_for_file(source_file_path, temp_file_path))
-    {
-      log_messages << "The source and target path are the same, but a temporary file path could not be created.  Is the path empty?";
-      p_logger->log(0, INFO, log_messages.str());
-      log_messages.clear();
-      log_messages.str("");
-    }
-
-    // create a uuid with a tmp extension for the temporary file
-    log_messages << "Source and target path are the same.  The source file will be overwritten.  Temporary file path: " << temp_file_path;
-    p_logger->log(0, INFO, log_messages.str());
-    log_messages.clear();
-    log_messages.str("");
-    target_file_path = temp_file_path;
-  }
-  log_messages << "Processing Gcode\n";
-  log_messages << "\tSource File Path             : " << source_file_path << "\n";
-  if (overwrite_source_file)
-  {
-    log_messages << "\tTarget File Path (overwrite) : " << target_file_path << "\n";
-    log_messages << "\tTemporary File Path          : " << temp_file_path << "\n";
-  }
-  else 
-  {
-    log_messages << "\tTarget File File             : " << target_file_path << "\n";
-  }
+  args.log = p_logger;
   
-  log_messages << "\tResolution                   : " << resolution_mm << "mm (+-" << std::setprecision(5) << resolution_mm/2.0 << "mm)\n";
-  log_messages << "\tPath Tolerance               : " << std::setprecision(3) << path_tolerance_percent*100.0 << "%\n";
-  log_messages << "\tMaximum Arc Radius           : " << std::setprecision(0) << max_radius_mm << "mm\n";
-  log_messages << "\tMin Arc Segments             : " << std::setprecision(0) << min_arc_segments << "\n";
-  log_messages << "\tMM Per Arc Segment           : " << std::setprecision(3) << mm_per_arc_segment << "\n";
-  log_messages << "\tAllow 3D Arcs                : " << (allow_3d_arcs ? "True" : "False") << "\n";
-  log_messages << "\tAllow Dynamic Precision      : " << (allow_dynamic_precision ? "True" : "False") << "\n";
-  log_messages << "\tDefault XYZ Precision        : " << std::setprecision(0) << static_cast<int>(default_xyz_precision) << "\n";
-  log_messages << "\tDefault E Precision          : " << std::setprecision(0) << static_cast<int>(default_e_precision) << "\n";
-  log_messages << "\tG90/G91 Influences Extruder  : " << (g90_g91_influences_extruder ? "True" : "False") << "\n";
-  log_messages << "\tLog Level                    : " << log_level_string << "\n";
-  log_messages << "\tHide Progress Updates        : " << (hide_progress ? "True" : "False");
-  p_logger->log(0, INFO, log_messages.str());
   arc_welder* p_arc_welder = NULL;
-
-  if (overwrite_source_file)
+  
+  if (progress_type == PROGRESS_TYPE_NONE)
   {
-    target_file_path = temp_file_path;
+    p_logger->log(0, log_levels::INFO, "Suppressing progress messages.");
+    args.callback = on_progress_suppress;
   }
-  if (!hide_progress)
-    p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, path_tolerance_percent, max_radius_mm, min_arc_segments, mm_per_arc_segment, g90_g91_influences_extruder, allow_3d_arcs, allow_dynamic_precision, default_xyz_precision, default_e_precision,  DEFAULT_GCODE_BUFFER_SIZE, on_progress);
-  else
-    p_arc_welder = new arc_welder(source_file_path, target_file_path, p_logger, resolution_mm, path_tolerance_percent, max_radius_mm, min_arc_segments, mm_per_arc_segment, g90_g91_influences_extruder, allow_3d_arcs, allow_dynamic_precision, default_xyz_precision, default_e_precision, DEFAULT_GCODE_BUFFER_SIZE, suppress_progress);
+  else if (progress_type == PROGRESS_TYPE_FULL)
+  {
+    p_logger->log(0, log_levels::INFO, "Displaying full progress messages.");
+    args.callback = on_progress_full;
+  }
+  else {
+    args.callback = on_progress_simple;  
+  }
+  // Log the arguments
+  std::stringstream log_messages;
+  log_messages << "Processing GCode.";
+  p_logger->log(0, log_levels::INFO, log_messages.str());
+  log_messages.clear();
+  log_messages.str("");
+  log_messages << args.str();
+  p_logger->log(0, log_levels::INFO, log_messages.str());
 
+  // Set the box encoding
+  args.box_encoding = args.box_encoding = utilities::box_drawing::ASCII;
+
+  p_arc_welder = new arc_welder(args);
+  
   arc_welder_results results = p_arc_welder->process();
   if (results.success)
   {
-    log_messages.clear();
-    log_messages.str("");
-    log_messages << "Target file at '" << target_file_path << "' created.";
-
-    if (overwrite_source_file)
+    if (args.allow_travel_arcs)
     {
       log_messages.clear();
       log_messages.str("");
-      log_messages << "Deleting the original source file at '" << source_file_path << "'.";
-      p_logger->log(0, INFO, log_messages.str());
-      log_messages.clear();
-      log_messages.str("");
-      std::remove(source_file_path.c_str());
-      log_messages << "Renaming temporary file at '" << target_file_path << "' to '" << source_file_path <<"'.";
-      p_logger->log(0, INFO, log_messages.str());
-      std::rename(target_file_path.c_str(), source_file_path.c_str());
+      if (results.progress.travel_statistics.total_count_source == results.progress.travel_statistics.total_count_target)
+      {
+        log_messages << "Target File Travel Statistics: No travel arcs converted." ;
+      }
+      else
+      {
+        log_messages << "\n" << results.progress.travel_statistics.str("Target File Travel Statistics", utilities::box_drawing::ASCII);
+      }
+      
+      p_logger->log(0, log_levels::INFO, log_messages.str());
     }
+
     log_messages.clear();
     log_messages.str("");
-    log_messages << std::endl << results.progress.segment_statistics.str();
+    // Extrusion Statistics
+    source_target_segment_statistics combined_stats = source_target_segment_statistics::add(results.progress.segment_statistics, results.progress.segment_retraction_statistics);
+    log_messages << "\n" << combined_stats.str("Target File Extrusion Statistics", utilities::box_drawing::ASCII);
     p_logger->log(0, INFO, log_messages.str() );
+  
+    
     
     log_messages.clear();
     log_messages.str("");
     log_messages << "Arc Welder process completed successfully.";
-    p_logger->log(0, INFO, log_messages.str());
+    p_logger->log(0, log_levels::INFO, log_messages.str());
   }
   else
   {
     log_messages.clear();
     log_messages.str("");
     log_messages << "File processing failed.";
-    p_logger->log(0, INFO, log_messages.str());
+    p_logger->log(0, log_levels::INFO, log_messages.str());
   }
 
   delete p_arc_welder;
   return 0;
 }
 
-bool on_progress(arc_welder_progress progress, logger* p_logger, int logger_type)
+bool on_progress_full(arc_welder_progress progress, logger* p_logger, int logger_type)
 {
   std::cout << "Progress: "<< progress.str() << std::endl;
   std::cout.flush();
   return true;
 }
-bool suppress_progress(arc_welder_progress progress, logger* p_logger, int logger_type)
+
+bool on_progress_simple(arc_welder_progress progress, logger* p_logger, int logger_type)
+{
+  std::cout << "Progress: " << progress.simple_progress_str() << std::endl;
+  std::cout.flush();
+  return true;
+}
+
+bool on_progress_suppress(arc_welder_progress progress, logger* p_logger, int logger_type)
 {
   return true;
 }

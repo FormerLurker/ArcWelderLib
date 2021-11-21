@@ -18,7 +18,31 @@
     <ClInclude Include="ArcWelderInverseProcessor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inverse_processor.h">
+    <ClInclude Include="firmware_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="repetier.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="arc_interpolation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="firmware.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="arc_interpolation_structs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="prusa.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="marlin_1.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="marlin_2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="smoothieware.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -26,7 +50,25 @@
     <ClCompile Include="ArcWelderInverseProcessor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="inverse_processor.cpp">
+    <ClCompile Include="repetier.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="arc_interpolation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="firmware.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="prusa.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="marlin_1.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="marlin_2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="smoothieware.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

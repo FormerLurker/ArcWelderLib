@@ -1,7 +1,5 @@
 set(GcodeProcessorLibSources ${GcodeProcessorLibSources}
-    array_list.cpp
     array_list.h
-    circular_buffer.cpp
     circular_buffer.h
     extruder.cpp
     extruder.h
