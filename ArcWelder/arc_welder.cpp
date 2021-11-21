@@ -6,7 +6,7 @@
 //
 // Uses the 'Gcode Processor Library' for gcode parsing, position processing, logging, and other various functionality.
 //
-// Copyright(C) 2020 - Brad Hochgesang
+// Copyright(C) 2021 - Brad Hochgesang
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // This program is free software : you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -955,7 +955,7 @@ void arc_welder::add_arcwelder_comment_to_target()
   std::stringstream stream;
   stream << std::fixed;
   stream << "; Postprocessed by [ArcWelder](https://github.com/FormerLurker/ArcWelderLib)\n";
-  stream << "; Copyright(C) 2020 - Brad Hochgesang\n";
+  stream << "; Copyright(C) 2021 - Brad Hochgesang\n";
   stream << "; Version: " << GIT_TAGGED_VERSION << ", Branch: " << GIT_BRANCH << ", BuildDate: " << BUILD_DATE << "\n";
   stream << "; resolution=" << std::setprecision(2) << resolution_mm_ << "mm\n";
   stream << "; path_tolerance=" << std::setprecision(1) << (current_arc_.get_path_tolerance_percent() * 100.0) << "%\n";

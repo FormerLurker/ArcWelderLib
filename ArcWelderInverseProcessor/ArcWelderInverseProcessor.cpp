@@ -1,12 +1,20 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Arc Welder: Inverse Processor Console Application
+// Arc Welder: Inverse Processor (firmware simulator).  
+// Please see the copyright notices in the function definitions
 //
 // Converts G2/G3(arc) commands back to G0/G1 commands.  Intended to test firmware changes to improve arc support.
 // This reduces file size and the number of gcodes per second.
-//
+// 
+// Based on arc interpolation implementations from:
+//    Marlin 1.x (see https://github.com/MarlinFirmware/Marlin/blob/1.0.x/LICENSE for the current license)
+//    Marlin 2.x (see https://github.com/MarlinFirmware/Marlin/blob/2.0.x/LICENSE for the current license)
+//    Prusa-Firmware (see https://github.com/prusa3d/Prusa-Firmware/blob/MK3/LICENSE for the current license)
+//    Smoothieware (see https://github.com/Smoothieware/Smoothieware for the current license)
+//    Repetier (see https://github.com/repetier/Repetier-Firmware for the current license)
+// 
 // Built using the 'Arc Welder: Anti Stutter' library
 //
-// Copyright(C) 2020 - Brad Hochgesang
+// Copyright(C) 2021 - Brad Hochgesang
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // This program is free software : you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -22,6 +30,7 @@
 // You can contact the author at the following email address: 
 // FormerLurker@pm.me
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 #if _MSC_VER > 1200
 #define _CRT_SECURE_NO_DEPRECATE
 #endif
