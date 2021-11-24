@@ -47,7 +47,8 @@
 #define DEFAULT_MIN_MM_PER_ARC_SEGMENT 0 /* OPTIONAL - the enforced minimum length of an interpolated segment.  Must be smaller than
   MM_PER_ARC_SEGMENT.  Only has an effect if MIN_ARC_SEGMENTS > 0 or ARC_SEGMENTS_PER_SEC > 0 */
   // If both MIN_ARC_SEGMENTS and ARC_SEGMENTS_PER_SEC is defined, the minimum calculated segment length is used.
-#define DEFAULT_MIN_ARC_SEGMENTS 0 // OPTIONAL - The enforced minimum segments in a full circle of the same radius.
+#define DEFAULT_MIN_ARC_SEGMENTS 24 // OPTIONAL - The enforced minimum segments in a full circle of the same radius.
+#define DEFAULT_MIN_CIRCLE_SEGMENTS 72 // OPTIONAL - The enforced minimum segments in a full circle of the same radius.
 #define DEFAULT_ARC_SEGMENTS_PER_SEC 0 // OPTIONAL - Use feedrate to choose segment length.
 // approximation will not be used for the first segment.  Subsequent segments will be corrected following DEFAULT_N_ARC_CORRECTION.
 #define DEFAULT_N_ARC_CORRECTIONS 24

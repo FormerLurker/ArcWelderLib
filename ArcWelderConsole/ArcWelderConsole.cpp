@@ -74,6 +74,12 @@ int main(int argc, char* argv[])
     // <TARGET>
     TCLAP::UnlabeledValueArg<std::string> target_arg("target", "The target gcode file containing the converted code.  If this is not supplied, the source path will be used and the source file will be overwritten.", false, "", "path to target gcode file");
 
+    // -g --g90-influences-extruder
+    arg_description_stream.clear();
+    arg_description_stream.str("");
+    arg_description_stream << "If supplied, G90/G91 influences the extruder axis.  Default Value: " << DEFAULT_G90_G91_INFLUENCES_EXTRUDER;
+    TCLAP::SwitchArg g90_arg("g", "g90-influences-extruder", arg_description_stream.str(), DEFAULT_G90_G91_INFLUENCES_EXTRUDER);
+
     // -r --resolution-mm
     arg_description_stream << "The resolution in mm of the of the output.  Determines the maximum tool path deviation allowed during conversion. Default Value: " << DEFAULT_RESOLUTION_MM;
     TCLAP::ValueArg<double> resolution_arg("r", "resolution-mm", arg_description_stream.str(), false, DEFAULT_RESOLUTION_MM, "float");
@@ -90,24 +96,6 @@ int main(int argc, char* argv[])
     arg_description_stream.str("");
     arg_description_stream << "The maximum radius of any arc in mm. Default Value: " << DEFAULT_MAX_RADIUS_MM;
     TCLAP::ValueArg<double> max_radius_arg("m", "max-radius-mm", arg_description_stream.str(), false, DEFAULT_MAX_RADIUS_MM, "float");
-
-    // -s --mm-per-arc-segment
-    arg_description_stream.clear();
-    arg_description_stream.str("");
-    arg_description_stream << "The mm per arc segment as defined in your firmware.   Used to compensate for firmware without min-arc-segments setting.  Requires that min-arc-segments be set.  Default Value: " << DEFAULT_MM_PER_ARC_SEGMENT;
-    TCLAP::ValueArg<double> mm_per_arc_segment_arg("s", "mm-per-arc-segment", arg_description_stream.str(), false, DEFAULT_MM_PER_ARC_SEGMENT, "float");
-
-    // -a --min-arc-segments
-    arg_description_stream.clear();
-    arg_description_stream.str("");
-    arg_description_stream << "The minimum number of segments in a full circle of the same radius as any given arc.  Can only be used if --mm-per-arc-segment is also set.  Used to compensate for firmware without min-arc-segments setting.  Default: " << DEFAULT_MIN_ARC_SEGMENTS;
-    TCLAP::ValueArg<int> min_arc_segments_arg("a", "min-arc-segments", arg_description_stream.str(), false, DEFAULT_MIN_ARC_SEGMENTS, "int");
-
-    // -g --g90-influences-extruder
-    arg_description_stream.clear();
-    arg_description_stream.str("");
-    arg_description_stream << "If supplied, G90/G91 influences the extruder axis.  Default Value: " << DEFAULT_G90_G91_INFLUENCES_EXTRUDER;
-    TCLAP::SwitchArg g90_arg("g", "g90-influences-extruder", arg_description_stream.str(), DEFAULT_G90_G91_INFLUENCES_EXTRUDER);
 
     // -z --allow-3d-arcs
     arg_description_stream.clear();
@@ -138,6 +126,18 @@ int main(int argc, char* argv[])
     arg_description_stream.str("");
     arg_description_stream << "The default precision of E output gcode parameters.  The precision may be larger than this value if allow-dynamic-precision is set to true.  Default Value: " << DEFAULT_E_PRECISION;
     TCLAP::ValueArg<unsigned int> default_e_precision_arg("e", "default-e-precision", arg_description_stream.str(), false, DEFAULT_E_PRECISION, "unsigned int");
+
+    // -s --mm-per-arc-segment
+    arg_description_stream.clear();
+    arg_description_stream.str("");
+    arg_description_stream << "The mm per arc segment as defined in your firmware.   Used to compensate for firmware without min-arc-segments setting.  Requires that min-arc-segments be set.  Default Value: " << DEFAULT_MM_PER_ARC_SEGMENT;
+    TCLAP::ValueArg<double> mm_per_arc_segment_arg("s", "mm-per-arc-segment", arg_description_stream.str(), false, DEFAULT_MM_PER_ARC_SEGMENT, "float");
+
+    // -a --min-arc-segments
+    arg_description_stream.clear();
+    arg_description_stream.str("");
+    arg_description_stream << "The minimum number of segments in a full circle of the same radius as any given arc.  Can only be used if --mm-per-arc-segment is also set.  Used to compensate for firmware without min-arc-segments setting.  Default: " << DEFAULT_MIN_ARC_SEGMENTS;
+    TCLAP::ValueArg<int> min_arc_segments_arg("a", "min-arc-segments", arg_description_stream.str(), false, DEFAULT_MIN_ARC_SEGMENTS, "int");
 
     // -v --extrusion-rate-variance
     arg_description_stream.clear();

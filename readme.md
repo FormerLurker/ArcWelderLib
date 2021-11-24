@@ -130,6 +130,15 @@ This option allows G2/G3 commands to be generated when using vase mode.  This is
 * Long Parameter: --allow-3d-arcs
 * Example: ```ArcWelder --allow-3d-arcs```
 
+### Allow Travel Arcs
+This option allows G2/G3 commands to be generated when for travel moves.  In general, most travel moves will not be converted for the average 3D print.  However, for plotters or CNC, or certain slicers that perform wipe actions while retracting, this feature can be useful.  This is an experimental option.
+
+* Type: Flag
+* Default: False
+* Short Parameter: -y
+* Long Parameter: --allow-travel-arcs
+* Example: ```ArcWelder --allow-travel-arcs```
+
 ### Allow Dynamic Precision
 Not all gcode has the same precision for X, Y, and Z parameters.  Enabling this option will cause the precision to grow as ArcWelder encounters gcodes with higher precision.  This may increase gcode size somewhat, depending on the precision of the gcode commands in your file.
 
@@ -182,6 +191,7 @@ This is the default length of a segment in your firmware.  This setting MUST mat
 * Short Parameter: -s=<decimal_value>
 * Long Parameter: --mm-per-arc-segment=<decimal_value>
 * Example: ```ArcWelder --mm-per-arc-segment=1.0```
+
 #### Minimum Arc Segments
 This specifies the minimum number of segments that a circle of the same radius must have and is the parameter that determines how much compensation will be applied.  This setting was inspired by the Marlin 2.0 arc interpolation algorithm and attempts to follow it as closely as possible.  The higher the value, the more compensation will be applied, and the less compression you will get.  A minimum of 14 is recommended.  Values above 24 are NOT recommended.  In general, this should be set as low as possible.
 
@@ -200,6 +210,37 @@ ArcWelder --mm-per-arc-segment=1.0 --min-arc-segments=14
 ```
 
 This should produce much more rounded small arcs.  However, in some cases you will want more detail (again, at the cost of compression, which reduces the effectiveness of ArcWelder), increase --min-arc-segments up to around 24.  I don't recommend going higher than this since you will start to get lots of uncompressed gcode in areas that need it.
+
+#### Extrusion Rate Variance
+This feature allows ArcWelder to abort an arc if the extrusion rate changes by more than the value set here.  Note that a setting of 0.050 = 5.0%.  This option especially useful for prints using Cura's Arachne engine, but is also useful for regular prints.  Set this value to 0 to disable this feature.
+
+* Type: Value
+* Default: 0.05 (5.0%)
+* Short Parameter: -v=<decimal_value> (0.05 = 5.0%, 0 to disable)
+* Long Parameter: --extrusion-rate-variance-percent=<decimal_value>
+* Example: ```ArcWelder --extrusion-rate-variance-percent=0.025```
+
+#### Maximum Gcode Length
+Some firmware has a problem with long gcode commands, and G2/G3 commands are some of the longest.  You can specify a maximum gcode length to prevent long commands from being generated, which will reduce compression by a tiny amount.
+
+* Type: Value
+* Default: 0 (no limit)
+* Short Parameter: -c=<integer_value>
+* Long Parameter: --max-gcode-length=<integer_value>
+* Example: ```ArcWelder --max-gcode-length=50```
+
+### Progress Type
+This setting allows you to control the type of progress messages the ArcWelder console application will display.  There are three options:
+
+* SIMPLE - This is the default setting.  Here is a sample simple progress message:  ```Progress:  21.9% complete - Estimated 35 of 45 seconds remaing.```
+* FULL - This will show a much more detailed message, which is useful for any applications that which to scrape the detailed progress messages.  Here is a sample full progress message:  ```Progress:  percent_complete:100.00, seconds_elapsed:0.01, seconds_remaining:0.00, gcodes_processed: 4320, current_file_line: 4320, points_compressed: 2092, arcs_created: 81, arcs_aborted_by_flowrate: 59, num_firmware_compensations: 0, num_gcode_length_exceptions: 0, compression_ratio: 2.27, size_reduction: 55.96%```
+* NONE - No progress messages will be shown.
+
+* Type: Flag
+* Default: SIMPLE
+* Short Parameter: -P
+* Long Parameter: --progress-type
+* Example: ```ArcWelder --progress-type=FULL```
 
 ## Slicer Integrations
 
@@ -285,11 +326,124 @@ See the [G90 Influences Extruder](#g90-influences-extruder) section for more inf
 # Arc Straightener
 This is the opposite of ArcWelder.  It will find any G2/G3 commands and replace them with G1 commands.  This is useful for testing firmware settings and generally seeing what the firmware is doing with your arc commands.
 
-The arc interpolation algorithm used here is a port of the Marlin 2.x interpolation code.  This makes it especially easy to work with.  
+The latest version includes several implementations of the arc interpolation algorithms from several different firmware types and versions.  This tool can be extremely useful for tracking down firmware issues when running G2/G3 commands.
 
-I will add better documentation for this soon, but since it is a development tool, you'll probably be able to figure it out by using the --help argument like so:
+You can get a full list of parameters using the --help argument like so:
 
 ```
 ArcStraightener --help
 ```
 
+#### Firmware Type
+Currently there are 5 different firmware types available:  MARLIN_1, MARLIN_2, REPETIER, PRUSA, SMOOTHIEWARE
+
+* Type: Value
+* Default: MARLIN_2
+* Short Parameter: -f=<string>
+* Long Parameter: --firmware-type=<string>
+* Example: ```--firmware-type==PRUSA```
+
+#### Firmware Version
+Use this argument to specify the firmware version.  Not all versions are supported.  To see a list of available versions for each firmware type, use the --help argument.  Note that the LATEST_RELEASE parameter does not always point to the most recent version, but rather the most recent stable release.  Also, the PRUSA firmware version V3_11_0 is not yet released, but was added assuming new arc interpolation parameters from the roadmap will be included.
+
+* Type: Value
+* Default: LATEST_RELEASE
+* Short Parameter: -V=<string>
+* Long Parameter: --firmware_version=<string>
+* Example: ```--firmware_version==V1_1_9_1```
+
+#### Print Firmware Defaults and Supported Settings
+Prints all avaliable settings and defaults for the provided firmware type and version.  When using this parameter, all other valid parameters will be ignored.
+
+Note:  Supply the --firmware_type and --firmware_version to see the defaults and supported settings.
+
+* Type: Flag
+* Short Parameter: -p
+* Long Parameter: --print-firmware-defaults
+* Example: ```ArcStraightener --print-firmware-defaults --firmware_type=PRUSA --firmware_version==V1_1_9_1```
+
+## Firmware Specific Settings
+The different firmware types and versions all support different arc interpolation settings.  See the Print Firmware Defaults section for info on how to discover what paramaters a specific firmware version supports, as well as the defaults.
+
+#### G90/G91 Influences Extruder
+Sets the firmware's G90/G91 influences extruder axis behavior.  By default this is determined by the firmware's behavior.
+
+* Type: Value
+* Default: Set By Firmware Type and Version
+* Short Parameter: -g=<TRUE,FALSE>
+* Long Parameter: --g90-influences-extruder=<string>
+* Example: ```ArcStraightener <SOURCE> --firmware_type=PRUSA --firmware_version==V1_1_9_1 --g90-influences-extruder=TRUE```
+
+Note, in the example above, the default behavior of the prusa firmware is overridden by the argument.
+
+#### MM Per Arc Segment
+This is the default segment length for arc interpolation.  Depending on the implementation, arcs could be longer or shorter than this value.
+
+* Type: Value (millimeters)
+* Default: 1.0
+* Short Parameter: -m=<decimal_value>
+* Long Parameter: --mm-per-arc-segment=<decimal_value>
+* Example: ```ArcStraightener <SOURCE> --mm-per-arc-segment=0.5```
+
+#### Max Arc Segment MM
+This is the maximum length an arc segment can be.
+
+* Type: Value (millimeters)
+* Default: 1.0
+* Short Parameter: -d=<decimal_value>
+* Long Parameter: --max-arc-segment-mm=<decimal_value>
+* Example: ```ArcStraightener <SOURCE> --max-arc-segment-mm=0.5```
+
+#### Min Arc Segment MM
+This is the Minimum length an arc segment can be.
+
+* Type: Value (millimeters)
+* Default: 1.0
+* Short Parameter: -n=<decimal_value>
+* Long Parameter: --min-mm-per-arc-segment=<decimal_value>
+* Example: ```ArcStraightener <SOURCE> --min-mm-per-arc-segment=0.5```
+
+#### Min Arc Segments
+The minimum number of segments within a circle of the same radius as the arc.  Can be used to increase detail on small arcs.
+
+* Type: Integer Value
+* Default: 24
+* Short Parameter: -r=<integer_value>
+* Long Parameter: --min-arc-segments=<integer_value>
+* Example: ```ArcStraightener <SOURCE> --min-arc-segments=24```
+
+#### Min Circle Segments
+This is a the same as the Min Arc Segments setting used in some firmware versions. Can be used to increase detail on small arcs.
+
+* Type: Integer Value
+* Default: 72
+* Short Parameter: -a=<integer_value>
+* Long Parameter: --min-circle-segments=<integer_value>
+* Example: ```ArcStraightener <SOURCE> --min-circle-segments=24```
+
+#### N Arc Correction
+The number of segments that will be interpolated using a small angle approximation before true sin/cos corrections are applied.  A value less than or equal to 1 will disable this feature.  Note that enabling this can cause visible interpolation errors, especially on arcs with a very large radius.  Disabling this setting could cause performance issues on slower hardware.
+
+* Type: Integer Value
+* Default: 24
+* Short Parameter: -c=<integer_value>
+* Long Parameter: --n-arc-correction=<integer_value>
+* Example: ```ArcStraightener <SOURCE> --n-arc-correction=8```
+
+#### Arc Segments Per Second
+The number of segments per second.  This will produce a constant number of arcs, clamped between mm-per-arc-segment and min-mm-per-arc-segment.  Can be used to prevent stuttering when printing very quickly.  A value less than or equal to 0 will disable this feature.
+
+* Type: Integer Value
+* Default: 0 (Disabled)
+* Short Parameter: -s=<integer_value>
+* Long Parameter: --arc-segments-per-second=<integer_value>
+* Example: ```ArcStraightener <SOURCE> --arc-segments-per-second=24```
+
+#### MM Max Arc Error
+I'm not 100% sure exactly what this does, but I believe it attempts to limit the drift in the arc path to this value in MM.  When I know more I will update this description.  This currently is only used in Smoothieware.  Set to 0 to disable.
+
+* Type: Value (millimeters)
+* Default: 0.01
+* Short Parameter: -e=<decimal_value>
+* Long Parameter: --mm-max-arc-error=<decimal_value>
+* Example: ```ArcStraightener <SOURCE> --mm-max-arc-error=0.25```

@@ -563,7 +563,7 @@ typedef bool(*progress_callback)(arc_welder_progress, logger* p_logger, int logg
 #define DEFAULT_GCODE_BUFFER_SIZE 10
 #define DEFAULT_G90_G91_INFLUENCES_EXTRUDER false
 #define DEFAULT_ALLOW_DYNAMIC_PRECISION false
-#define DEFAULT_ALLOW_TRAVEL_ARCS true
+#define DEFAULT_ALLOW_TRAVEL_ARCS false
 #define DEFAULT_EXTRUSION_RATE_VARIANCE_PERCENT 0.05
 #define DEFAULT_NOTIFICATION_PERIOD_SECONDS 0.5
 

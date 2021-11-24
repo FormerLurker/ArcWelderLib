@@ -16,6 +16,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="COPYING" />
+    <None Include="tclap\AUTHORS" />
+    <None Include="tclap\COPYING" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />

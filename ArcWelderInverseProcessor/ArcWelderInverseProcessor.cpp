@@ -87,8 +87,9 @@ int run_arc_straightener(int argc, char* argv[])
   try {
     // Define the command line object
     TCLAP::CmdLine cmd(info, '=', GIT_TAGGED_VERSION);
+    // Define a special command line object for various help requests
+    TCLAP::CmdLine help_cmd(info, '=', GIT_TAGGED_VERSION, false);
 
-    // Define Arguments
 
     // <SOURCE>
     TCLAP::UnlabeledValueArg<std::string> source_arg("source", "The source gcode file to convert.", true, "", "path to source gcode file");
@@ -120,6 +121,12 @@ int run_arc_straightener(int argc, char* argv[])
     arg_description_stream << "\tDefault Value: " << DEFAULT_FIRMWARE_VERSION_NAME;
     TCLAP::ValueArg<std::string> firmware_version_arg("v", "firmware-version", arg_description_stream.str(), false, DEFAULT_FIRMWARE_VERSION_NAME, "string");
 
+    // -p --print-firmware-defaults
+    arg_description_stream.clear();
+    arg_description_stream.str("");
+    arg_description_stream << "Prints all available settings and defaults for the provided firmware type and version.  If provided, all other parameters will be ignored except for " << firmware_type_arg.getName() << " and " << firmware_version_arg.getName() << ".";
+    TCLAP::SwitchArg print_firmware_defaults_arg("p", "print-firmware-defaults", arg_description_stream.str());
+
     // -g --g90-influences-extruder
     std::string g90_g91_influences_extruder_default_value = "DEFAULT";
     std::vector<std::string> g90_g91_influences_extruder_vector;
@@ -139,7 +146,7 @@ int run_arc_straightener(int argc, char* argv[])
     TCLAP::ValueArg<double> mm_per_arc_segment_arg("m", "mm-per-arc-segment", arg_description_stream.str(), false, DEFAULT_MM_PER_ARC_SEGMENT, "float");
     
     // max_arc_segment_mm_arg
-    // -d --mm-per-arc-segment
+    // -d --max-arc-segment-mm
     arg_description_stream.clear();
     arg_description_stream.str("");
     arg_description_stream << "The maximum length of an arc segment. Default Value: " << DEFAULT_MM_PER_ARC_SEGMENT;
@@ -169,7 +176,7 @@ int run_arc_straightener(int argc, char* argv[])
     arg_description_stream.clear();
     arg_description_stream.str("");
     arg_description_stream << "The minimum number of segments within a circle of the same radius as the arc.  Can be used to increase detail on small arcs.  The smallest segment generated will be no larger than min_mm_per_arc_segment.  A value less than or equal to 0 will disable this feature.  Default Value: " << DEFAULT_MIN_ARC_SEGMENTS;
-    TCLAP::ValueArg<int> min_circle_segments_arg("a", "min-circle-segments", arg_description_stream.str(), false, DEFAULT_MIN_ARC_SEGMENTS, "int");
+    TCLAP::ValueArg<int> min_circle_segments_arg("a", "min-circle-segments", arg_description_stream.str(), false, DEFAULT_MIN_CIRCLE_SEGMENTS, "int");
 
     // -c --n-arc-correction
     arg_description_stream.clear();
@@ -188,12 +195,6 @@ int run_arc_straightener(int argc, char* argv[])
     arg_description_stream.str("");
     arg_description_stream << "This currently is only used in Smoothieware.   The maximum error for line segments that divide arcs.  Set to 0 to disable.  Default Value: " << DEFAULT_MM_MAX_ARC_ERROR;
     TCLAP::ValueArg<double> mm_max_arc_error_arg("e", "mm-max-arc-error", arg_description_stream.str(), false, DEFAULT_MM_MAX_ARC_ERROR, "float");
-
-    // -p --print-firmware-defaults
-    arg_description_stream.clear();
-    arg_description_stream.str("");
-    arg_description_stream << "Prints all available settings and defaults for the provided firmware type and version.  All other parameters will be ignored.";
-    TCLAP::SwitchArg print_firmware_defaults_arg("p", "print-firmware-defaults", arg_description_stream.str());
 
     // -l --log-level
     std::vector<std::string> log_levels_vector;
@@ -228,55 +229,49 @@ int run_arc_straightener(int argc, char* argv[])
     cmd.add(max_arc_segment_mm_arg);
     cmd.add(print_firmware_defaults_arg);
 
-    // Parse the argv array.
+    // First, we need to see if the user wants to print firmware defaults
+    help_cmd.add(firmware_type_arg);
+    help_cmd.add(firmware_version_arg);
+    help_cmd.add(print_firmware_defaults_arg);
+    help_cmd.setExceptionHandling(false);
+    // parse the help requests
+    try {
+        help_cmd.parse(argc, argv);
+
+        if (print_firmware_defaults_arg.isSet())
+        {
+            std::string firmware_type_string = firmware_type_arg.getValue();
+            std::string firmware_version_string = firmware_version_arg.getValue();
+            print_firmware_defaults(firmware_type_string, firmware_version_string, firmware_version_arg.getName());
+            return 0;
+        }
+    }
+    catch (TCLAP::ArgException& exc)
+    {
+        if (exc.argId() == "Argument: " + firmware_type_arg.toString()
+            || exc.argId() == "Argument: " + firmware_version_arg.toString())
+        {
+           // This will raise an exit exception
+           cmd.getOutput()->failure(cmd, exc);
+        }
+    }
+
+    // End print firmware defaults
+
+    // Parse the argv array after resetting any used parameters.
+    firmware_type_arg.reset();
+    firmware_version_arg.reset();
     cmd.parse(argc, argv);
 
     // Ok!  Now let's see what firmware and version were selected, then we can start adding parameters
     // First, Set the firmware type
     std::string firmware_type_string = firmware_type_arg.getValue();
-    for (int i = 0; i < NUM_FIRMWARE_TYPES; i++)
-    {
-      if (firmware_type_names[i] == firmware_type_string)
-      {
-        args.firmware_args.firmware_type = static_cast<firmware_types>(i);
-      }
-    }
+    firmware_types firmware_type = static_cast<firmware_types>(get_firmware_type_from_string(firmware_type_string));
+    
     // Now set the version
     // Set the firmware version, and check to make sure that the version supplied is supported.
     std::string firmware_version_string = firmware_version_arg.getValue();
-    switch (args.firmware_args.firmware_type)
-    {
-    case firmware_types::MARLIN_1:
-      if (!marlin_1_firmware.is_valid_version(firmware_version_string))
-      {
-        throw new TCLAP::ArgException("Unknown Version Exception", firmware_version_arg.getName(), "'" + firmware_version_string + "' is not a valid version for " + firmware_type_string + " firmware type.");
-      }
-      break;
-    case firmware_types::MARLIN_2:
-      if (!marlin_2_firmware.is_valid_version(firmware_version_string))
-      {
-        throw new TCLAP::ArgException("Unknown Version Exception", firmware_version_arg.getName(), "'" + firmware_version_string + "' is not a valid version for " + firmware_type_string + " firmware type.");
-      }
-      break;
-    case firmware_types::REPETIER:
-      if (!repetier_firmware.is_valid_version(firmware_version_string))
-      {
-        throw new TCLAP::ArgException("Unknown Version Exception", firmware_version_arg.getName(), "'" + firmware_version_string + "' is not a valid version for " + firmware_type_string + " firmware type.");
-      }
-      break;
-    case firmware_types::PRUSA:
-      if (!prusa_firmware.is_valid_version(firmware_version_string))
-      {
-        throw new TCLAP::ArgException("Unknown Version Exception", firmware_version_arg.getName(), "'" + firmware_version_string + "' is not a valid version for " + firmware_type_string + " firmware type.");
-      }
-      break;
-    case firmware_types::SMOOTHIEWARE:
-      if (!smoothieware_firmware.is_valid_version(firmware_version_string))
-      {
-        throw new TCLAP::ArgException("Unknown Version Exception", firmware_version_arg.getName(), "'" + firmware_version_string + "' is not a valid version for " + firmware_type_string + " firmware type.");
-      }
-      break;
-    }
+    is_firmware_version_valid_for_type(firmware_type_string, firmware_version_string, firmware_version_arg.getName());
     args.firmware_args.version = firmware_version_string;
 
     // now that we have the firmware type and version, we can extract the default arguments and override any settings that are supplied
@@ -304,13 +299,16 @@ int run_arc_straightener(int argc, char* argv[])
       break;
     }
 
-    // see if the user want's to see the default settings
-    if (print_firmware_defaults_arg.getValue())
+    
+
+    // See if the source parameter is included
+    bool isSourceIncluded = source_arg.isSet();
+
+    // if the source parameter isn't set, we have to complain
+    if (!isSourceIncluded)
     {
-      std::cout << "Showing arguments and defaults for " << firmware_type_string << " ("<< firmware_version_string << ")\n";
-      std::cout << "Available argument for firmware: " << get_available_arguments_string(args.firmware_args.get_available_arguments()) << "\n";
-      std::cout << "Default " << args.firmware_args.get_argument_description();
-      return 0;
+        std::cout << "The <source> parameter is required.  Please specify a file to convert.";
+        return 0;
     }
     // Get the value parsed by each arg. 
     args.source_path = source_arg.getValue();
@@ -539,4 +537,108 @@ std::string get_available_arguments_string(std::vector<std::string> firmware_arg
     available_argument_string += "--" +utilities::replace(*it, "_", "-");
   }
   return available_argument_string;
+}
+
+int get_firmware_type_from_string(std::string firmware_type)
+{
+    for (int i = 0; i < NUM_FIRMWARE_TYPES; i++)
+    {
+        if (firmware_type_names[i] == firmware_type)
+        {
+            return i;
+        }
+    }
+    // We should never get here if we properly limited the argument values
+    return static_cast<firmware_types>(DEFAULT_FIRMWARE_TYPE);
+}
+
+bool is_firmware_version_valid_for_type(std::string firmware_type_string, std::string firmware_version, std::string firmware_version_arg_name)
+{
+    firmware_types firmware_type = static_cast<firmware_types>(get_firmware_type_from_string(firmware_type_string));
+    // Create an instance of all supported firmware types using the default args
+    arc_interpolation_args args;
+    marlin_1 marlin_1_firmware(args.firmware_args);
+    marlin_2 marlin_2_firmware(args.firmware_args);
+    repetier repetier_firmware(args.firmware_args);
+    prusa prusa_firmware(args.firmware_args);
+    smoothieware smoothieware_firmware(args.firmware_args);
+
+    switch (firmware_type)
+    {
+    case firmware_types::MARLIN_1:
+        if (!marlin_1_firmware.is_valid_version(firmware_version))
+        {
+            throw new TCLAP::ArgException("Unknown Version Exception", firmware_version_arg_name, "'" + firmware_version + "' is not a valid version for " + firmware_type_string + " firmware type.");
+        }
+        break;
+    case firmware_types::MARLIN_2:
+        if (!marlin_2_firmware.is_valid_version(firmware_version))
+        {
+            throw new TCLAP::ArgException("Unknown Version Exception", firmware_version_arg_name, "'" + firmware_version + "' is not a valid version for " + firmware_type_string + " firmware type.");
+        }
+        break;
+    case firmware_types::REPETIER:
+        if (!repetier_firmware.is_valid_version(firmware_version))
+        {
+            throw new TCLAP::ArgException("Unknown Version Exception", firmware_version_arg_name, "'" + firmware_version + "' is not a valid version for " + firmware_type_string + " firmware type.");
+        }
+        break;
+    case firmware_types::PRUSA:
+        if (!prusa_firmware.is_valid_version(firmware_version))
+        {
+            throw new TCLAP::ArgException("Unknown Version Exception", firmware_version_arg_name, "'" + firmware_version + "' is not a valid version for " + firmware_type_string + " firmware type.");
+        }
+        break;
+    case firmware_types::SMOOTHIEWARE:
+        if (!smoothieware_firmware.is_valid_version(firmware_version))
+        {
+            throw new TCLAP::ArgException("Unknown Version Exception", firmware_version_arg_name, "'" + firmware_version + "' is not a valid version for " + firmware_type_string + " firmware type.");
+        }
+        break;
+    }
+}
+
+void print_firmware_defaults(std::string firmware_type_string, std::string firmware_version_string, std::string firmware_version_arg_name)
+{
+    arc_interpolation_args args;
+    marlin_1 marlin_1_firmware(args.firmware_args);
+    marlin_2 marlin_2_firmware(args.firmware_args);
+    repetier repetier_firmware(args.firmware_args);
+    prusa prusa_firmware(args.firmware_args);
+    smoothieware smoothieware_firmware(args.firmware_args);
+
+    
+    firmware_types firmware_type = static_cast<firmware_types>(get_firmware_type_from_string(firmware_type_string));
+    args.firmware_args.firmware_type = firmware_type;
+    is_firmware_version_valid_for_type(firmware_type_string, firmware_version_string, firmware_version_arg_name);
+    args.firmware_args.version = firmware_version_string;
+
+    // now that we have the firmware type and version, we can extract the default arguments and override any settings that are supplied
+    switch (args.firmware_args.firmware_type)
+    {
+    case firmware_types::MARLIN_1:
+        marlin_1_firmware.set_arguments(args.firmware_args);
+        args.firmware_args = marlin_1_firmware.get_default_arguments_for_current_version();
+        break;
+    case firmware_types::MARLIN_2:
+        marlin_2_firmware.set_arguments(args.firmware_args);
+        args.firmware_args = marlin_2_firmware.get_default_arguments_for_current_version();
+        break;
+    case firmware_types::REPETIER:
+        repetier_firmware.set_arguments(args.firmware_args);
+        args.firmware_args = repetier_firmware.get_default_arguments_for_current_version();
+        break;
+    case firmware_types::PRUSA:
+        prusa_firmware.set_arguments(args.firmware_args);
+        args.firmware_args = prusa_firmware.get_default_arguments_for_current_version();
+        break;
+    case firmware_types::SMOOTHIEWARE:
+        smoothieware_firmware.set_arguments(args.firmware_args);
+        args.firmware_args = smoothieware_firmware.get_default_arguments_for_current_version();
+        break;
+    }
+
+    std::cout << "Showing arguments and defaults for " << firmware_type_string << " (" << firmware_version_string << ")\n";
+    std::cout << "Available argument for firmware: " << get_available_arguments_string(args.firmware_args.get_available_arguments()) << "\n";
+    std::cout << "Default " << args.firmware_args.get_argument_description();
 }
