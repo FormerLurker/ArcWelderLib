@@ -2,7 +2,7 @@
 
 Converts G0/G1 GCode commands to G2/G3 (arc) commands and back again.  This can greatly compress most GCode files and potentially improve quality by preventing planner starvation.  It is especially useful when streaming over a serial connection (OctoPrint, Pronterface, Slicer Direct Printing), but has some potential advantages in other cases too depending on your firmware and board.
 
-This software was designed for 3D printers but should also be useful in other cases.  Please note that the current version does not convert travel moves to G2/G3, but this will be remedied soon.
+This software was designed for 3D printers but should also be useful in other cases.
 
 # Installation
 
@@ -239,7 +239,7 @@ ArcWelder --mm-per-arc-segment=1.0 --min-arc-segments=14
 
 This should produce much more rounded small arcs.  However, in some cases you will want more detail (again, at the cost of compression, which reduces the effectiveness of ArcWelder), increase --min-arc-segments up to around 24.  I don't recommend going higher than this since you will start to get lots of uncompressed gcode in areas that need it.
 
-#### Extrusion Rate Variance
+### Extrusion Rate Variance
 This feature allows ArcWelder to abort an arc if the extrusion rate changes by more than the value set here.  Note that a setting of 0.050 = 5.0%.  This option especially useful for prints using Cura's Arachne engine, but is also useful for regular prints.  Set this value to 0 to disable this feature.
 
 * Type: Value
@@ -249,7 +249,7 @@ This feature allows ArcWelder to abort an arc if the extrusion rate changes by m
 * Long Parameter: --extrusion-rate-variance-percent=<decimal_value>
 * Example: ```ArcWelder "C:\thing.gcode" --extrusion-rate-variance-percent=0.025```
 
-#### Maximum Gcode Length
+### Maximum Gcode Length
 Some firmware has a problem with long gcode commands, and G2/G3 commands are some of the longest.  You can specify a maximum gcode length to prevent long commands from being generated, which will reduce compression by a tiny amount.
 
 Non-zero values less than 31 are not allowed.  
@@ -261,7 +261,7 @@ Non-zero values less than 31 are not allowed.
 * Long Parameter: --max-gcode-length=<integer_value>
 * Example: ```ArcWelder "C:\thing.gcode" --max-gcode-length=50```
 
-#### Progress Type
+### Progress Type
 This setting allows you to control the type of progress messages the ArcWelder console application will display.  There are three options:
 
 **SIMPLE** - This is the default setting.  Here is a sample simple progress message:  
@@ -280,7 +280,7 @@ This setting allows you to control the type of progress messages the ArcWelder c
 * Long Parameter: --progress-type=<SIMPLE|FULL|NONE>
 * Example: ```ArcWelder "C:\thing.gcode" --progress-type=FULL```
 
-#### Log Level
+### Log Level
 When set, ArcWelder will log to the console.  This can be used to track down issues, or to figure out exactly what ArcWelder is doing.
 
 **Important Note:** Setting the log level could cause a huge amount of data to be outputted to the console, and will cause ArcWelder to be slow.  I recommend you redirect the console output to speed things up if you use the DEBUG, VERBOSE or NOSET log levels.
@@ -373,16 +373,28 @@ c:\ArcWelder.exe --g90-influences-extruder "[output_filepath]"
 
 See the [G90 Influences Extruder](#g90-influences-extruder) section for more info.
 
-# Arc Straightener
+# ArcStraightener
 This is the opposite of ArcWelder.  It will find any G2/G3 commands and replace them with G1 commands.  This is useful for testing firmware settings and generally seeing what the firmware is doing with your arc commands.
 
 The latest version includes several implementations of the arc interpolation algorithms from several different firmware types and versions.  This tool can be extremely useful for tracking down firmware issues when running G2/G3 commands.
+
+## ArcStraightener Console Arguments
+
+ArcStraightener has settings that represent the arc interpolation settings for the firmwares that are implemented.  The parameters accepted vary by firmware type and version.  ArcStraightener will not accept any parameters that will not work with the selected firmware and version.  It can also provide a list of available settings and the defaults by firmware type and version.
+
+ArcStraightener also uses the [TCLAP Templatized C++ Command Line Parser](https://github.com/mirror/tclap) for implementing the arguments.
 
 You can get a full list of parameters using the --help argument like so:
 
 ```
 ArcStraightener --help
 ```
+
+This will also show you what firmware types and versions are available.
+
+### Non-Firmware Specific Settings
+
+The following arguments apply regardless of the firmware type and version selected.
 
 #### Firmware Type
 Currently there are 5 different firmware types available:  MARLIN_1, MARLIN_2, REPETIER, PRUSA, SMOOTHIEWARE
@@ -414,7 +426,7 @@ Note:  Supply the --firmware_type and --firmware_version to see the defaults and
 * Long Parameter: --print-firmware-defaults
 * Example: ```ArcStraightener --print-firmware-defaults --firmware_type=MARLIN_1 --firmware_version==1.1.9.1```
 
-## Firmware Specific Settings
+### Firmware Specific Settings
 The different firmware types and versions all support different arc interpolation settings.  See the Print Firmware Defaults section for info on how to discover what paramaters a specific firmware version supports, as well as the defaults.
 
 #### G90/G91 Influences Extruder
