@@ -2,7 +2,7 @@
 
 Converts G0/G1 GCode commands to G2/G3 (arc) commands and back again.  This can greatly compress most GCode files and potentially improve quality by preventing planner starvation.  It is especially useful when streaming over a serial connection (OctoPrint, Pronterface, Slicer Direct Printing), but has some potential advantages in other cases too depending on your firmware and board.
 
-This software was designed for 3D printers but should also be useful in other cases.  Please note that the current version does not convert travel moves to G2/G3, but this will be remedied soon.
+This software was designed for 3D printers but should also be useful in other cases.
 
 # Installation
 
@@ -211,7 +211,7 @@ ArcWelder --mm-per-arc-segment=1.0 --min-arc-segments=14
 
 This should produce much more rounded small arcs.  However, in some cases you will want more detail (again, at the cost of compression, which reduces the effectiveness of ArcWelder), increase --min-arc-segments up to around 24.  I don't recommend going higher than this since you will start to get lots of uncompressed gcode in areas that need it.
 
-#### Extrusion Rate Variance
+### Extrusion Rate Variance
 This feature allows ArcWelder to abort an arc if the extrusion rate changes by more than the value set here.  Note that a setting of 0.050 = 5.0%.  This option especially useful for prints using Cura's Arachne engine, but is also useful for regular prints.  Set this value to 0 to disable this feature.
 
 * Type: Value
@@ -220,8 +220,8 @@ This feature allows ArcWelder to abort an arc if the extrusion rate changes by m
 * Long Parameter: --extrusion-rate-variance-percent=<decimal_value>
 * Example: ```ArcWelder --extrusion-rate-variance-percent=0.025```
 
-#### Maximum Gcode Length
-Some firmware has a problem with long gcode commands, and G2/G3 commands are some of the longest.  You can specify a maximum gcode length to prevent long commands from being generated, which will reduce compression by a tiny amount.
+### Maximum Gcode Length
+Some firmware has a problem with long gcode commands, and G2/G3 commands are some of the longest.  You can specify a maximum gcode length to prevent long commands from being generated, which will reduce compression by a tiny amount. This value is defaults to 0 for unlimited length.
 
 * Type: Value
 * Default: 0 (no limit)
