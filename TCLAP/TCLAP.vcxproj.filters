@@ -98,5 +98,8 @@
     <ClInclude Include="tclap\ZshCompletionOutput.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="tclap\tclap_version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

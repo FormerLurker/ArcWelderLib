@@ -55,11 +55,11 @@ void marlin_2::apply_arguments()
   switch (marlin_2_version_)
   {
   case marlin_2::marlin_2_firmware_versions::V2_0_9_2:
-    used_arguments = {"min_arc_segment_mm", "max_arc_segment_mm", "min_circle_segments", "arc_segments_per_sec", "n_arc_correction", "g90_g91_influences_extruder" };
+    used_arguments = { FIRMWARE_ARGUMENT_MIN_ARC_SEGMENT_MM, FIRMWARE_ARGUMENT_MAX_ARC_SEGMENT_MM, FIRMWARE_ARGUMENT_MIN_CIRCLE_SEGMENTS, FIRMWARE_ARGUMENT_ARC_SEGMENTS_PER_SEC, FIRMWARE_ARGUMENT_N_ARC_CORRECTION, FIRMWARE_ARGUMENT_G90_G91_INFLUENCES_EXTRUDER };
     plan_arc_ = &marlin_2::plan_arc_2_0_9_2;
     break;
   default:
-    used_arguments = { "mm_per_arc_segment", "arc_segments_per_r", "min_arc_segments", "arc_segments_per_sec", "n_arc_correction", "g90_g91_influences_extruder" };
+    used_arguments = { FIRMWARE_ARGUMENT_MM_PER_ARC_SEGMENT, FIRMWARE_ARGUMENT_ARC_SEGMENT_PER_R, FIRMWARE_ARGUMENT_MIN_ARC_SEGMENTS, FIRMWARE_ARGUMENT_ARC_SEGMENTS_PER_SEC, FIRMWARE_ARGUMENT_N_ARC_CORRECTION, FIRMWARE_ARGUMENT_G90_G91_INFLUENCES_EXTRUDER };
     plan_arc_ = &marlin_2::plan_arc_2_0_9_1;
     break;
   }
@@ -78,15 +78,13 @@ firmware_arguments marlin_2::get_default_arguments_for_current_version() const
   {
   case marlin_2::marlin_2_firmware_versions::V2_0_9_2:
       // Active Settings
-      default_args.set_min_arc_segment_mm(0.1f);
-      default_args.set_max_arc_segment_mm(1.0f);
-      default_args.set_min_circle_segments(72);
+      default_args.min_arc_segment_mm = 0.1f;
+      default_args.max_arc_segment_mm = 1.0f;
+      default_args.min_circle_segments = 72;
       default_args.n_arc_correction = 25;
       // Inactive Settings
       default_args.arc_segments_per_r = 0;
       default_args.arc_segments_per_sec = 0;
-      // Settings that do not apply
-      default_args.mm_max_arc_error = 0;
     break;
     default:
       // Active Settings
@@ -95,10 +93,7 @@ firmware_arguments marlin_2::get_default_arguments_for_current_version() const
       default_args.n_arc_correction = 25;
       // Inactive Settings
       default_args.arc_segments_per_r = 0;
-      default_args.min_mm_per_arc_segment = 0;
       default_args.arc_segments_per_sec = 0;
-      // Settings that do not apply
-      default_args.mm_max_arc_error = 0;
       break;
   }
   return default_args;
@@ -340,7 +335,7 @@ void marlin_2::plan_arc_2_0_9_1(
 
 
 /// <summary>
-/// This function was adapted from the 2.0.9.1 release of Marlin firmware, which can be found at the following link:
+/// This function was adapted from the 2.0.9.2 release of Marlin firmware, which can be found at the following link:
 /// https://github.com/MarlinFirmware/Marlin/blob/b878127ea04cc72334eb35ce0dca39ccf7d73a68/Marlin/src/gcode/motion/G2_G3.cpp
 /// Copyright Notice found on that page:
 /// 
@@ -374,7 +369,7 @@ void marlin_2::plan_arc_2_0_9_2(
   const uint8_t circles     // Take the scenic route
 )
 {
-  int min_circle_segments = args_.get_min_circle_segments() > 0 ? args_.get_min_circle_segments() : 1;
+  int min_circle_segments = args_.min_circle_segments > 0 ? args_.min_circle_segments : 1;
   uint8_t p_axis = X_AXIS, q_axis = Y_AXIS, l_axis = Z_AXIS;
 
   // Radius vector from center to current location
@@ -436,16 +431,16 @@ void marlin_2::plan_arc_2_0_9_2(
   // Get the nominal segment length based on settings
   float nominal_segment_mm;
   if (args_.arc_segments_per_sec > 0) {
-    nominal_segment_mm = utilities::constrainf(scaled_fr_mm_s * utilities::reciprocalf((float)args_.arc_segments_per_sec), (float)args_.get_min_arc_segment_mm(), (float)args_.get_max_arc_segment_mm());
+    nominal_segment_mm = utilities::constrainf(scaled_fr_mm_s * utilities::reciprocalf((float)args_.arc_segments_per_sec), (float)args_.min_arc_segment_mm, (float)args_.max_arc_segment_mm);
   }
   else {
-    nominal_segment_mm = (float)args_.get_max_arc_segment_mm();
+    nominal_segment_mm = (float)args_.max_arc_segment_mm;
   }
   // Number of whole segments based on the nominal segment length
   const float nominal_segments = utilities::maxf(utilities::floorf(flat_mm / nominal_segment_mm), min_segments);
 
   // A new segment length based on the required minimum
-  const float segment_mm = utilities::constrainf(flat_mm / nominal_segments, (float)args_.get_min_arc_segment_mm(), (float)args_.get_max_arc_segment_mm());
+  const float segment_mm = utilities::constrainf(flat_mm / nominal_segments, (float)args_.min_arc_segment_mm, (float)args_.max_arc_segment_mm);
 
   // The number of whole segments in the arc, ignoring the remainder
   uint16_t segments = (uint16_t)utilities::floorf(flat_mm / segment_mm);

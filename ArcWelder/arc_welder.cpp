@@ -981,8 +981,11 @@ void arc_welder::add_arcwelder_comment_to_target()
   }
   stream << "; default_xyz_precision=" << std::setprecision(0) << static_cast<int>(current_arc_.get_xyz_precision()) << "\n";
   stream << "; default_e_precision=" << std::setprecision(0) << static_cast<int>(current_arc_.get_e_precision()) << "\n";
-  stream << "; extrusion_rate_variance_percent=" << std::setprecision(1) << (extrusion_rate_variance_percent_ * 100.0) << "%\n\n";
-
+  if (extrusion_rate_variance_percent_ > 0)
+  {
+      stream << "; extrusion_rate_variance=" << std::setprecision(1) << (extrusion_rate_variance_percent_ * 100.0) << "%\n";
+  }
+  stream << "\n";
 
   output_file_ << stream.str();
 }

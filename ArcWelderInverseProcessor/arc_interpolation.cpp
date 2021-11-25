@@ -152,6 +152,8 @@ void arc_interpolation::process()
   {
     if (output_file_.is_open())
     {
+      // Add the gcode file header
+        output_file_ << p_current_firmware_->get_gcode_header_comment()<<"\n";
       parsed_command cmd;
       // Communicate every second
       while (std::getline(gcode_file, line))
@@ -273,7 +275,7 @@ void arc_interpolation::process()
   std::cout << stream.str();
 }
 
-std::string arc_interpolation::get_firmware_argument_description() const
+std::string arc_interpolation::get_firmware_arguments_description(std::string separator, std::string argument_prefix, std::string replacement_string, std::string replacement_value) const
 {
-  return p_current_firmware_->get_argument_description();
+  return p_current_firmware_->get_arguments_description(separator, argument_prefix, replacement_string, replacement_value);
 }

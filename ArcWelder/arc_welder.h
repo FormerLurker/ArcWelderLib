@@ -44,6 +44,8 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
+#define ARC_WELDER_INFO_STRING "Arc Welder: Anti-Stutter\nConverts G0/G1 commands to G2/G3 (arc) commands. Reduces the number of gcodes per second sent to a 3D printer, which can reduce stuttering.";
+
 static const int segment_statistic_lengths_count = 12;
 const double segment_statistic_lengths[] = { 0.002f, 0.005f, 0.01f, 0.05f, 0.1f, 0.5f, 1.0f, 5.0f, 10.0f, 20.0f, 50.0f, 100.0f };
 
@@ -623,15 +625,31 @@ struct arc_welder_args
 			}
 			stream << "\tResolution                   : " << resolution_mm << "mm (+-" << std::setprecision(5) << resolution_mm / 2.0 << "mm)\n";
 			stream << "\tPath Tolerance               : " << std::setprecision(3) << path_tolerance_percent * 100.0 << "%\n";
-			stream << "\tMaximum Arc Radius           : " << std::setprecision(0) << max_radius_mm << "mm\n";
-			stream << "\tMin Arc Segments             : " << std::setprecision(0) << min_arc_segments << "\n";
-			stream << "\tMM Per Arc Segment           : " << std::setprecision(3) << mm_per_arc_segment << "\n";
+			stream << "\tMaximum Arc Radius           : " << std::setprecision(1) << max_radius_mm << "mm\n";
+			bool firmware_compensation_enabled = min_arc_segments > 0 && mm_per_arc_segment > 0.0;
+			stream << "\tFirmware Compensation        : " << (firmware_compensation_enabled ? "True" : "False") << "\n";
+			if (firmware_compensation_enabled)
+			{
+				stream << "\tMin Arc Segments             : " << std::setprecision(0) << min_arc_segments << "\n";
+				stream << "\tMM Per Arc Segment           : " << std::setprecision(3) << mm_per_arc_segment << "\n";
+			}
+			
 			stream << "\tAllow 3D Arcs                : " << (allow_3d_arcs ? "True" : "False") << "\n";
 			stream << "\tAllow Travel Arcs            : " << (allow_travel_arcs ? "True" : "False") << "\n";
 			stream << "\tAllow Dynamic Precision      : " << (allow_dynamic_precision ? "True" : "False") << "\n";
 			stream << "\tDefault XYZ Precision        : " << std::setprecision(0) << static_cast<int>(default_xyz_precision) << "\n";
 			stream << "\tDefault E Precision          : " << std::setprecision(0) << static_cast<int>(default_e_precision) << "\n";
-			stream << "\tExtrusion Rate Variance %    : " << std::setprecision(3) << extrusion_rate_variance_percent * 100.0 << "%\n";
+			stream << "\tExtrusion Rate Variance      : ";
+			if (extrusion_rate_variance_percent == 0)
+			{
+				stream << "Unlimited";
+			}
+			else
+			{
+				stream << extrusion_rate_variance_percent * 100.0 << "%";
+			}
+			stream << "\n";
+
 			stream << "\tG90/G91 Influences Extruder  : " << (g90_g91_influences_extruder ? "True" : "False") << "\n";
 			if (max_gcode_length == 0)
 			{

@@ -219,6 +219,7 @@
     <ClInclude Include="tclap\StandardTraits.h" />
     <ClInclude Include="tclap\StdOutput.h" />
     <ClInclude Include="tclap\SwitchArg.h" />
+    <ClInclude Include="tclap\tclap_version.h" />
     <ClInclude Include="tclap\UnlabeledMultiArg.h" />
     <ClInclude Include="tclap\UnlabeledValueArg.h" />
     <ClInclude Include="tclap\ValueArg.h" />

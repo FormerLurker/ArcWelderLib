@@ -50,13 +50,28 @@ That will replace thing.gcode with a welded version of the file.
 
 **Creating a new file**
 
-If you want your original file preserved, you can specify a target path like so:
+If you want your original file preserved, you can specify a target path.
+
+Windows example:
 
 ```
-C:\ArcWelder.exe C:\thing.gcode c:\thing.aw.gcode
+ArcWelder thing.gcode thing.aw.gcode
+```
+
+Linux/Raspbian example:
+```
+./ArcWelder thing.gcode thing.aw.gcode
 ```
 
 That would create a new file called thing.aw.gcode and would leave the thing.gcode file alone.
+
+You can also supply a path for the source and target gcode files:
+
+```
+ArcWelder c:\my_gcode\thing.gcode c:\my_gcode\arc_welded_files\thing.aw.gcode
+```
+
+Note:  You may need to enclose the paths in quotes, for example, if there are any spaces.
 
 ## ArcWelder Console Help
 
@@ -86,7 +101,7 @@ For some printers, sending a G90 or G91 command also changes the E axis mode.  T
 * Default: Disabled
 * Short Parameter: -g
 * Long Parameter: --g90-influences-extruder
-* Example: ```ArcWelder -g "C:\thing.gcode"```
+* Example: ```ArcWelder "C:\thing.gcode" -g```
 
 ### Resolution (Maximum Path Deviation)
 ArcWelder is able to compress line segments into gcode by taking advantage of the fact that a bunch of tiny line segments can, when viewed from a distance, approximate a curve.  However, a true curved path will never match up exactly with a bunch of straight lines, so ArcWelder needs a bit of play in order to create arc commands.  The *resolution argument* tells ArcWelder how much leeway it has with the original toolpath to make an arc.  Increasing this value will result in more compression, and reducing it will improve accuracy.  It is a trade-off, but one that most slicers implement anyway in order to prevent too many tiny movements from overwhelming your firmware.  In fact, ArcWelder can produce toolpaths that are more accurate than simply merging short segments together, making it less 'lossy' than slicer resolution settings.
@@ -97,9 +112,10 @@ Values above 0.1 are not recommended, as you may encounter overlapping toolpaths
 
 * Type: Value (millimeters)
 * Default: 0.05 (+- 0.025)
+* Restrictions: Only values greater than 0 are allowed.  
 * Short Parameter: -r=<decimal_value>
 * Long Parameter: --resolution-mm=<decimal_value>
-* Example: ```ArcWelder -r=0.1```
+* Example: ```ArcWelder "C:\thing.gcode" -r=0.1```
 
 ### Path Tolerance Percent (length)
 This parameter allows you control how much the length of the final arc can deviate from the original toolpath.  The default value of 5% is absolutely fine in most cases, even though that sounds like a lot.  The key thing to remember here is that your firmware will break the G2/G3 commands into many small segments, essentially reversing the process, so the path length in your firmware will match the original path much more closely.
@@ -108,18 +124,20 @@ Originally, this setting was added as a safety feature to prevent prevent bad ar
 
 * Type: Value (percent)
 * Default: 0.05 (5%)
+* Restrictions: Only values greater than 0 (0%) and less than 1.0 (100%) are allowed.
 * Short Parameter: -t=<decimal_value>
 * Long Parameter: --path-tolerance-percent=<decimal_value>
-* Example: ```ArcWelder --path-tolerance-percent=0.10```
+* Example: ```ArcWelder "C:\thing.gcode" --path-tolerance-percent=0.10```
 
 ### Maximum Arc Radius
 Allows you to control the maximum radius arc that will be generated with ArcWelder.  This was added as a safety feature to prevent giant arcs from being generated for essentially straight lines.  ArcWelder does have built-in detection to prevent colinear lines from being turned into arcs, but slight deviations due to the precision of the gcodes (usually fixed to 3 decimal places) can cause arcs to be generated where straight lines would do.  Typically no adjustments are necessary from the defaults, but you can adjust this value if you want.
 
-* Type: Value (percent)
-* Default: 1000000.0 (1000000.0 millimeters or 1 kilometer)
+* Type: Value (decimal, millimeters)
+* Default: 9999.0mm
+* Restrictions: Only values greater than 0.0 are allowed.
 * Short Parameter: -m=<decimal_value>
 * Long Parameter: --max-radius-mm=<decimal_value>
-* Example: ```ArcWelder --max-radius-mm=1000.0```
+* Example: ```ArcWelder "C:\thing.gcode" --max-radius-mm=1000.0```
 
 ### Allow 3D Arcs
 This option allows G2/G3 commands to be generated when using vase mode.  This is an experimental option, and it's possible that there are some unknown firmware issues when adding Z coordinates to arc commands.  That being said, I've gotten pretty good results from this option.  At some point, this will be enabled by default.
@@ -128,49 +146,57 @@ This option allows G2/G3 commands to be generated when using vase mode.  This is
 * Default: Disabled
 * Short Parameter: -z
 * Long Parameter: --allow-3d-arcs
-* Example: ```ArcWelder --allow-3d-arcs```
+* Example: ```ArcWelder "C:\thing.gcode" --allow-3d-arcs```
 
 ### Allow Travel Arcs
-This option allows G2/G3 commands to be generated when for travel moves.  In general, most travel moves will not be converted for the average 3D print.  However, for plotters or CNC, or certain slicers that perform wipe actions while retracting, this feature can be useful.  This is an experimental option.
+This option allows G2/G3 commands to be generated when for travel moves (moves without any extrusion).  In general, most travel moves will not be converted for the average 3D print.  However, for plotters or CNC, or certain slicers that perform wipe actions while retracting, this feature can be useful.  This is an experimental option.
+
+Note:  When using the allow-travel-arcs option, you will see separate statistics for the travel move conversion, or a message indicating that no travel moves were converted.
 
 * Type: Flag
 * Default: False
 * Short Parameter: -y
 * Long Parameter: --allow-travel-arcs
-* Example: ```ArcWelder --allow-travel-arcs```
+* Example: ```ArcWelder "C:\thing.gcode" --allow-travel-arcs```
 
 ### Allow Dynamic Precision
 Not all gcode has the same precision for X, Y, and Z parameters.  Enabling this option will cause the precision to grow as ArcWelder encounters gcodes with higher precision.  This may increase gcode size somewhat, depending on the precision of the gcode commands in your file.
 
-**Important Note**: This option used to be the default, but in some cases I've seen files with unusually high precision.  If it gets too high, the resulting gcode may overrun the gcode buffer size, causing prints to fail.  For that reason, this option has been disabled by default.  I've only seen a few cases where this happens, and it's always been due to custom start/end gcode with extremely high precision.
+**Important Note**: This option used to be the default, but in some cases I've seen files with unusually high precision.  If it gets too high, the resulting gcode may overrun the gcode buffer size, causing prints to fail.  For that reason, this option has been disabled by default.  I've only seen a few cases where this happens, and it's always been due to custom start/end gcode with extremely high precision.  See the Maximum Gcode Length section for more details.
 
 * Type: Flag
 * Default: Disabled
 * Short Parameter: -d
 * Long Parameter: --allow-dynamic-precision
-* Example: ```ArcWelder --allow-dynamic-precision```
+* Example: ```ArcWelder "C:\thing.gcode" --allow-dynamic-precision```
 
 ### Default XYZ Precision
-ArcWelder outputs fixed precision for X, Y, Z, I, and J parameters.  99% of the time the default of 3 decimal places is just fine.  If you need (want) more or less precision, you can alter this value.  In general, I do not recommend a value below 3 or above 5.
+ArcWelder outputs fixed precision for X, Y, Z, I, and J parameters.  99% of the time the default of 3 decimal places is just fine.  If you need (want) more or less precision, you can alter this value.
 
-Note that when combined with the --allow-dynamic-precision argument, this represents the minimum precision.  It will grow if Arc Welder encounters gcode commands with a higher precision.
+Note: that when combined with the --allow-dynamic-precision argument, this represents the minimum precision.  It will grow if Arc Welder encounters gcode commands with a higher precision.
+
+**Important Note**: Some firmware isn't capable of executing gcodes that are too long.  Increasing the precision will produce longer gcodes.  See the Maximum Gcode Length section for more details.
 
 * Type: Value (integer decimal places)
 * Default: 3 (3 decimals, example: 1.001)
+* Restrictions: Allowed values are 3, 4, 5, or 6.
 * Short Parameter: -x=<integer_value>
 * Long Parameter: --default-xyz-precision=<integer_value>
-* Example: ```ArcWelder --default-xyz-precision=5```
+* Example: ```ArcWelder "C:\thing.gcode" --default-xyz-precision=5```
 
 ### Default E Precision
 Arc Welder outputs fixed precision for the E parameter (extruder travel).  99% of the time the default of 5 decimal places is what you want.  If you need (want) more or less precision, you can alter this value.  In general, I do not recommend a value below 3 or above 5.
 
 Note, that when combined with the --allow-dynamic-precision argument, this represents the minimum precision.  It will grow if Arc Welder encounters gcode commands with a higher precision.
 
+**Important Note**: Some firmware isn't capable of executing gcodes that are too long.  Increasing the precision will produce longer gcodes.  See the Maximum Gcode Length section for more details.
+
 * Type: Value (integer decimal places)
 * Default: 5 (5 decimals, example: 1.00001)
+* Restrictions: Allowed values are 3, 4, 5, or 6.
 * Short Parameter: -e=<integer_value>
 * Long Parameter: --default-e-precision=<integer_value>
-* Example: ```ArcWelder --default-e-precision=3```
+* Example: ```ArcWelder "C:\thing.gcode" --default-e-precision=3```
 
 ### Firmware Compensation
 **Important**: Do **NOT** enable firmware compensation unless you are sure you need it!  Print quality and compression will suffer if it is enabled needlessly.
@@ -188,9 +214,10 @@ This is the default length of a segment in your firmware.  This setting MUST mat
 
 * Type: Value (millimeters)
 * Default: 0 (disabled)
+* Restrictions: Only values greater than or equal to 0.0 are allowed.  If set greater than 0, min-arc-segments must also be set.
 * Short Parameter: -s=<decimal_value>
 * Long Parameter: --mm-per-arc-segment=<decimal_value>
-* Example: ```ArcWelder --mm-per-arc-segment=1.0```
+* Example: ```ArcWelder "C:\thing.gcode" --mm-per-arc-segment=1.0 --min-arc-segments=14```
 
 #### Minimum Arc Segments
 This specifies the minimum number of segments that a circle of the same radius must have and is the parameter that determines how much compensation will be applied.  This setting was inspired by the Marlin 2.0 arc interpolation algorithm and attempts to follow it as closely as possible.  The higher the value, the more compensation will be applied, and the less compression you will get.  A minimum of 14 is recommended.  Values above 24 are NOT recommended.  In general, this should be set as low as possible.
@@ -199,9 +226,10 @@ If ArcWelder detects that a generated arc would have fewer segments than specifi
 
 * Type: Value
 * Default: 0 (disabled)
+* Restrictions: Only values greater than or equal to 0.0 are allowed.  If set greater than 0, mm-per-arc-segment must also be set.
 * Short Parameter: -a=<integer_value>
 * Long Parameter: --min-arc-segments=<integer_value>
-* Example: ```ArcWelder --min-arc-segments=14```
+* Example: ```ArcWelder "C:\thing.gcode" --mm-per-arc-segment=1.0 --min-arc-segments=14```
 
 #### Firmware Compensation Example
 If you need to enable firmware compensation because you notice that small arcs appear flat, I recommend you start with the following settings:
@@ -216,31 +244,47 @@ This feature allows ArcWelder to abort an arc if the extrusion rate changes by m
 
 * Type: Value
 * Default: 0.05 (5.0%)
+* Restrictions: Only values greater than or equal to 0.0 are allowed.
 * Short Parameter: -v=<decimal_value> (0.05 = 5.0%, 0 to disable)
 * Long Parameter: --extrusion-rate-variance-percent=<decimal_value>
-* Example: ```ArcWelder --extrusion-rate-variance-percent=0.025```
+* Example: ```ArcWelder "C:\thing.gcode" --extrusion-rate-variance-percent=0.025```
 
 #### Maximum Gcode Length
 Some firmware has a problem with long gcode commands, and G2/G3 commands are some of the longest.  You can specify a maximum gcode length to prevent long commands from being generated, which will reduce compression by a tiny amount.
 
+Non-zero values less than 31 are not allowed.  
+
 * Type: Value
 * Default: 0 (no limit)
+* Restrictions: Can be set to 0, or values > 30.
 * Short Parameter: -c=<integer_value>
 * Long Parameter: --max-gcode-length=<integer_value>
-* Example: ```ArcWelder --max-gcode-length=50```
+* Example: ```ArcWelder "C:\thing.gcode" --max-gcode-length=50```
 
-### Progress Type
+#### Progress Type
 This setting allows you to control the type of progress messages the ArcWelder console application will display.  There are three options:
 
 * SIMPLE - This is the default setting.  Here is a sample simple progress message:  ```Progress:  21.9% complete - Estimated 35 of 45 seconds remaing.```
 * FULL - This will show a much more detailed message, which is useful for any applications that which to scrape the detailed progress messages.  Here is a sample full progress message:  ```Progress:  percent_complete:100.00, seconds_elapsed:0.01, seconds_remaining:0.00, gcodes_processed: 4320, current_file_line: 4320, points_compressed: 2092, arcs_created: 81, arcs_aborted_by_flowrate: 59, num_firmware_compensations: 0, num_gcode_length_exceptions: 0, compression_ratio: 2.27, size_reduction: 55.96%```
 * NONE - No progress messages will be shown.
 
-* Type: Flag
+* Type: Value
 * Default: SIMPLE
-* Short Parameter: -P
-* Long Parameter: --progress-type
-* Example: ```ArcWelder --progress-type=FULL```
+* Short Parameter: -P=<SIMPLE|FULL|NONE>
+* Long Parameter: --progress-type=<SIMPLE|FULL|NONE>
+* Example: ```ArcWelder "C:\thing.gcode" --progress-type=FULL```
+
+#### Log Level
+When set, ArcWelder will log to the console.  This can be used to track down issues, or to figure out exactly what ArcWelder is doing.
+
+**Important Note:** Setting the log level could cause a huge amount of data to be outputted to the console, and will cause ArcWelder to be slow.  I recommend you redirect the console output to speed things up if you use the DEBUG, VERBOSE or NOSET log levels.
+
+* Type: Value
+* Default: INFO
+* Short Parameter: -l=<NOSET|VERBOSE|DEBUG|INFO|WARNING|ERROR|CRITICAL>
+* Long Parameter: --log-level=<NOSET|VERBOSE|DEBUG|INFO|WARNING|ERROR|CRITICAL>
+* Example: ```ArcWelder "C:\thing.gcode" --log-level=DEBUG```
+
 
 ## Slicer Integrations
 
@@ -341,26 +385,28 @@ Currently there are 5 different firmware types available:  MARLIN_1, MARLIN_2, R
 * Default: MARLIN_2
 * Short Parameter: -f=<string>
 * Long Parameter: --firmware-type=<string>
-* Example: ```--firmware-type==PRUSA```
+* Example: ```ArcStraightener "C:\thing.aw.gcode" --firmware-type==MARLIN_1```
 
 #### Firmware Version
 Use this argument to specify the firmware version.  Not all versions are supported.  To see a list of available versions for each firmware type, use the --help argument.  Note that the LATEST_RELEASE parameter does not always point to the most recent version, but rather the most recent stable release.  Also, the PRUSA firmware version V3_11_0 is not yet released, but was added assuming new arc interpolation parameters from the roadmap will be included.
+
+Note:  You may need to specify the firmware-type argument to choose the appropriate firmware version.
 
 * Type: Value
 * Default: LATEST_RELEASE
 * Short Parameter: -V=<string>
 * Long Parameter: --firmware_version=<string>
-* Example: ```--firmware_version==V1_1_9_1```
+* Example: ```ArcStraightener "C:\thing.aw.gcode"  --firmware-type==MARLIN_1 --firmware_version==1.1.9.1```
 
 #### Print Firmware Defaults and Supported Settings
 Prints all avaliable settings and defaults for the provided firmware type and version.  When using this parameter, all other valid parameters will be ignored.
 
-Note:  Supply the --firmware_type and --firmware_version to see the defaults and supported settings.
+Note:  Supply the --firmware_type and --firmware_version to see the defaults and supported settings.  When printing firmware defaults, you don't need to supply a source file location.
 
 * Type: Flag
 * Short Parameter: -p
 * Long Parameter: --print-firmware-defaults
-* Example: ```ArcStraightener --print-firmware-defaults --firmware_type=PRUSA --firmware_version==V1_1_9_1```
+* Example: ```ArcStraightener --print-firmware-defaults --firmware_type=MARLIN_1 --firmware_version==1.1.9.1```
 
 ## Firmware Specific Settings
 The different firmware types and versions all support different arc interpolation settings.  See the Print Firmware Defaults section for info on how to discover what paramaters a specific firmware version supports, as well as the defaults.
@@ -372,7 +418,7 @@ Sets the firmware's G90/G91 influences extruder axis behavior.  By default this 
 * Default: Set By Firmware Type and Version
 * Short Parameter: -g=<TRUE,FALSE>
 * Long Parameter: --g90-influences-extruder=<string>
-* Example: ```ArcStraightener <SOURCE> --firmware_type=PRUSA --firmware_version==V1_1_9_1 --g90-influences-extruder=TRUE```
+* Example: ```ArcStraightener "C:\thing.aw.gcode" --firmware_type=PRUSA --firmware_version==V1_1_9_1 --g90-influences-extruder=TRUE```
 
 Note, in the example above, the default behavior of the prusa firmware is overridden by the argument.
 
@@ -383,7 +429,7 @@ This is the default segment length for arc interpolation.  Depending on the impl
 * Default: 1.0
 * Short Parameter: -m=<decimal_value>
 * Long Parameter: --mm-per-arc-segment=<decimal_value>
-* Example: ```ArcStraightener <SOURCE> --mm-per-arc-segment=0.5```
+* Example: ```ArcStraightener "C:\thing.aw.gcode" --mm-per-arc-segment=0.5```
 
 #### Max Arc Segment MM
 This is the maximum length an arc segment can be.
@@ -392,7 +438,16 @@ This is the maximum length an arc segment can be.
 * Default: 1.0
 * Short Parameter: -d=<decimal_value>
 * Long Parameter: --max-arc-segment-mm=<decimal_value>
-* Example: ```ArcStraightener <SOURCE> --max-arc-segment-mm=0.5```
+* Example: ```ArcStraightener "C:\thing.aw.gcode" --max-arc-segment-mm=0.5```
+
+#### Arc Segments Per R
+This is the maximum length an arc segment can be. It's basically the same as Max Arc Segment MM, but is used in different firmware
+
+* Type: Value (millimeters)
+* Default: 0 (disabled)
+* Short Parameter: -i=<decimal_value>
+* Long Parameter: --arc-segments-per-r=<decimal_value>
+* Example: ```ArcStraightener "C:\thing.aw.gcode" --arc-segments-per-r=0.5```
 
 #### Min Arc Segment MM
 This is the Minimum length an arc segment can be.
@@ -401,7 +456,7 @@ This is the Minimum length an arc segment can be.
 * Default: 1.0
 * Short Parameter: -n=<decimal_value>
 * Long Parameter: --min-mm-per-arc-segment=<decimal_value>
-* Example: ```ArcStraightener <SOURCE> --min-mm-per-arc-segment=0.5```
+* Example: ```ArcStraightener "C:\thing.aw.gcode" --min-mm-per-arc-segment=0.5```
 
 #### Min Arc Segments
 The minimum number of segments within a circle of the same radius as the arc.  Can be used to increase detail on small arcs.
@@ -410,7 +465,7 @@ The minimum number of segments within a circle of the same radius as the arc.  C
 * Default: 24
 * Short Parameter: -r=<integer_value>
 * Long Parameter: --min-arc-segments=<integer_value>
-* Example: ```ArcStraightener <SOURCE> --min-arc-segments=24```
+* Example: ```ArcStraightener "C:\thing.aw.gcode" --min-arc-segments=24```
 
 #### Min Circle Segments
 This is a the same as the Min Arc Segments setting used in some firmware versions. Can be used to increase detail on small arcs.
@@ -419,7 +474,7 @@ This is a the same as the Min Arc Segments setting used in some firmware version
 * Default: 72
 * Short Parameter: -a=<integer_value>
 * Long Parameter: --min-circle-segments=<integer_value>
-* Example: ```ArcStraightener <SOURCE> --min-circle-segments=24```
+* Example: ```ArcStraightener "C:\thing.aw.gcode" --min-circle-segments=24```
 
 #### N Arc Correction
 The number of segments that will be interpolated using a small angle approximation before true sin/cos corrections are applied.  A value less than or equal to 1 will disable this feature.  Note that enabling this can cause visible interpolation errors, especially on arcs with a very large radius.  Disabling this setting could cause performance issues on slower hardware.
@@ -428,7 +483,7 @@ The number of segments that will be interpolated using a small angle approximati
 * Default: 24
 * Short Parameter: -c=<integer_value>
 * Long Parameter: --n-arc-correction=<integer_value>
-* Example: ```ArcStraightener <SOURCE> --n-arc-correction=8```
+* Example: ```ArcStraightener "C:\thing.aw.gcode" --n-arc-correction=8```
 
 #### Arc Segments Per Second
 The number of segments per second.  This will produce a constant number of arcs, clamped between mm-per-arc-segment and min-mm-per-arc-segment.  Can be used to prevent stuttering when printing very quickly.  A value less than or equal to 0 will disable this feature.
@@ -437,7 +492,7 @@ The number of segments per second.  This will produce a constant number of arcs,
 * Default: 0 (Disabled)
 * Short Parameter: -s=<integer_value>
 * Long Parameter: --arc-segments-per-second=<integer_value>
-* Example: ```ArcStraightener <SOURCE> --arc-segments-per-second=24```
+* Example: ```ArcStraightener "C:\thing.aw.gcode" --arc-segments-per-second=24```
 
 #### MM Max Arc Error
 I'm not 100% sure exactly what this does, but I believe it attempts to limit the drift in the arc path to this value in MM.  When I know more I will update this description.  This currently is only used in Smoothieware.  Set to 0 to disable.
@@ -446,4 +501,4 @@ I'm not 100% sure exactly what this does, but I believe it attempts to limit the
 * Default: 0.01
 * Short Parameter: -e=<decimal_value>
 * Long Parameter: --mm-max-arc-error=<decimal_value>
-* Example: ```ArcStraightener <SOURCE> --mm-max-arc-error=0.25```
+* Example: ```ArcStraightener "C:\thing.aw.gcode" --mm-max-arc-error=0.25```

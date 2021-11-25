@@ -48,11 +48,11 @@ void repetier::apply_arguments()
   switch (repetier_version_)
   {
   case repetier::repetier_firmware_versions::V1_0_5:
-    used_arguments = { "mm_per_arc_segment", "n_arc_correction", "g90_g91_influences_extruder" };
+    used_arguments = { FIRMWARE_ARGUMENT_MM_PER_ARC_SEGMENT, FIRMWARE_ARGUMENT_N_ARC_CORRECTION, FIRMWARE_ARGUMENT_G90_G91_INFLUENCES_EXTRUDER };
     arc_ = &repetier::arc_1_0_5;
     break;
   default:
-    used_arguments = { "mm_per_arc_segment", "n_arc_correction", "g90_g91_influences_extruder" };
+    used_arguments = { FIRMWARE_ARGUMENT_MM_PER_ARC_SEGMENT, FIRMWARE_ARGUMENT_N_ARC_CORRECTION, FIRMWARE_ARGUMENT_G90_G91_INFLUENCES_EXTRUDER };
     arc_ = &repetier::arc_1_0_4;
     break;
   }
@@ -76,25 +76,11 @@ firmware_arguments repetier::get_default_arguments_for_current_version() const
     default_args.mm_per_arc_segment = 1.0f;
     default_args.n_arc_correction = 25;
     default_args.min_arc_segments = 24;
-    // Inactive Settings
-    default_args.min_arc_segments = 0;
-    default_args.arc_segments_per_r = 0;
-    default_args.min_mm_per_arc_segment = 0;
-    default_args.arc_segments_per_sec = 0;
-    // Settings that do not apply
-    default_args.mm_max_arc_error = 0;
     break;
   default:
     // Active Settings
     default_args.mm_per_arc_segment = 1.0f;
     default_args.n_arc_correction = 25;
-    // Inactive Settings
-    default_args.min_arc_segments = 0;
-    default_args.arc_segments_per_r = 0;
-    default_args.min_mm_per_arc_segment = 0;
-    default_args.arc_segments_per_sec = 0;
-    // Settings that do not apply
-    default_args.mm_max_arc_error = 0;
     break;
   }
   return default_args;

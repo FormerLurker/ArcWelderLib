@@ -74,7 +74,7 @@ class arc_interpolation
 		/// Outputs a string description of the firmware arguments.
 		/// </summary>
 		/// <returns></returns>
-		std::string get_firmware_argument_description() const;
+		std::string get_firmware_arguments_description(std::string separator = "", std::string argument_prefix = "", std::string replacement_string = "", std::string replacement_value = "") const;
 	private:
 			arc_interpolation_args args_;
 			gcode_position_args get_args_(bool g90_g91_influences_extruder, int buffer_size);

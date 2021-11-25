@@ -105,7 +105,7 @@ std::string firmware::g1_command(firmware_position& target)
   if (has_e)
   {
     gcode += is_first_parameter ? "E" : " E";
-    gcode += utilities::dtos(state_.is_extruder_relative ? target.e - position_.e : target.e, 3);
+    gcode += utilities::dtos(state_.is_extruder_relative ? target.e - position_.e : target.e, 5);
     is_first_parameter = false;
   }
 
@@ -139,14 +139,41 @@ std::vector<std::string> firmware::get_version_names()
   return version_names_;
 }
 
+std::string firmware::get_version_names_string()
+{
+    std::vector<std::string> version_names_with_release_info;
+    bool foundLatestRelease = false;
+    for (int index = 0; index < version_names_.size(); index++)
+    {
+        std::string version_name = version_names_[index];
+        
+        if (foundLatestRelease)
+        {
+            version_name.append(" (").append("NON_RELEASE_VERSION").append(")");
+        }
+        else if (version_name == args_.latest_release_version)
+        {
+            version_name.append(" (").append(LATEST_FIRMWARE_VERSION_NAME).append(")");
+            foundLatestRelease = true;
+        }
+        version_names_with_release_info.push_back(version_name);
+    }
+    return utilities::join(version_names_with_release_info, ",");
+}
+
 bool firmware::get_g90_g91_influences_extruder()
 {
   return args_.g90_g91_influences_extruder;
 }
 
-std::string firmware::get_argument_description() {
+std::string firmware::get_arguments_description(std::string separator, std::string argument_prefix, std::string replacement_string, std::string replacement_value) {
   
-  return args_.get_argument_description();
+  return args_.get_arguments_description(separator, argument_prefix, replacement_string, replacement_value);
+}
+
+std::string firmware::get_gcode_header_comment()
+{
+    return args_.get_gcode_header_comment();
 }
 
 void firmware::set_versions(std::vector<std::string> version_names, std::string latest_release_version_name)

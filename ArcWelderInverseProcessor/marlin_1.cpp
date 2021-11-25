@@ -58,7 +58,7 @@ void marlin_1::apply_arguments()
 	{
 	default:*/
 	plan_arc_ = &marlin_1::plan_arc_1_1_9_1;
-	used_arguments = { "mm_per_arc_segment", "n_arc_correction", "g90_g91_influences_extruder" };
+	used_arguments = { FIRMWARE_ARGUMENT_MM_PER_ARC_SEGMENT, FIRMWARE_ARGUMENT_N_ARC_CORRECTION, FIRMWARE_ARGUMENT_G90_G91_INFLUENCES_EXTRUDER };
 	//break;
   //}
 
@@ -78,14 +78,7 @@ firmware_arguments marlin_1::get_default_arguments_for_current_version() const
 	//default:
 	  // Active Settings
 	default_args.mm_per_arc_segment = 1.0f;
-	default_args.min_arc_segments = 24;
 	default_args.n_arc_correction = 25;
-	// Inactive Settings
-	default_args.arc_segments_per_r = 0;
-	default_args.min_mm_per_arc_segment = 0;
-	default_args.arc_segments_per_sec = 0;
-	// Settings that do not apply
-	default_args.mm_max_arc_error = 0;
 	//break;
   //}
 

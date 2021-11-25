@@ -42,6 +42,7 @@ smoothieware::smoothieware(firmware_arguments args) : firmware(args) {
   apply_arguments();
 };
 
+
 void smoothieware::apply_arguments()
 {
   static const std::vector<std::string> smoothieware_firmware_version_names{ "2021-06-19" };
@@ -53,7 +54,7 @@ void smoothieware::apply_arguments()
   //{
   //default:
     append_arc_ = &smoothieware::append_arc_2021_06_19;
-    used_arguments = { "mm_per_arc_segment",  "mm_max_arc_error", "n_arc_correction", "g90_g91_influences_extruder" };
+    used_arguments = { FIRMWARE_ARGUMENT_MM_PER_ARC_SEGMENT,  FIRMWARE_ARGUMENT_MM_MAX_ARC_ERROR, FIRMWARE_ARGUMENT_N_ARC_CORRECTION, FIRMWARE_ARGUMENT_G90_G91_INFLUENCES_EXTRUDER };
     //break;
   //}
   

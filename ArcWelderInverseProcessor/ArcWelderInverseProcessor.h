@@ -35,8 +35,7 @@
 #include <string>
 #include <vector>
 int run_arc_straightener(int argc, char* argv[]);
-static std::string get_available_arguments_string(std::vector<std::string> firmware_arguments);
-static bool is_firmware_version_valid_for_type(std::string firmware_type_string, std::string firmware_version, std::string firmware_version_arg_name);
+static void check_firmware_version_for_type(std::string firmware_type_string, std::string firmware_version, std::string firmware_version_arg_name);
 static int get_firmware_type_from_string(std::string firmware_type);
 static void print_firmware_defaults(std::string firmware_type_string, std::string firmware_version_string, std::string firmware_version_arg_name);
 

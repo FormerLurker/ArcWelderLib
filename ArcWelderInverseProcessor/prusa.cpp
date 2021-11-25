@@ -52,20 +52,14 @@ void prusa::apply_arguments()
   {
   case prusa::prusa_firmware_versions::V3_11_0:
     mc_arc_ = &prusa::mc_arc_3_11_0; 
-    used_arguments = { "mm_per_arc_segment", "min_arc_segments", "min_mm_per_arc_segment", "mm_per_arc_segment", "n_arc_correction", "g90_g91_influences_extruder" };
+    used_arguments = { FIRMWARE_ARGUMENT_MM_PER_ARC_SEGMENT, FIRMWARE_ARGUMENT_MIN_ARC_SEGMENTS, FIRMWARE_ARGUMENT_MIN_MM_PER_ARC_SEGMENT, FIRMWARE_ARGUMENT_N_ARC_CORRECTION, FIRMWARE_ARGUMENT_G90_G91_INFLUENCES_EXTRUDER };
     break;
   default:
     mc_arc_ = &prusa::mc_arc_3_10_0;
-    used_arguments = { "mm_per_arc_segment", "n_arc_correction", "g90_g91_influences_extruder" };
+    used_arguments = { FIRMWARE_ARGUMENT_MM_PER_ARC_SEGMENT, FIRMWARE_ARGUMENT_N_ARC_CORRECTION, FIRMWARE_ARGUMENT_G90_G91_INFLUENCES_EXTRUDER };
     break;
   }
   args_.set_used_arguments(used_arguments);
-  cs.arc_segments_per_sec = args_.arc_segments_per_sec;
-  cs.min_arc_segments = args_.min_arc_segments;
-  cs.min_mm_per_arc_segment = (float)args_.min_mm_per_arc_segment;
-  cs.mm_per_arc_segment = (float)args_.mm_per_arc_segment;
-  cs.n_arc_correction = args_.n_arc_correction;
-
 }
 
 
@@ -196,7 +190,7 @@ void prusa::mc_arc_3_10_0(float* position, float* target, float* offset, float f
 
   float millimeters_of_travel = (float)utilities::hypot((double)angular_travel * radius, utilities::absf(linear_travel));
   if (millimeters_of_travel < 0.001) { return; }
-  uint16_t segments = (uint16_t)utilities::floorf(millimeters_of_travel / cs.mm_per_arc_segment);
+  uint16_t segments = (uint16_t)utilities::floorf(millimeters_of_travel / static_cast<float>(args_.mm_per_arc_segment));
   if (segments == 0) segments = 1;
 
   /*
@@ -252,7 +246,7 @@ void prusa::mc_arc_3_10_0(float* position, float* target, float* offset, float f
 
   for (i = 1; i < segments; i++) { // Increment (segments-1)
 
-    if (count < cs.n_arc_correction) {
+    if (count < args_.n_arc_correction) {
       // Apply vector rotation matrix 
       r_axisi = r_axis0 * sin_T + r_axis1 * cos_T;
       r_axis0 = r_axis0 * cos_T - r_axis1 * sin_T;
@@ -327,39 +321,39 @@ void prusa::mc_arc_3_11_0(float* position, float* target, float* offset, float f
   float rt_x = target[X_AXIS] - center_axis_x;
   float rt_y = target[Y_AXIS] - center_axis_y;
   // 20200419 - Add a variable that will be used to hold the arc segment length
-  float mm_per_arc_segment = cs.mm_per_arc_segment;
+  float mm_per_arc_segment = static_cast<float>(args_.mm_per_arc_segment);
   // 20210109 - Add a variable to hold the n_arc_correction value
-  uint8_t n_arc_correction = cs.n_arc_correction;
+  uint8_t n_arc_correction = args_.n_arc_correction;
 
   // CCW angle between position and target from circle center. Only one atan2() trig computation required.
   float angular_travel_total = (float)utilities::atan2((double)r_axis_x * rt_y - (double)r_axis_y * rt_x, (double)r_axis_x * rt_x + (double)r_axis_y * rt_y);
   if (angular_travel_total < 0) { angular_travel_total += 2.0f * PI_FLOAT; }
 
-  if (cs.min_arc_segments > 0)
+  if (args_.min_arc_segments > 0)
   {
     // 20200417 - FormerLurker - Implement MIN_ARC_SEGMENTS if it is defined - from Marlin 2.0 implementation
     // Do this before converting the angular travel for clockwise rotation
-    mm_per_arc_segment = radius * ((2.0f * PI_FLOAT) / cs.min_arc_segments);
+    mm_per_arc_segment = radius * ((2.0f * PI_FLOAT) / args_.min_arc_segments);
   }
-  if (cs.arc_segments_per_sec > 0)
+  if (args_.arc_segments_per_sec > 0)
   {
     // 20200417 - FormerLurker - Implement MIN_ARC_SEGMENTS if it is defined - from Marlin 2.0 implementation
-    float mm_per_arc_segment_sec = (feed_rate / 60.0f) * (1.0f / (float)cs.arc_segments_per_sec);
+    float mm_per_arc_segment_sec = (feed_rate / 60.0f) * (1.0f / (float)args_.arc_segments_per_sec);
     if (mm_per_arc_segment_sec < mm_per_arc_segment)
       mm_per_arc_segment = mm_per_arc_segment_sec;
   }
 
   // Note:  no need to check to see if min_mm_per_arc_segment is enabled or not (i.e. = 0), since mm_per_arc_segment can never be below 0.
-  if (mm_per_arc_segment < cs.min_mm_per_arc_segment)
+  if (mm_per_arc_segment < args_.min_mm_per_arc_segment)
   {
     // 20200417 - FormerLurker - Implement MIN_MM_PER_ARC_SEGMENT if it is defined
     // This prevents a very high number of segments from being generated for curves of a short radius
-    mm_per_arc_segment = cs.min_mm_per_arc_segment;
+    mm_per_arc_segment = static_cast<float>(args_.min_mm_per_arc_segment);
   }
-  else if (mm_per_arc_segment > cs.mm_per_arc_segment) {
+  else if (mm_per_arc_segment > args_.mm_per_arc_segment) {
     // 20210113 - This can be implemented in an else if since  we can't be below the min AND above the max at the same time.
     // 20200417 - FormerLurker - Implement MIN_MM_PER_ARC_SEGMENT if it is defined
-    mm_per_arc_segment = cs.mm_per_arc_segment;
+    mm_per_arc_segment = static_cast<float>(args_.mm_per_arc_segment);
   }
 
   // Adjust the angular travel if the direction is clockwise
@@ -420,7 +414,7 @@ void prusa::mc_arc_3_11_0(float* position, float* target, float* offset, float f
         r_axis_x = -offset[X_AXIS] * cos_Ti + offset[Y_AXIS] * sin_Ti;
         r_axis_y = -offset[X_AXIS] * sin_Ti - offset[Y_AXIS] * cos_Ti;
         // reset n_arc_correction
-        n_arc_correction = cs.n_arc_correction;
+        n_arc_correction = args_.n_arc_correction;
       }
       else {
         // Calculate X and Y using the small angle approximation

@@ -37,25 +37,29 @@
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
+#include <utilities.h>
+#include "version.h"
 
 #define DEFAULT_FIRMWARE_TYPE firmware_types::MARLIN_2
 #define LATEST_FIRMWARE_VERSION_NAME "LATEST_RELEASE"
 #define DEFAULT_FIRMWARE_VERSION_NAME LATEST_FIRMWARE_VERSION_NAME
 // Arc interpretation settings:
-#define DEFAULT_MM_PER_ARC_SEGMENT 1.0 // REQUIRED - The enforced maximum length of an arc segment
-#define DEFAULT_ARC_SEGMENTS_PER_R 0;
+#define DEFAULT_MM_PER_ARC_SEGMENT 0 // REQUIRED - The enforced maximum length of an arc segment
+#define DEFAULT_ARC_SEGMENTS_PER_R 0; // 0 to disable
+#define DEFAULT_MAX_MM_PER_ARC_SEGMENT 0 // Required - The enforced maximum length of an arc segment
+#define DEFAULT_MIN_ARC_SEGMENT_MM 0; // 0 to disable
 #define DEFAULT_MIN_MM_PER_ARC_SEGMENT 0 /* OPTIONAL - the enforced minimum length of an interpolated segment.  Must be smaller than
   MM_PER_ARC_SEGMENT.  Only has an effect if MIN_ARC_SEGMENTS > 0 or ARC_SEGMENTS_PER_SEC > 0 */
-  // If both MIN_ARC_SEGMENTS and ARC_SEGMENTS_PER_SEC is defined, the minimum calculated segment length is used.
-#define DEFAULT_MIN_ARC_SEGMENTS 24 // OPTIONAL - The enforced minimum segments in a full circle of the same radius.
-#define DEFAULT_MIN_CIRCLE_SEGMENTS 72 // OPTIONAL - The enforced minimum segments in a full circle of the same radius.
+  // If both MIN_ARC_SEGMENTS and ARC_SEGMENTS_PER_SEC is defined, the minimum calculated segment length is used.  Set to 0 to disable
+#define DEFAULT_MIN_ARC_SEGMENTS 0 // OPTIONAL - The enforced minimum segments in a full circle of the same radius.  Set to 0 to disable.
+#define DEFAULT_MIN_CIRCLE_SEGMENTS 0 // OPTIONAL - The enforced minimum segments in a full circle of the same radius.
 #define DEFAULT_ARC_SEGMENTS_PER_SEC 0 // OPTIONAL - Use feedrate to choose segment length.
-// approximation will not be used for the first segment.  Subsequent segments will be corrected following DEFAULT_N_ARC_CORRECTION.
-#define DEFAULT_N_ARC_CORRECTIONS 24
+// approximation will not be used for the first segment.  Subsequent segments will be corrected following DEFAULT_N_ARC_CORRECTION.  Set to 0 to disable.
+#define DEFAULT_N_ARC_CORRECTIONS 0
 // This setting is for the gcode position processor to help interpret G90/G91 behavior
 #define DEFAULT_G90_G91_INFLUENCES_EXTRUDER false
 // This currently is only used in Smoothieware.   The maximum error for line segments that divide arcs.  Set to 0 to disable.
-#define DEFAULT_MM_MAX_ARC_ERROR 0.01
+#define DEFAULT_MM_MAX_ARC_ERROR 0
 
 struct firmware_state {
   firmware_state() {
@@ -81,13 +85,29 @@ struct firmware_position {
   double f;
 };
 
+// parameter name defines
+#define FIRMWARE_ARGUMENT_MM_PER_ARC_SEGMENT "mm_per_arc_segment"
+#define FIRMWARE_ARGUMENT_ARC_SEGMENT_PER_R "arc_segments_per_r"
+#define FIRMWARE_ARGUMENT_MIN_MM_PER_ARC_SEGMENT "min_mm_per_arc_segment"
+#define FIRMWARE_ARGUMENT_MIN_ARC_SEGMENTS "min_arc_segments"
+#define FIRMWARE_ARGUMENT_ARC_SEGMENTS_PER_SEC "arc_segments_per_sec"
+#define FIRMWARE_ARGUMENT_N_ARC_CORRECTION "n_arc_correction"
+#define FIRMWARE_ARGUMENT_G90_G91_INFLUENCES_EXTRUDER "g90_g91_influences_extruder"
+#define FIRMWARE_ARGUMENT_MM_MAX_ARC_ERROR "mm_max_arc_error"
+#define FIRMWARE_ARGUMENT_MIN_CIRCLE_SEGMENTS "min_circle_segments"
+#define FIRMWARE_ARGUMENT_MIN_ARC_SEGMENT_MM "min_arc_segment_mm"
+#define FIRMWARE_ARGUMENT_MAX_ARC_SEGMENT_MM "max_arc_segment_mm"
+
 struct firmware_arguments {
 public:
-
+    
     firmware_arguments() {
     mm_per_arc_segment = DEFAULT_MM_PER_ARC_SEGMENT;
+    min_arc_segment_mm = DEFAULT_MIN_ARC_SEGMENT_MM;
+    max_arc_segment_mm = DEFAULT_MAX_MM_PER_ARC_SEGMENT;
     arc_segments_per_r = DEFAULT_ARC_SEGMENTS_PER_R;
     min_mm_per_arc_segment = DEFAULT_MIN_MM_PER_ARC_SEGMENT;
+    min_circle_segments = DEFAULT_MIN_CIRCLE_SEGMENTS;
     min_arc_segments = DEFAULT_MIN_ARC_SEGMENTS;
     arc_segments_per_sec = DEFAULT_ARC_SEGMENTS_PER_SEC;
     n_arc_correction = DEFAULT_N_ARC_CORRECTIONS;
@@ -99,17 +119,17 @@ public:
 
     // add a list of all possible arguments, including aliases
     all_arguments_.clear();
-    all_arguments_.push_back("mm_per_arc_segment");
-    all_arguments_.push_back("arc_segments_per_r");
-    all_arguments_.push_back("min_mm_per_arc_segment");
-    all_arguments_.push_back("min_arc_segments");
-    all_arguments_.push_back("arc_segments_per_sec");
-    all_arguments_.push_back("n_arc_correction");
-    all_arguments_.push_back("g90_g91_influences_extruder");
-    all_arguments_.push_back("mm_max_arc_error");
-    all_arguments_.push_back("min_circle_segments");
-    all_arguments_.push_back("min_arc_segment_mm");
-    all_arguments_.push_back("max_arc_segment_mm");
+    all_arguments_.push_back(FIRMWARE_ARGUMENT_MM_PER_ARC_SEGMENT);
+    all_arguments_.push_back(FIRMWARE_ARGUMENT_ARC_SEGMENT_PER_R);
+    all_arguments_.push_back(FIRMWARE_ARGUMENT_MIN_MM_PER_ARC_SEGMENT);
+    all_arguments_.push_back(FIRMWARE_ARGUMENT_MIN_ARC_SEGMENTS);
+    all_arguments_.push_back(FIRMWARE_ARGUMENT_ARC_SEGMENTS_PER_SEC);
+    all_arguments_.push_back(FIRMWARE_ARGUMENT_N_ARC_CORRECTION);
+    all_arguments_.push_back(FIRMWARE_ARGUMENT_G90_G91_INFLUENCES_EXTRUDER);
+    all_arguments_.push_back(FIRMWARE_ARGUMENT_MM_MAX_ARC_ERROR);
+    all_arguments_.push_back(FIRMWARE_ARGUMENT_MIN_CIRCLE_SEGMENTS);
+    all_arguments_.push_back(FIRMWARE_ARGUMENT_MIN_ARC_SEGMENT_MM);
+    all_arguments_.push_back(FIRMWARE_ARGUMENT_MAX_ARC_SEGMENT_MM);
   };
 
   /// <summary>
@@ -125,9 +145,20 @@ public:
   /// </summary>
   double min_mm_per_arc_segment;
   /// <summary>
+  /// The minimum mm per arc segment.  If less than or equal to 0, this is disabled
+  /// </summary>
+  double min_arc_segment_mm;
+  /// <summary>
+  /// The maximum mm per arc segment.
+  /// </summary>
+  double max_arc_segment_mm;
+
+
+  /// <summary>
   /// The number of arc segments that will be drawn per second based on the given feedrate.  
   /// If less than or equal to zero, this is disabled.
   /// </summary>
+  
   double arc_segments_per_sec;
   /// <summary>
   /// This currently is only used in Smoothieware.   The maximum error for line segments that divide arcs.  Set to 0 to disable.
@@ -138,6 +169,12 @@ public:
   /// If less than or equal to zero, this is disabled
   /// </summary>
   int min_arc_segments;
+
+  /// <summary>
+  /// The minimum number of arc segments in a full circle of the arc's radius.
+  /// If less than or equal to zero, this is disabled
+  /// </summary>
+  int min_circle_segments;
   /// <summary>
   /// // Number of interpolated segments before true sin and cos corrections will be applied.  
   /// If less than or equal to zero, true sin and cos will always be used.
@@ -160,36 +197,7 @@ public:
   /// True if the current version is the latest release.  For informational purposes only
   /// </summary>
   std::string latest_release_version;
-  /// Aliases for variour parameters
-  int get_min_circle_segments() const
-  {
-    return min_arc_segments;
-  }
-  void set_min_circle_segments(int segments)
-  {
-    min_arc_segments = segments;
-  }
-
-  double get_min_arc_segment_mm() const
-  {
-    return min_mm_per_arc_segment;
-  }
-
-  void set_min_arc_segment_mm(double mm)
-  {
-    min_mm_per_arc_segment = mm;
-  }
-
-  double get_max_arc_segment_mm() const
-  {
-    return mm_per_arc_segment;
-  }
-
-  void set_max_arc_segment_mm(double mm)
-  {
-    mm_per_arc_segment = mm;
-  }
-
+  
   void set_used_arguments(std::vector<std::string> arguments)
   {
     used_arguments_ = arguments;
@@ -208,91 +216,180 @@ public:
     return unused_arguments;
   }
 
-  std::string get_unused_arguments_string()
+  std::string get_unused_arguments_string(std::string separator = "", std::string argument_prefix = "", std::string replacement_string = "", std::string replacement_value = "")
   {
+      return get_arguments_string_(get_unused_arguments(), separator, argument_prefix, replacement_string, replacement_value);
     std::string unusaed_argument_string = "";
     std::vector<std::string> unused_argumnts = get_unused_arguments();
     for (std::vector<std::string>::iterator it = unused_argumnts.begin(); it != unused_argumnts.end(); it++)
     {
       if (unusaed_argument_string.size() > 0)
       {
-        unusaed_argument_string += ", ";
+        unusaed_argument_string += separator;
       }
       unusaed_argument_string += *it;
     }
     return unusaed_argument_string;
   }
 
+  std::string get_available_arguments_string(std::string separator = "", std::string argument_prefix = "", std::string replacement_string = "", std::string replacement_value = "")
+  {
+      return get_arguments_string_(used_arguments_, separator, argument_prefix, replacement_string, replacement_value);
+  }
+
   std::vector<std::string> get_available_arguments()
   {
     return used_arguments_;
   }
+  std::string get_gcode_header_comment()
+  {
+      std::string comment_start = "; ";
+      std::stringstream stream;
+      stream << comment_start << "Postprocessed by [ArcStraightener](https://github.com/FormerLurker/ArcWelderLib)\n";
+      stream << comment_start << "Copyright(C) " << COPYRIGHT_DATE << " - " << AUTHOR << "\n";
+      stream << comment_start << "Version: " << GIT_TAGGED_VERSION << ", Branch: " << GIT_BRANCH << ", BuildDate: " << BUILD_DATE << "\n";
 
-  std::string get_argument_description() {
+      stream << comment_start << "firmware_type=" << firmware_type_names[firmware_type] << "\n";
+      stream << comment_start << "firmware_version=" << (version == LATEST_FIRMWARE_VERSION_NAME || version == latest_release_version ? latest_release_version + " (" + LATEST_FIRMWARE_VERSION_NAME + ")" : version) << "\n";
+      
+      stream << std::fixed << std::setprecision(0);
+      std::string argument_string;
+
+      // Bool values
+      argument_string = FIRMWARE_ARGUMENT_G90_G91_INFLUENCES_EXTRUDER;
+      if (is_argument_used(argument_string))
+      {
+          stream << comment_start << argument_string << "=" << (g90_g91_influences_extruder ? "True" : "False") << "\n";
+      }
+
+      // Int values
+      argument_string = FIRMWARE_ARGUMENT_MIN_ARC_SEGMENTS;
+      if (is_argument_used(argument_string))
+      {
+          stream << comment_start << argument_string << "=" << min_arc_segments << "\n";
+      }
+      argument_string = FIRMWARE_ARGUMENT_MIN_CIRCLE_SEGMENTS;
+      if (is_argument_used(argument_string))
+      {
+          stream << comment_start << argument_string << "=" << min_circle_segments << "\n";
+      }
+      argument_string = FIRMWARE_ARGUMENT_N_ARC_CORRECTION;
+      if (is_argument_used(argument_string))
+      {
+          stream << comment_start << argument_string << "=" << n_arc_correction << "\n";
+      }
+
+      stream << std::fixed << std::setprecision(2);
+      // Double values
+      argument_string = FIRMWARE_ARGUMENT_MM_PER_ARC_SEGMENT;
+      if (is_argument_used(argument_string))
+      {
+          stream << comment_start << argument_string << "=" << mm_per_arc_segment << "\n";
+      }
+      argument_string = FIRMWARE_ARGUMENT_ARC_SEGMENT_PER_R;
+      if (is_argument_used(argument_string))
+      {
+          stream << comment_start << argument_string << "=" << arc_segments_per_r << "\n";
+      }
+      argument_string = FIRMWARE_ARGUMENT_ARC_SEGMENTS_PER_SEC;
+      if (is_argument_used(argument_string))
+      {
+          stream << comment_start << argument_string << "=" << arc_segments_per_sec << "\n";
+      }
+      argument_string = FIRMWARE_ARGUMENT_MM_MAX_ARC_ERROR;
+      if (is_argument_used(argument_string))
+      {
+          stream << comment_start << argument_string << "=" << mm_max_arc_error << "\n";
+      }
+      argument_string = FIRMWARE_ARGUMENT_MIN_MM_PER_ARC_SEGMENT;
+      if (is_argument_used(argument_string))
+      {
+          stream << comment_start << argument_string << "=" << min_mm_per_arc_segment << "\n";
+      }
+      argument_string = FIRMWARE_ARGUMENT_MIN_ARC_SEGMENT_MM;
+      if (is_argument_used(argument_string))
+      {
+          stream << comment_start << argument_string << "=" << min_arc_segment_mm << "\n";
+      }
+      argument_string = FIRMWARE_ARGUMENT_MAX_ARC_SEGMENT_MM;
+      if (is_argument_used(argument_string))
+      {
+          stream << comment_start << argument_string << "=" << max_arc_segment_mm << "\n";
+      }
+
+      return stream.str();
+  }
+
+  std::string get_arguments_description(std::string separator="", std::string argument_prefix = "", std::string replacement_string = "", std::string replacement_value = "") {
     std::stringstream stream;
     stream << "Firmware Arguments:\n";
     stream << "\tFirmware Type               : " << firmware_type_names[firmware_type] << "\n";
     stream << "\tFirmware Version            : " << (version == LATEST_FIRMWARE_VERSION_NAME || version == latest_release_version ? latest_release_version + " (" + LATEST_FIRMWARE_VERSION_NAME + ")" : version) <<"\n";
     stream << std::fixed << std::setprecision(0);
+    std::string argument_string;
+
     // Bool values
-    if (is_argument_used("g90_g91_influences_extruder"))
+    argument_string = FIRMWARE_ARGUMENT_G90_G91_INFLUENCES_EXTRUDER;
+    if (is_argument_used(argument_string))
     {
-      stream << "\tg90_g91_influences_extruder : " << (g90_g91_influences_extruder ? "True" : "False") << "\n";
+      stream << "\t" << get_argument_string(argument_string, "", replacement_string, replacement_value) << " : " << (g90_g91_influences_extruder ? "True" : "False") << "\n";
     }
     
     // Int values
-    if (is_argument_used("min_arc_segments"))
+    argument_string = FIRMWARE_ARGUMENT_MIN_ARC_SEGMENTS;
+    if (is_argument_used(argument_string))
     {
-      stream << "\tmin_arc_segments            : " << min_arc_segments << "\n";
+      stream << "\t" << get_argument_string(argument_string, "", replacement_string, replacement_value) << "            : " << min_arc_segments << "\n";
     }
-    if (is_argument_used("min_circle_segments"))
+    argument_string = FIRMWARE_ARGUMENT_MIN_CIRCLE_SEGMENTS;
+    if (is_argument_used(argument_string))
     {
-      stream << "\tmin_circle_segments         : " << get_min_circle_segments() << "\n";
+      stream << "\t" << get_argument_string(argument_string, "", replacement_string, replacement_value) << "         : " << min_circle_segments << "\n";
     }
-    if (is_argument_used("n_arc_correction"))
+    argument_string = FIRMWARE_ARGUMENT_N_ARC_CORRECTION;
+    if (is_argument_used(argument_string))
     {
-      stream << "\tn_arc_correction            : " << n_arc_correction << "\n";
+      stream << "\t" << get_argument_string(argument_string, "", replacement_string, replacement_value) << "            : " << n_arc_correction << "\n";
     }
 
     stream << std::fixed << std::setprecision(2);
     // Double values
-    // 
-    if (is_argument_used("mm_per_arc_segment"))
+    argument_string = FIRMWARE_ARGUMENT_MM_PER_ARC_SEGMENT;
+    if (is_argument_used(argument_string))
     {
-      stream << "\tmm_per_arc_segment          : " << mm_per_arc_segment << "\n";
+      stream << "\t" << get_argument_string(argument_string, "", replacement_string, replacement_value) << "          : " << mm_per_arc_segment << "\n";
     }
-    // 
-    if (is_argument_used("arc_segments_per_r"))
+    argument_string = FIRMWARE_ARGUMENT_ARC_SEGMENT_PER_R;
+    if (is_argument_used(argument_string))
     {
-      stream << "\tarc_segments_per_r          : " << arc_segments_per_r << "\n";
+      stream << "\t" << get_argument_string(argument_string, "", replacement_string, replacement_value) << "          : " << arc_segments_per_r << "\n";
     }
-    // 
-    if (is_argument_used("min_mm_per_arc_segment"))
+    argument_string = FIRMWARE_ARGUMENT_ARC_SEGMENTS_PER_SEC;
+    if (is_argument_used(argument_string))
     {
-      stream << "\tmin_mm_per_arc_segment      : " << min_mm_per_arc_segment << "\n";
+      stream << "\t" << get_argument_string(argument_string, "", replacement_string, replacement_value) << "        : " << arc_segments_per_sec << "\n";
     }
-    // 
-    if (is_argument_used("arc_segments_per_sec"))
+    argument_string = FIRMWARE_ARGUMENT_MM_MAX_ARC_ERROR;
+    if (is_argument_used(argument_string))
     {
-      stream << "\tarc_segments_per_sec        : " << arc_segments_per_sec << "\n";
+      stream << "\t" << get_argument_string(argument_string, "", replacement_string, replacement_value) << "            : " << mm_max_arc_error << "\n";
     }
-    // 
-    if (is_argument_used("mm_max_arc_error"))
+    argument_string = FIRMWARE_ARGUMENT_MIN_MM_PER_ARC_SEGMENT;
+    if (is_argument_used(argument_string))
     {
-      stream << "\tmm_max_arc_error            : " << mm_max_arc_error << "\n";
+        stream << "\t" << get_argument_string(argument_string, "", replacement_string, replacement_value) << "      : " << min_mm_per_arc_segment << "\n";
     }
-    // 
-    if (is_argument_used("min_arc_segment_mm"))
+    argument_string = FIRMWARE_ARGUMENT_MIN_ARC_SEGMENT_MM;
+    if (is_argument_used(argument_string))
     {
-      stream << "\tmin_arc_segment_mm          : " << get_min_arc_segment_mm() << "\n";
+      stream << "\t" << get_argument_string(argument_string, "", replacement_string, replacement_value) << "          : " << min_arc_segment_mm << "\n";
     }
-    // 
-    if (is_argument_used("max_arc_segment_mm"))
+    argument_string = FIRMWARE_ARGUMENT_MAX_ARC_SEGMENT_MM;
+    if (is_argument_used(argument_string))
     {
-      stream << "\tmax_arc_segment_mm          : " << get_max_arc_segment_mm() << "\n";
+      stream << "\t" << get_argument_string(argument_string, "", replacement_string, replacement_value) << "          : " << max_arc_segment_mm << "\n";
     }
-
-    std::string unused_argument_string = get_unused_arguments_string();
+    std::string unused_argument_string = get_unused_arguments_string(separator, argument_prefix, replacement_string, replacement_value);
     if (unused_argument_string.size() > 0)
     {
       stream << "The following parameters do not apply to this firmware version: " << unused_argument_string << "\n";
@@ -304,9 +401,29 @@ public:
   {
     return (std::find(used_arguments_.begin(), used_arguments_.end(), argument_name) != used_arguments_.end());
   }
+  static std::string get_argument_string(std::string argument_name, std::string argument_prefix, std::string replacement_string = "", std::string replacement_value = "")
+  {
+      return argument_prefix + utilities::replace(argument_name, replacement_string, replacement_value);
+  }
+
   private:
     std::vector<std::string> all_arguments_;
     std::vector<std::string> used_arguments_;
+    std::string get_arguments_string_(std::vector<std::string> string_values, std::string separator, std::string argument_prefix, std::string replacement_string = "", std::string replacement_value = "")
+    {
+        std::string available_argument_string = "";
+
+        for (std::vector<std::string>::iterator it = string_values.begin(); it != string_values.end(); it++)
+        {
+            if (available_argument_string.size() > 0)
+            {
+                available_argument_string += separator;
+            }
+            available_argument_string += get_argument_string(*it, argument_prefix , replacement_string, replacement_value);
+        }
+        return available_argument_string;
+    }
+    
     
 };
 
@@ -364,6 +481,12 @@ public:
   std::vector<std::string> get_version_names();
 
   /// <summary>
+  /// Returns all valid versions for this firmware in one comma separated string.
+  /// </summary>
+  /// <returns>Vector of strings, one for each supported version</returns>
+  std::string get_version_names_string();
+
+  /// <summary>
   /// Returns the current g90_g91_influences_extruder value for the firmware.
   /// </summary>
   /// <returns></returns>
@@ -379,7 +502,13 @@ public:
   /// Outputs a string description of the firmware arguments.
   /// </summary>
   /// <returns></returns>
-  std::string get_argument_description();
+  std::string get_arguments_description(std::string separator , std::string argument_prefix = "", std::string replacement_string = "", std::string replacement_value = "");
+
+  /// <summary>
+  /// Returns a gcode comment containing the current settings
+  /// </summary>
+  /// <returns></returns>
+  std::string get_gcode_header_comment();
 
   /// <summary>
   /// Sets all available versions names and the version index based on args_.version
@@ -387,8 +516,7 @@ public:
   /// <returns></returns>
   void set_versions(std::vector<std::string> version_names, std::string latest_release_version_name);
 
-  virtual firmware_arguments get_default_arguments_for_current_version()const;
-
+  virtual firmware_arguments get_default_arguments_for_current_version() const;
 
   void set_arguments(firmware_arguments args);
 

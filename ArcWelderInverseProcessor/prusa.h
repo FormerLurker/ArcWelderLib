@@ -43,21 +43,6 @@
 #include <iomanip>
 #include <fstream>
 
-struct ConfigurationStore {
-  ConfigurationStore() {
-    mm_per_arc_segment = DEFAULT_MM_PER_ARC_SEGMENT;
-    min_mm_per_arc_segment = DEFAULT_MIN_MM_PER_ARC_SEGMENT;
-    min_arc_segments = DEFAULT_MIN_ARC_SEGMENTS;
-    arc_segments_per_sec = DEFAULT_ARC_SEGMENTS_PER_SEC;
-    n_arc_correction = DEFAULT_N_ARC_CORRECTIONS;
-  }
-  float mm_per_arc_segment; // This value is ALWAYS used.
-  float min_mm_per_arc_segment;  // if less than or equal to 0, this is disabled
-  int min_arc_segments; // If less than or equal to zero, this is disabled
-  double arc_segments_per_sec; // If less than or equal to zero, this is disabled
-  int n_arc_correction;
-
-};
 class prusa :
   public firmware
 {
@@ -76,7 +61,6 @@ private:
   /// <summary>
   /// A struct representing the prusa configuration store.  Note:  I didn't add the trailing underscore so this variable name will match the original source algorithm name.
   /// </summary>
-  ConfigurationStore cs;
   typedef void(prusa::*mc_arc_func)(float* position, float* target, float* offset, float feed_rate, float radius, uint8_t isclockwise, uint8_t extruder);
   void mc_arc_3_10_0(float* position, float* target, float* offset, float feed_rate, float radius, uint8_t isclockwise, uint8_t extruder);
   void mc_arc_3_11_0(float* position, float* target, float* offset, float feed_rate, float radius, uint8_t isclockwise, uint8_t extruder);
