@@ -264,9 +264,13 @@ Non-zero values less than 31 are not allowed.
 #### Progress Type
 This setting allows you to control the type of progress messages the ArcWelder console application will display.  There are three options:
 
-**SIMPLE** - This is the default setting.  Here is a sample simple progress message:  ```Progress:  21.9% complete - Estimated 35 of 45 seconds remaing.```
+**SIMPLE** - This is the default setting.  Here is a sample simple progress message:  
 
-**FULL** - This will show a much more detailed message, which is useful for any applications that which to scrape the detailed progress messages.  Here is a sample full progress message:  ```Progress:  percent_complete:100.00, seconds_elapsed:0.01, seconds_remaining:0.00, gcodes_processed: 4320, current_file_line: 4320, points_compressed: 2092, arcs_created: 81, arcs_aborted_by_flowrate: 59, num_firmware_compensations: 0, num_gcode_length_exceptions: 0, compression_ratio: 2.27, size_reduction: 55.96%```
+```Progress:  21.9% complete - Estimated 35 of 45 seconds remaing.```
+
+**FULL** - This will show a much more detailed message, which is useful for any applications that which to scrape the detailed progress messages.  Here is a sample full progress message:  
+
+```Progress:  percent_complete:100.00, seconds_elapsed:0.01, seconds_remaining:0.00, gcodes_processed: 4320, current_file_line: 4320, points_compressed: 2092, arcs_created: 81, arcs_aborted_by_flowrate: 59, num_firmware_compensations: 0, num_gcode_length_exceptions: 0, compression_ratio: 2.27, size_reduction: 55.96%```
 
 **NONE** - No progress messages will be shown.
 
