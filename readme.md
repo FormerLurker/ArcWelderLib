@@ -438,7 +438,7 @@ This is the default segment length for arc interpolation.  Depending on the impl
 * Example: ```ArcStraightener "C:\thing.aw.gcode" --mm-per-arc-segment=0.5```
 
 #### Max Arc Segment MM
-This is the maximum length an arc segment can be.
+This is the maximum length an arc segment can be. Similar to --arc-segments-per-r, but is used in different firmware.  This has replaced and has a slightly different meaning than --mm-per-arc-segment in newer versions of Marlin 2.0.
 
 * Type: Value (millimeters)
 * Default: 1.0
@@ -447,7 +447,7 @@ This is the maximum length an arc segment can be.
 * Example: ```ArcStraightener "C:\thing.aw.gcode" --max-arc-segment-mm=0.5```
 
 #### Arc Segments Per R
-This is the maximum length an arc segment can be. It's basically the same as Max Arc Segment MM, but is used in different firmware
+This is the maximum length an arc segment can be. Similar to --max-arc-segment-mm, but is used in different firmware.
 
 * Type: Value (millimeters)
 * Default: 0 (disabled)
@@ -455,8 +455,9 @@ This is the maximum length an arc segment can be. It's basically the same as Max
 * Long Parameter: --arc-segments-per-r=<decimal_value>
 * Example: ```ArcStraightener "C:\thing.aw.gcode" --arc-segments-per-r=0.5```
 
-#### Min Arc Segment MM
-This is the Minimum length an arc segment can be.
+#### Min MM Per Arc Segment
+
+This is the Minimum length an arc segment can be.  Similar to -min_arc_segment_mm, but used for different firmware.
 
 * Type: Value (millimeters)
 * Default: 1.0
@@ -464,8 +465,17 @@ This is the Minimum length an arc segment can be.
 * Long Parameter: --min-mm-per-arc-segment=<decimal_value>
 * Example: ```ArcStraightener "C:\thing.aw.gcode" --min-mm-per-arc-segment=0.5```
 
+#### Min Arc Segment MM
+This is the Minimum length an arc segment can be.  Similar to --min=mm-per-arc-segment, but used for different firmware.
+
+* Type: Value (millimeters)
+* Default: 1.0
+* Short Parameter: -b=<decimal_value>
+* Long Parameter: --min_arc_segment_mm=<decimal_value>
+* Example: ```ArcStraightener "C:\thing.aw.gcode" --min_arc_segment_mm=0.5```
+
 #### Min Arc Segments
-The minimum number of segments within a circle of the same radius as the arc.  Can be used to increase detail on small arcs.
+The minimum number of segments within a circle of the same radius as the arc.  Can be used to increase detail on small arcs.  This is a the same as --min-circle-segments setting used in some firmware versions.
 
 * Type: Integer Value
 * Default: 24
@@ -474,7 +484,7 @@ The minimum number of segments within a circle of the same radius as the arc.  C
 * Example: ```ArcStraightener "C:\thing.aw.gcode" --min-arc-segments=24```
 
 #### Min Circle Segments
-This is a the same as the Min Arc Segments setting used in some firmware versions. Can be used to increase detail on small arcs.
+The minimum number of segments within a circle of the same radius as the arc.  Can be used to increase detail on small arcs.  This is a the same as --min-arc-segments setting used in some firmware versions.
 
 * Type: Integer Value
 * Default: 72
