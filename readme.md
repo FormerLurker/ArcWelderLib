@@ -52,11 +52,11 @@ make
 
 The resulting console application is located in `build/ArcWelderConsole/`. You might want to create the build directory out of the repository, or make `git` ignore it, to avoid a dirty tree.
 
-## Arc Welder Console Application
+## ArcWelder Console Application
 
-This is a multiplatform console application that can be used to run the Arc Welder algorithm from a command prompt.  Binaries are available for Windows, Linux, Raspbian, and MacOs.  See the [installation][#installation] section for information on how to download the console application.
+This is a multiplatform console application that can be used to run the ArcWelder algorithm from a command prompt.  Binaries are available for Windows, Linux, Raspbian, and MacOs.  See the [installation][#installation] section for information on how to download the console application.
 
-### Running Arc Welder Console
+### Running ArcWelder Console
 
 Once ArcWelder (or ArcWelder.exe for Windows) is downloaded and copied to your machine, you can execute it in the following form:
 
@@ -199,7 +199,7 @@ Not all gcode has the same precision for X, Y, and Z parameters.  Enabling this 
 #### Default XYZ Precision
 ArcWelder outputs fixed precision for X, Y, Z, I, and J parameters.  99% of the time the default of 3 decimal places is just fine.  If you need (want) more or less precision, you can alter this value.
 
-Note: that when combined with the --allow-dynamic-precision argument, this represents the minimum precision.  It will grow if Arc Welder encounters gcode commands with a higher precision.
+Note: that when combined with the --allow-dynamic-precision argument, this represents the minimum precision.  It will grow if ArcWelder encounters gcode commands with a higher precision.
 
 **Important Note**: Some firmware isn't capable of executing gcodes that are too long.  Increasing the precision will produce longer gcodes.  See the Maximum Gcode Length section for more details.
 
@@ -211,9 +211,9 @@ Note: that when combined with the --allow-dynamic-precision argument, this repre
 * Example: ```ArcWelder "C:\thing.gcode" --default-xyz-precision=5```
 
 #### Default E Precision
-Arc Welder outputs fixed precision for the E parameter (extruder travel).  99% of the time the default of 5 decimal places is what you want.  If you need (want) more or less precision, you can alter this value.  In general, I do not recommend a value below 3 or above 5.
+ArcWelder outputs fixed precision for the E parameter (extruder travel).  99% of the time the default of 5 decimal places is what you want.  If you need (want) more or less precision, you can alter this value.  In general, I do not recommend a value below 3 or above 5.
 
-Note, that when combined with the --allow-dynamic-precision argument, this represents the minimum precision.  It will grow if Arc Welder encounters gcode commands with a higher precision.
+Note, that when combined with the --allow-dynamic-precision argument, this represents the minimum precision.  It will grow if ArcWelder encounters gcode commands with a higher precision.
 
 **Important Note**: Some firmware isn't capable of executing gcodes that are too long.  Increasing the precision will produce longer gcodes.  See the Maximum Gcode Length section for more details.
 
@@ -404,11 +404,63 @@ This is the opposite of ArcWelder.  It will find any G2/G3 commands and replace 
 
 The latest version includes several implementations of the arc interpolation algorithms from several different firmware types and versions.  This tool can be extremely useful for tracking down firmware issues when running G2/G3 commands.
 
-### ArcStraightener Console Arguments
+### Running ArcStraightener Console
 
-ArcStraightener has settings that represent the arc interpolation settings for the firmwares that are implemented.  The parameters accepted vary by firmware type and version.  ArcStraightener will not accept any parameters that will not work with the selected firmware and version.  It can also provide a list of available settings and the defaults by firmware type and version.
+Once ArcStraightener (or ArcStraightener.exe for Windows) is downloaded and copied to your machine, you can execute it in the following form:
 
-ArcStraightener also uses the [TCLAP Templatized C++ Command Line Parser](https://github.com/mirror/tclap) for implementing the arguments.
+```
+{Path_To_Arc_Straightener} {Options_Parameters} {Source_Path} {Optional_Target_Path}
+```
+
+Alternatively, you can put the source and (optional) target path first:
+
+
+```
+{Path_To_Arc_Straightener} {Source_Path} {Optional_Target_Path} {Options_Parameters}
+```
+
+
+**Important Note:** By Default, ArcStraightener will process your gcode using the latest version of Marlin 2's arc interpolation algorithm using the default firmware settings.  See the --firmware-type and --firmware-version parameters for information about supported firmware types and versions.
+
+**Overwriting the source file**
+
+If you want to overwrite the source file, no target path is needed.  For example, if you are running the Windows version from the root of your C drive and want to weld a file called C:\thing.aw.gcode, you could run the following command from the terminal:
+
+```
+C:\ArcStraightener.exe C:\thing.aw.gcode
+```
+
+That will replace thing.aw.gcode with a welded version of the file.
+
+**Creating a new file**
+
+If you want your original file preserved, you can specify a target path.
+
+Windows example:
+
+```
+ArcStraightener thing.aw.gcode thing.gcode
+```
+
+Linux/Raspbian example:
+```
+./ArcStraightener thing.aw.gcode thing.gcode
+```
+
+That would create a new file called thing.gcode and would leave the thing.aw.gcode file alone.
+
+You can also supply a path for the source and target gcode files:
+
+```
+ArcStraightener c:\my_gcode\thing.aw.gcode c:\my_gcode\arc_welded_files\thing.gcode
+```
+
+Note:  You may need to enclose the paths in quotes, for example, if there are any spaces:
+```
+ArcStraightener "c:\my_gcode\thing with spaces.aw.gcode" "c:\my_gcode\arc_welded_files\thing with spaces.gcode"
+```
+
+### ArcStraightener Console Help
 
 You can get a full list of parameters using the --help argument like so:
 
@@ -417,6 +469,20 @@ ArcStraightener --help
 ```
 
 This will also show you what firmware types and versions are available.
+
+
+### ArcStraightener Version Information
+Run the following command to view the current version, which is very useful for debugging purposes, or if you submit a github issue:
+
+```
+ArcStraightener --version
+```
+
+### ArcStraightener Console Arguments
+
+ArcStraightener has settings that represent the arc interpolation settings for the firmwares that are implemented.  The parameters accepted vary by firmware type and version.  ArcStraightener will not accept any parameters that will not work with the selected firmware and version.  It can also provide a list of available settings and the defaults by firmware type and version.
+
+ArcStraightener also uses the [TCLAP Templatized C++ Command Line Parser](https://github.com/mirror/tclap) for implementing the arguments.
 
 #### Non-Firmware Specific Settings
 
