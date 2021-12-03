@@ -44,7 +44,6 @@ namespace utilities{
 	extern const std::string WHITESPACE_;
 	extern const char GUID_RANGE[];
 	extern const bool GUID_DASHES[];
-
 	extern const char PATH_SEPARATOR_;
 	bool is_zero(double x, double tolerance);
 	bool is_zero(double x);
@@ -86,6 +85,7 @@ namespace utilities{
 	std::string join(const std::string* strings, size_t length, std::string sep);
 
 	std::string join(const std::vector<std::string> strings, std::string sep);
+
 	// bool contains(const std::string source, const std::string substring); // Might need this later
 	std::istream& safe_get_line(std::istream& is, std::string& t);
 

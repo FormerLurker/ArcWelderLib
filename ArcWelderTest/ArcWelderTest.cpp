@@ -305,10 +305,10 @@ static void TestAntiStutter(std::string filePath)
 	// BENCHY_L1_DIFFICULT
 	// SPIRAL_TEST
 	// SPIRAL_VASE_TEST_FUNNEL
-	std::string source_path = SPIRAL_VASE_TEST_SINGLE_LAYER_CYLINDER;
+	std::string source_path = SUPER_HUGE_TEST;
 	std::string target_path = "C:\\Users\\Brad\\Documents\\3DPrinter\\AntiStutter\\test_output.gcode";
 	arc_welder_args args(source_path, target_path, p_logger);
-	args.box_encoding = args.box_encoding = utilities::box_drawing::HTML;
+	args.box_encoding = args.box_encoding = utilities::box_drawing::ASCII;
 	args.callback = on_progress;
   // override any arguments here;
 	args.allow_travel_arcs = true;

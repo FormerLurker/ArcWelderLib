@@ -40,7 +40,6 @@
 #define PROGRESS_TYPE_FULL "FULL"
 int main(int argc, char* argv[])
 {
-  
   arc_welder_args args;
   std::string log_level_string;
   std::string log_level_string_default = "INFO";
