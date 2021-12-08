@@ -20,7 +20,6 @@ Here are some common visualizers that do NOT support G2/G3 commands:
 * PrusaSlicer
 * Slic3r
 * Slic3r PE
-* SuperSlicer
 
 #### GCode Visualizers that DO Support G2/G3
 Here are a few that DO support G2/G3 commands: 
@@ -29,6 +28,7 @@ Here are a few that DO support G2/G3 commands:
 * OctoPrint's built in 2D GCode Viewer
 * PrettyGCode plugin for OctoPrint
 * ncviewer.com - Note that this viewer has some issues with embedded thumbnails.  It sometimes renders certain gcodes as arcs or circles as well, which can cause confusion.  You can click on odd looking arcs and check out the gcode.  If it's not a G2/G3, it's just a rendering bug.
+* SuperSlicer - since 2.3.57.0
 
 ## Installation
 
