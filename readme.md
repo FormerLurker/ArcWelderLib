@@ -146,7 +146,7 @@ Values above 0.1 are not recommended, as you may encounter overlapping toolpaths
 #### Path Tolerance Percent (length)
 This parameter allows you control how much the length of the final arc can deviate from the original toolpath.  The default value of 5% is absolutely fine in most cases, even though that sounds like a lot.  The key thing to remember here is that your firmware will break the G2/G3 commands into many small segments, essentially reversing the process, so the path length in your firmware will match the original path much more closely.
 
-Originally, this setting was added as a safety feature to prevent prevent bad arcs from being generated in some edge cases.  However, since then a new error detection algorithm was added that makes this unnecessary.  In some cases, especially if your resolution parameter is large (above 0.1), this setting can be used to fine tune the generated arcs, so I left this setting in as is.  99+% of the time, no adjustments will be necessary here.
+Originally, this setting was added as a safety feature to prevent bad arcs from being generated in some edge cases.  However, since then a new error detection algorithm was added that makes this unnecessary.  In some cases, especially if your resolution parameter is large (above 0.1), this setting can be used to fine tune the generated arcs, so I left this setting in as is.  99+% of the time, no adjustments will be necessary here.
 
 * Type: Value (percent)
 * Default: 0.05 (5%)
