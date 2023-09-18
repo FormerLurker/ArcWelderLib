@@ -17,7 +17,7 @@ Most gcode visualizers do NOT correctly display G2/G3 commands.  This will cause
 Here are some common visualizers that do NOT support G2/G3 commands:  
 
 * Cura
-* PrusaSlicer
+* PrusaSlicer (Prior to version 2.6)
 * Slic3r
 * Slic3r PE
 * SuperSlicer
@@ -28,6 +28,7 @@ Here are a few that DO support G2/G3 commands:
 * Simplify3D
 * OctoPrint's built in 2D GCode Viewer
 * PrettyGCode plugin for OctoPrint
+* PrusaSlicer (Since version 2.6)
 * ncviewer.com - Note that this viewer has some issues with embedded thumbnails.  It sometimes renders certain gcodes as arcs or circles as well, which can cause confusion.  You can click on odd looking arcs and check out the gcode.  If it's not a G2/G3, it's just a rendering bug.
 
 ## Installation
