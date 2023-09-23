@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
   TCLAP::SwitchArg g90_arg("g", "g90-influences-extruder", arg_description_stream.str(), DEFAULT_G90_G91_INFLUENCES_EXTRUDER);
 
   // -r --resolution-mm
-  arg_description_stream << "The resolution in mm of the of the output. Determines the maximum tool path deviation allowed during conversion. Restrictions: Only values greater than 0 are allowed. Default Value: " << DEFAULT_RESOLUTION_MM;
+  arg_description_stream << "The resolution in mm of the output. Determines the maximum tool path deviation allowed during conversion. Restrictions: Only values greater than 0 are allowed. Default Value: " << DEFAULT_RESOLUTION_MM;
   TCLAP::ValueArg<double> resolution_arg("r", "resolution-mm", arg_description_stream.str(), false, DEFAULT_RESOLUTION_MM, "float");
 
   // -t --path-tolerance-percent
